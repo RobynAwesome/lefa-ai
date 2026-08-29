@@ -1,33 +1,92 @@
-# NOW - LEFA AI
+# NOW — LEFA AI
 
-## Pre-seed
+## Why this file exists
 
-- Repository began with an MIT license only.
-- Goal: establish the smallest inspectable KC x Alpaca vertical slice.
-- Authority boundary: read-only Alpaca paper telemetry; no order execution.
+This is the current handoff for LEFA AI.
 
-## Current state
+It records **what is actually known now** so the next person or agent does not invent a future architecture and treat it as project truth.
 
-- Python package baseline defined.
-- Environment configuration fails closed unless Alpaca paper mode is explicit.
-- Account observation adapter is read-only.
-- Deterministic risk firewall returns structured governance receipts.
-- Unit tests and GitHub Actions validate the firewall without credentials.
+---
+
+## Current phase
+
+`ALPACA AI TRADING AGENTS HACKATHON → BUILD START → POC`
+
+We are at the beginning.
+
+The immediate goal is **not** to optimize a trading strategy.
+
+The immediate goal is to prove the Hackathon / Alpaca connection and learn what the real authenticated environment exposes.
+
+---
+
+## Known
+
+- The `RobynAwesome/lefa-ai` repository exists.
+- A Python project seed exists.
+- The seed currently contains Alpaca SDK wiring, a CLI, configuration, a read-only account adapter, governance/risk experiments, tests and CI scaffolding.
+- Those artifacts are useful implementation experiments.
+- They are **not automatically final product decisions**.
+
+---
+
+## Unknown
+
+- The final authenticated connection path LEFA should use for the hackathon.
+- Which authenticated Alpaca account capabilities are available end-to-end in the intended build environment.
+- Which Alpaca APIs / tools belong in the first real agent loop.
+- The first trading strategy worth proving.
+- The final agent architecture.
+- The final execution policy.
+- The final operator / UI surface.
+
+`UNKNOWN` is valid state.
+
+Do not convert unknowns into FOC assumptions.
+
+---
 
 ## Next proof
 
-1. Confirm paper-account connectivity with `lefa account`.
-2. Add SPY quote and option-chain observation.
-3. Normalize one vertical-credit-spread proposal.
-4. Test approval and rejection receipts against recorded fixtures.
-5. Add paper execution only in a separate reviewed pull request.
+1. Complete the intended Hackathon / Alpaca login or authenticated connection.
+2. Prove that LEFA can reach the authenticated Alpaca environment.
+3. Record exactly what account data, market data and actions are available.
+4. Record failures and missing capabilities without filling them with guesses.
+5. Use that evidence to define the **smallest first agent loop**.
+6. Build and test that loop.
 
-## Holds
+Nothing further becomes canon before this proof feeds back into the build.
 
-- Live trading: prohibited.
-- Autonomous scheduling: prohibited until observation and recovery tests pass.
-- Multi-leg MCP execution: held pending adapter validation.
+---
 
-## Post-seed receipt
+## Feedback loop
 
-Baseline is successful when CI passes and a maintainer can retrieve paper-account telemetry without any available order path.
+```text
+UNKNOWN
+   ↓
+TEST
+   ↓
+EVIDENCE
+   ↓
+POC
+   ↓
+FEEDBACK
+   ↓
+CHANGE / KEEP / REMOVE
+   ↓
+NEXT POC
+```
+
+A failed POC is still useful if it tells us what the system cannot do.
+
+A generated idea is not evidence.
+
+---
+
+## Anti-drift rule
+
+If a future agent cannot prove a claim from the repository, the real environment or a recorded test:
+
+**mark it UNKNOWN and work backwards to the next POC.**
+
+Do not make LEFA look complete before LEFA is complete.
