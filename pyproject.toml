@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "lefa-ai"
 version = "0.1.0"
-description = "Kopano Context-governed Alpaca paper-trading agent"
+description = "LEFA AI — Alpaca AI Trading Agents Hackathon POC"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
