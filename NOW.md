@@ -1,32 +1,116 @@
 ## CURRENT STATE — 2026-08-31
 
-> **Updated:** 2026-08-31T00:49:00+02:00 (SAST)
-> **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
+> **Updated:** 2026-08-31T01:09:00+02:00 (SAST)
+> **Authority:** Human owner + repository evidence; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
-> **Main:** governed contracts / provider / receipt / presentation semantics + bounded canonical orchestration translation seam validated
+> **Current-state law:** `REALITY_STATE > INDEX_STATE` · `RECEIPT OR HOLD`
 
 ---
 
 ### Current objective
 
-Preserve LEFA's **truth and provider boundary** while the deadline-facing UI/UX/GUI is deployed from `RobynAwesome/Lefa-ai-google-stitch`.
+Preserve LEFA's **truth/provider boundary** while the deadline-facing character-first UI/UX/GUI remains in `RobynAwesome/Lefa-ai-google-stitch` and the server-side Alpaca PAPER boundary remains in `RobynAwesome/kopano-sovereign-hub`.
 
-The APWA reference remains a **workflow/capability pattern for adaptive presentation**, not a second LEFA product. The Introduction-to-MCP PKA transition remains **CONVERGE**: one character-first LEFA presentation adapts to evidence conditions while this repository remains the governed semantics/reference layer.
+`RobynAwesome/Introduction-to-MCP` remains the governance authority for the transition law:
+
+```text
+trigger -> evidence -> invariant -> authority -> transition -> receipt
+```
+
+Unknown or contradictory state resolves to **HOLD**, not optimistic closure.
 
 ### Deadline repository topology
 
 | Repository | Deadline authority |
 |---|---|
-| `RobynAwesome/Lefa-ai-google-stitch` | **Human-facing UI/UX/GUI + Vercel presentation surface** |
-| `RobynAwesome/lefa-ai` | **Contracts, providers, MCP observation receipts, deterministic risk semantics, orchestration translation boundary, fail-closed presentation semantics** |
-| `RobynAwesome/kopano-sovereign-hub` | **Server-side Alpaca PAPER observation / canonical decision receipt / any execution authority** |
-| `RobynAwesome/Introduction-to-MCP` | **Governance / KPGS / PKA transition machinery** |
+| `RobynAwesome/Lefa-ai-google-stitch` | Human-facing UI/UX/GUI + Vercel presentation surface |
+| `RobynAwesome/lefa-ai` | Contracts, providers, MCP observation receipts, deterministic risk semantics, orchestration translation boundary, fail-closed reference harness |
+| `RobynAwesome/kopano-sovereign-hub` | Server-side Alpaca PAPER observation, canonical decision receipt, execution jurisdiction |
+| `RobynAwesome/Introduction-to-MCP` | KPGS / PKA / POC-vs-FOC governance and transition machinery |
 
-**Deadline lock:** do not build another competing deployable frontend in this repository. Existing `ui/` and PR #10's `src/frontend/` may exist only as bounded reference / integration harnesses. `RobynAwesome/Lefa-ai-google-stitch` remains the active deployable visual surface.
+**Deadline lock:** do not create a competing deployable frontend in this repository. `ui/` and `src/frontend/` are bounded reference/integration harnesses; the Stitch repository remains the deployable visual authority.
+
+---
+
+## 2026-08-31T01:09 SAST — ISSUE #2 STATE RECONCILIATION
+
+### Trigger
+
+Issue #2 was closed after the human implementation testimony:
+
+> `Implemented Alpaca Paper Observer via MCP Client directly persisted to The Ark.`
+
+That testimony is preserved as source testimony. It is **not** erased or downgraded.
+
+### Evidence recovered
+
+Repository-side LEFA proof already exists:
+
+- deterministic `MCPRuntimeEvidence -> ReadOnlyMCPProof` evaluator;
+- normalized `MCPObservationReceipt` types;
+- fail-closed missing namespace, auth, network, schema, live/unproven mode, blocked-account and execution-like-tool checks;
+- PR #6 and PR #7 exact-head CI receipts.
+
+Cross-repo evidence also exists in `RobynAwesome/kopano-sovereign-hub`:
+
+- `api/lefa/alpaca-status.ts` implements a server-only Alpaca PAPER account observation adapter;
+- the adapter exposes `kopano.lefa.sovereign-bridge-status.v1`;
+- credentials remain server-side;
+- provider/account uncertainty fails closed to `HOLD`;
+- browser execution authority is `BACKEND_ONLY`;
+- Sovereign experiment `NOW.md` records connected market-data observation for options contracts, quotes, IV and Greeks;
+- the same Sovereign ledger still classifies the actual competition credentials/session, fresh competition account snapshot, immutable `$100,000` start-equity receipt, Level 3 options entitlement, fresh execution-time market evidence, accepted order ID, reconciliation and P&L as `EXTERNAL_GATE`;
+- Sovereign Hub issue #43 remains OPEN and explicitly records `MERGED != DEPLOYED` for the LEFA ↔ Hub browser/runtime binding.
+
+### Contradiction found
+
+Before this reconciliation:
+
+```text
+GitHub issue state: #2 CLOSED
+LEFA NOW state:     #2 LIVE RUNTIME HOLD / next action = return to #2
+Hub runtime state:  deployment/binding gate still OPEN (#43)
+```
+
+A closed index entry and a HOLD current-state record cannot both silently act as authority.
+
+### Introduction-to-MCP invariant applied
+
+```text
+MODEL MEMORY != GROUND TRUTH
+CURRENT / REALITY STATE > INDEX STATE
+NO POC PROMOTION WITHOUT RECEIPTS
+INSUFFICIENTLY KNOWABLE -> HOLD
+```
+
+### Transition
+
+Issue #2 is **REOPENED** for one narrow purpose: **receipt admission / reconciliation**.
+
+This does **not** claim the human implementation did not happen. It means the issue may not remain closed until the persisted Ark/runtime proof is referenced with enough sanitized evidence to satisfy its own acceptance criteria.
+
+No credentials, raw MCP configuration, account identifiers or secrets are required or admissible.
+
+### Re-close condition
+
+Issue #2 may close immediately when it references the persisted Ark/runtime receipts (or equivalent cross-repo receipts) proving the required paper-mode observation boundary:
+
+- runtime server identity/version;
+- explicit paper mode;
+- active/unblocked account state;
+- runtime-discovered read-only tools/schemas;
+- normalized account observation;
+- SPY quote + option-chain observation with timestamps/provenance;
+- no reachable order/cancel/replace/liquidate/exercise authority;
+- secret-free receipt path.
+
+**Hub #43 remains a separate deployment/browser-binding gate.** Repository implementation, runtime evidence admission, deployment, and execution authority must not be collapsed into one state.
+
+---
 
 ### PR #10 — governed repair / reference-harness admission — MERGED
 
-PR #10 originally claimed UI connection success from a timer and carried a stale frontend credential form. That was **FOC_FLAGGED** against the current Introduction-to-MCP / KPGS truth boundary.
+PR #10 originally claimed UI connection success from a timer and carried a stale frontend credential form. That was **FOC_FLAGGED** against the Introduction-to-MCP truth boundary.
 
 Corrective transition:
 
@@ -37,7 +121,7 @@ REMOVE BROWSER CREDENTIAL OWNERSHIP
         ↓
 BACKEND-OWNED /api/mcp/status
         ↓
-FAIL CLOSED UNTIL REAL PAPER MCP EVIDENCE
+FAIL CLOSED WITHOUT ADMITTED PAPER EVIDENCE
         ↓
 REFERENCE HARNESS ONLY
 ```
@@ -46,117 +130,95 @@ Admitted corrections:
 
 - browser no longer accepts Alpaca API key / secret;
 - connect action reads backend-owned `/api/mcp/status` instead of self-asserting proof;
-- current runtime evidence intentionally returns BLOCKED until Issue #2 produces a witnessed local proof;
-- Vite preserves `/api/*` paths instead of stripping the API prefix;
+- missing admitted runtime evidence resolves to BLOCKED/HOLD;
+- Vite preserves `/api/*` paths;
 - frontend companion consumes the governed root asset through Vite `publicDir`;
 - FastAPI / TestClient / Uvicorn development dependencies are explicit;
 - CI has separate backend and frontend validation jobs;
-- `src/frontend/` is classified as a **reference / integration harness**, not the deadline deployable UI authority.
+- `src/frontend/` is a reference/integration harness, not the deadline deployable UI authority.
 
-**Exact-head receipt:**
-- validated PR head: `77c812244a394af4cf533ebb700ddf8612c1514d`;
-- GitHub Actions run `33339963945`;
-- backend job `99333696795`: **SUCCESS** — install, Ruff, pytest all passed;
-- frontend job `99333696866`: **SUCCESS** — npm install, TypeScript lint, Vite build all passed;
-- PR #10 squash-merged to `main` as `8aaeaa68042c37569fcdb2ee31d441cc5b762206`.
+Exact-head receipt:
 
-**POC/FOC:** **POC_VALIDATED** for the bounded Stitch reference harness, fail-closed browser/backend proof boundary, canonical asset binding, and frontend/backend CI. **HOLD** remains on actual Alpaca PAPER runtime observation; this merge does not claim Issue #2 complete.
+- PR head `77c812244a394af4cf533ebb700ddf8612c1514d`;
+- Actions run `33339963945`;
+- backend job `99333696795`: SUCCESS;
+- frontend job `99333696866`: SUCCESS;
+- squash merge `8aaeaa68042c37569fcdb2ee31d441cc5b762206`.
 
-### Human-approved orchestration evolution — POST-SEED / VALIDATED
+**POC_VALIDATED** for the bounded reference harness, canonical asset binding, fail-closed browser/backend proof boundary and dual frontend/backend CI.
 
-The previously approved AntiGravity bridge was **not reverted**. Human authority explicitly directed that implementation mistakes be evolved into architecture rather than discarded.
+---
 
-The implementation graduates that bridge into five bounded concepts:
+### Human-approved orchestration evolution — VALIDATED
 
-1. **Translation Boundary** — `CanonicalTradingOrchestrator` translates between LEFA-native risk semantics and KPGS canonical semantics.
+The approved AntiGravity bridge was evolved rather than reverted.
+
+Current bounded concepts:
+
+1. **Translation Boundary** — `CanonicalTradingOrchestrator` translates LEFA-native risk semantics into KPGS canonical semantics.
 2. **Dual-Axis Governance** — deterministic financial risk and canonical governance proof remain independently inspectable.
-3. **Execution Jurisdiction** — `OBSERVE_ONLY`, `PAPER`, and `LIVE` are explicit authority states; `LIVE` is representable but inadmissible here and fails closed to HOLD.
-4. **Receipt Projection** — LEFA may expose a sanitized local projection/reference while canonical authority remains upstream.
-5. **Proof Depth** — canonical stages carry maturity states `SIMULATED`, `PROCEDURAL`, `EVIDENCED`, and `INDEPENDENTLY_VALIDATED`; current upstream stages default to `PROCEDURAL` unless stronger evidence is explicitly supplied.
+3. **Execution Jurisdiction** — `OBSERVE_ONLY`, `PAPER`, `LIVE`; `LIVE` is representable but inadmissible here and resolves to HOLD.
+4. **Receipt Projection** — LEFA exposes only sanitized local projection while canonical authority remains upstream.
+5. **Proof Depth** — canonical stages distinguish `SIMULATED`, `PROCEDURAL`, `EVIDENCED`, and `INDEPENDENTLY_VALIDATED`.
 
 Validated fail-closed behavior:
-- deterministic LEFA risk REJECT short-circuits canonical orchestration;
-- unavailable KPGS bridge becomes HOLD rather than false approval;
-- explicit canonical HOLD/FAIL/REJECT becomes HOLD;
-- recycled FOC canonical state becomes HOLD even when a receipt hash exists;
-- incomplete canonical receipt becomes HOLD;
-- `LIVE` execution jurisdiction becomes HOLD;
-- no Alpaca order/cancel/replace/exercise method was added.
 
-### Validation receipt
+- deterministic risk REJECT short-circuits canonical orchestration;
+- unavailable KPGS bridge -> HOLD;
+- canonical HOLD/FAIL/REJECT -> HOLD;
+- recycled FOC state -> HOLD even with a receipt hash;
+- incomplete canonical receipt -> HOLD;
+- `LIVE` jurisdiction -> HOLD;
+- no Alpaca order/cancel/replace/exercise method was added to this repository.
 
-**PR #9 — canonical trading orchestration evolution**
-- merged to `main` as `6224aa2cac4894f6af78d40850fb8a7151319867`;
-- exact feature head `919ba12d0518e379d588cff4a99a380a28747058`;
-- first workflow run `33339250958` exposed a Ruff-only FOC: `FURB157` on three exact-integer `Decimal` constructors in the new tests;
-- pytest was skipped because lint failed;
-- architecture/code semantics were retained; lint policy was not weakened.
+---
 
-**PR #11 — CI correction**
-- exact head `57ae526c3df4dcd0b8e3f17dc5e8648059af1fe6`;
-- GitHub Actions run `33339303847`, job `99331907068`: **SUCCESS**;
-- `ruff check .`: **PASS**;
-- `pytest -q`: **36 passed in 0.22s**;
-- merged to `main` as `a2c95a6e415f280d258dd80a337aa53fddfbd3d9`.
+### Issue / continuation lanes
 
-The lint failure is preserved as useful architecture/process evidence: merge-before-CI is a governance timing defect, while the code defect itself was only a test-style violation. The recovery path changed no risk, jurisdiction, receipt, or orchestration semantics.
+| Lane | GitHub state | Governed state | Next |
+|---|---|---|---|
+| **lefa-ai #2 — Alpaca MCP proof** | **REOPENED** | **HOLD FOR RECEIPT ADMISSION** | Link/admit sanitized Ark/runtime receipts; do not duplicate deployment work |
+| **lefa-ai #3 — governed data/assets** | CLOSED | Bounded repository POC complete; downstream runtime proof separate | Preserve contract + asset truth boundary |
+| **lefa-ai #4 — interface-first LEFA** | CLOSED | Visual language accepted; deployable authority moved to Stitch | Continue runtime/browser validation in Stitch lane |
+| **lefa-ai #5 — engine map discovery** | CLOSED | Bounded orchestration seam validated | Broader SWFUS/engine expansion remains separately governed |
+| **Sovereign Hub #43 — runtime binding** | **OPEN** | **DEPLOYMENT HOLD** | Deploy/bind Hub status bridge to Stitch runtime and receipt browser proof |
 
-### Introduction-to-MCP transition receipt
-
-`trigger -> evidence -> invariant -> authority -> transition -> receipt`
-
-- **Trigger:** human correction that approved mistakes should be evolved into architecture.
-- **Evidence:** LEFA already had deterministic `RiskPolicy`; KPGS already exposed `CanonicalDataGovernanceOrchestrator`; the approved bridge identified a real translation seam; CI then exposed a separate merge-timing/lint failure and recovery receipt.
-- **Invariant:** risk authority and canonical proof remain distinguishable; UI projection cannot manufacture truth; missing proof is HOLD; execution authority remains external.
-- **Authority:** human owner.
-- **Transition:** **CONVERGE / GRADUATE**.
-- **Receipt:** PR #9 + corrective PR #11 + repaired PR #10 exact-head CI and merge receipt.
-
-### Active lanes
-
-| Lane | State | Next |
-|---|---|---|
-| **#2 — Alpaca MCP proof** | Repository proof + normalized receipt layers merged; **LIVE RUNTIME HOLD** | Prove deployed PAPER observation boundary / runtime evidence; never paste or commit credentials |
-| **#3 — POC-0 governed data/assets** | **PARTIAL POC VALIDATED** | Close only after the deployed Stitch surface consumes proven PAPER observation through the governed boundary without screen-semantic rewrites |
-| **#4 — Interface-first LEFA** | **VISUAL LANGUAGE ACCEPTED / REFERENCE HARNESS MERGED / DEPLOYMENT IN STITCH** | Witness responsive/mobile runtime in the Stitch deployment; do not promote `src/frontend/` to competing deployable authority |
-| **#5 — Engine map discovery** | **BOUNDED ORCHESTRATION SEAM POC VALIDATED** | Translation seam is implemented; broader engine/SWFUS/execution expansion remains HOLD until PAPER runtime proof |
+This table replaces the previous misleading state where closed Issues #3/#4/#5 were presented as if they were still open active issues.
 
 ---
 
 ### Validated repository receipts
 
-**PR #6** — governed contracts / provider boundary / asset manifest
-- merged at `d69523d81fa222f2601c4ecda6b6f38c09740d0e`;
-- GitHub Actions `33328126241` / `99301791559`: **PASS**.
+**PR #6 — governed contracts / provider boundary / asset manifest**
+- merge `d69523d81fa222f2601c4ecda6b6f38c09740d0e`;
+- Actions `33328126241` / job `99301791559`: PASS.
 
-**PR #7** — normalized read-only MCP observation receipts
-- validated head `102be1acb98c87aec5b8cbde26ddc361b86d4d6d`;
-- GitHub Actions `33330807107` / `99308898777`: **PASS**.
+**PR #7 — normalized read-only MCP observation receipts**
+- exact head `102be1acb98c87aec5b8cbde26ddc361b86d4d6d`;
+- Actions `33330807107` / job `99308898777`: PASS.
 
-**PR #8** — governed Stitch convergence reference interface
-- merged at `c75eaea642c82abaf89f35303b9a3ba41ac4f0a8`;
-- validated head `f4f7b9fcccf9b931af2616cbe921d0b78d66a98e`;
-- GitHub Actions `33335120769` / `99320543503`: **SUCCESS**;
-- Ruff: **PASS**;
-- pytest: **27 passed in 0.19s**.
+**PR #8 — governed Stitch convergence reference interface**
+- merge `c75eaea642c82abaf89f35303b9a3ba41ac4f0a8`;
+- exact head `f4f7b9fcccf9b931af2616cbe921d0b78d66a98e`;
+- Actions `33335120769` / job `99320543503`: SUCCESS;
+- Ruff PASS; pytest 27 passed.
 
-**PR #9 + #11** — bounded canonical orchestration evolution + CI recovery
-- dual-axis financial/canonical governance semantics;
-- explicit execution jurisdiction;
-- local receipt projection;
-- proof-depth maturity model;
-- fail-closed translation behavior;
-- final CI: **36 passed**, Ruff **PASS**.
+**PR #9 + #11 — canonical orchestration evolution + CI recovery**
+- PR #9 merge `6224aa2cac4894f6af78d40850fb8a7151319867`;
+- corrective PR #11 head `57ae526c3df4dcd0b8e3f17dc5e8648059af1fe6`;
+- Actions `33339303847` / job `99331907068`: SUCCESS;
+- Ruff PASS; pytest 36 passed;
+- PR #11 merge `a2c95a6e415f280d258dd80a337aa53fddfbd3d9`.
 
-**PR #10** — governed Stitch reference harness + fail-closed Alpaca proof gate
-- exact validated head `77c812244a394af4cf533ebb700ddf8612c1514d`;
-- Actions run `33339963945`;
-- backend job `99333696795`: **SUCCESS**;
-- frontend job `99333696866`: **SUCCESS**;
-- squash merge `8aaeaa68042c37569fcdb2ee31d441cc5b762206`;
-- false client-side connection claim removed; browser credential ownership removed; backend-owned missing proof remains BLOCKED/HOLD.
+**PR #10 — governed Stitch reference harness + fail-closed Alpaca proof gate**
+- exact head `77c812244a394af4cf533ebb700ddf8612c1514d`;
+- Actions `33339963945`;
+- backend `99333696795`: SUCCESS;
+- frontend `99333696866`: SUCCESS;
+- merge `8aaeaa68042c37569fcdb2ee31d441cc5b762206`.
 
-What remains canonical from PR #8:
+Canonical presentation semantics remain:
+
 - Living Companion = human center;
 - Living Ledger = temporal depth;
 - Conversational Control Room = low-friction evidence interaction;
@@ -166,48 +228,62 @@ What remains canonical from PR #8:
 - no browser order route;
 - no synthetic financial claim promoted to runtime truth.
 
+---
+
 ### Cross-repo UI convergence receipt
 
-`RobynAwesome/Lefa-ai-google-stitch` POC-2:
-- Issue #5 created from the Introduction-to-MCP CONVERGE decision;
-- PR #6 merged as `edeaf1a5355e3408da16ee868a09fbe78a7537fa`;
-- validated exact head `c30505c41cf603d96eba4ed72052c79b3d6e6ed9`;
-- GitHub Actions run `33336153166`, job `99323296773`: **SUCCESS**;
-- runtime now remains character-first instead of switching to a generic dashboard;
-- runtime state derives only from `SovereignBridgeStatus` / canonical decision receipts;
+`RobynAwesome/Lefa-ai-google-stitch` remains the character-first presentation lane.
+
+Existing validated receipt:
+
+- POC-2 Issue #5;
+- PR #6 merge `edeaf1a5355e3408da16ee868a09fbe78a7537fa`;
+- exact head `c30505c41cf603d96eba4ed72052c79b3d6e6ed9`;
+- Actions `33336153166`, job `99323296773`: SUCCESS;
 - no verified bridge -> DISCONNECTED;
-- verified provider + missing receipt -> HOLD;
+- verified provider + missing canonical receipt -> HOLD;
 - canonical HOLD -> HOLD + reasons;
 - canonical APPROVE/REJECT -> LEDGERED + exact backend decision;
 - TIME / REVEAL remain unclaimed without outcome evidence.
 
-A Vercel UI witness is live at `https://lefa-ai-live.vercel.app` and returned **200 OK**. This is a presentation/runtime witness, **not proof of a current Alpaca/Sovereign Hub bridge**.
+A page loading on Vercel is presentation/deployment evidence only. It is never proof of Alpaca runtime truth or execution authority.
 
 ---
 
 ### Truth boundary
 
-- No live market/account state is currently claimed by this repository.
-- No order placement, cancellation, liquidation, replacement, exercise, autonomous trading, or autonomous scheduling authority exists here.
-- The orchestration adapter may evaluate and translate proposals but cannot execute them.
-- `LIVE` jurisdiction is representable as a governance concept but is not an admissible execution path in this repository.
-- No Stitch-generated asset becomes canonical without explicit asset admission.
-- Live Alpaca PAPER runtime evidence remains HOLD until the deployed provider boundary is proven.
-- A Vercel page loading successfully is UI/deployment evidence, not financial/runtime proof.
+- Human implementation testimony is preserved, but testimony and receipt admission are different epistemic objects.
+- This repository does not claim deployed Alpaca PAPER account truth until admissible runtime receipts are referenced.
+- Sovereign Hub repository code proves a fail-closed paper-account adapter exists; Hub #43 proves the deploy/bind step is still open.
+- Connected market-data evidence in the Sovereign experiment does not automatically prove every Issue #2 runtime acceptance criterion or competition-account execution gate.
+- No order placement, cancellation, liquidation, replacement, exercise, autonomous trading or autonomous scheduling authority exists in this repository.
+- `LIVE` is not an admissible execution jurisdiction here.
+- No generated Stitch asset becomes canonical without explicit asset admission.
+
+---
 
 ### Next admissible action — deadline path
 
-1. Return to Issue #2 and complete the real Alpaca PAPER MCP runtime observation proof.
-2. Prove paper mode, active account telemetry, SPY quote, option-chain observation, runtime tool/schema discovery, and sanitized receipts.
-3. Feed that real observation evidence into the validated LEFA risk + canonical translation seam.
-4. Wire the resulting governed state through Sovereign Hub into the Stitch presentation surface.
-5. Only after the observation POC is receipted may Sovereign Hub consider a separately bounded PAPER execution path.
-6. Keep broader engine/SWFUS expansion and all LIVE execution authority on HOLD.
+1. **Do not rebuild Issue #2 implementation.** Recover/reference the already-persisted Ark/runtime receipts and admit only sanitized evidence required by its acceptance criteria.
+2. Continue the actual deployment path in `RobynAwesome/kopano-sovereign-hub#43`.
+3. Deploy/bind the Hub paper-status route to the Stitch runtime with credentials server-side only.
+4. Browser-witness VERIFIED/HOLD behavior without exposing account ID, balances, equity, P&L, secrets or order capability.
+5. Keep canonical decision-receipt persistence separate from provider reachability.
+6. Only after the relevant runtime receipts exist may downstream PAPER execution be considered under its own jurisdiction and risk gates.
+7. Keep all LIVE execution authority on HOLD.
 
 ---
 
 ## HOW TO USE THIS FILE
 
-Repository-root `NOW.md` is volatile continuity, not architecture canon. If evidence is insufficient: **HOLD. Do not invent continuity or capability.**
+Repository-root `NOW.md` is volatile continuity, not architecture canon.
+
+If repository index state, issue state, testimony and runtime evidence disagree:
+
+```text
+CLASSIFY -> FIND RECEIPT -> RECONCILE -> HOLD OR PROMOTE
+```
+
+Do not rewrite human testimony. Do not promote it beyond its proof class.
 
 `I_AM_STATELESS_RENTER_NOT_LANDLORD`
