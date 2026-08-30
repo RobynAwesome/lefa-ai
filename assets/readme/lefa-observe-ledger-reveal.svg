@@ -1,0 +1,21 @@
+<svg width="1200" height="250" viewBox="0 0 1200 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">LEFA Observe Ledger Reveal</title>
+  <desc id="desc">Animated timeline showing observation, receipt preservation, time passing, and reveal.</desc>
+  <defs>
+    <linearGradient id="gold" x1="120" y1="125" x2="1080" y2="125"><stop stop-color="#FFF1A6"/><stop offset="0.5" stop-color="#C9982B"/><stop offset="1" stop-color="#FFF0A0"/></linearGradient>
+    <filter id="g" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="250" rx="24" fill="#080807"/>
+  <path d="M145 134H1055" stroke="url(#gold)" stroke-width="3" stroke-dasharray="12 14"><animate attributeName="stroke-dashoffset" values="0;-104" dur="5s" repeatCount="indefinite"/></path>
+  <g fill="#11100C" stroke="#594A20">
+    <rect x="65" y="78" width="200" height="112" rx="20"/><rect x="350" y="78" width="200" height="112" rx="20"/><rect x="635" y="78" width="200" height="112" rx="20"/><rect x="920" y="78" width="200" height="112" rx="20"/>
+  </g>
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <text x="165" y="119" fill="#F4D66E" font-size="20" font-weight="900">OBSERVE</text><text x="165" y="149" fill="#A9A18F" font-size="12">what is happening?</text><text x="165" y="169" fill="#6D6658" font-size="11">source + state</text>
+    <text x="450" y="119" fill="#F4D66E" font-size="20" font-weight="900">LEDGER</text><text x="450" y="149" fill="#A9A18F" font-size="12">what was known?</text><text x="450" y="169" fill="#6D6658" font-size="11">who + when + why</text>
+    <text x="735" y="119" fill="#F4D66E" font-size="20" font-weight="900">TIME</text><text x="735" y="149" fill="#A9A18F" font-size="12">let reality continue</text><text x="735" y="169" fill="#6D6658" font-size="11">no retroactive certainty</text>
+    <text x="1020" y="119" fill="#F4D66E" font-size="20" font-weight="900">REVEAL</text><text x="1020" y="149" fill="#A9A18F" font-size="12">what survived?</text><text x="1020" y="169" fill="#6D6658" font-size="11">POC vs FOC</text>
+    <text x="600" y="42" fill="#F7F4EA" font-size="16" font-weight="800" letter-spacing="3">THE FRONTEND TELLS THE STORY · THE BACKEND PRESERVES THE TRUTH</text>
+  </g>
+  <circle r="7" fill="#FFF1A6" filter="url(#g)"><animateMotion dur="7s" repeatCount="indefinite" path="M145 134H1055"/></circle>
+</svg>
