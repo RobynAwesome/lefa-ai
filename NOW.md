@@ -1,100 +1,199 @@
-## CURRENT STATE — 2026-08-30
+## CURRENT STATE — 2026-08-31
 
-> **Updated:** 2026-08-30T~22:30:00+02:00 (SAST)
-> **Authority:** Human owner + repository issues; JIRO (AWS/Kiro) is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
+> **Updated:** 2026-08-31T00:48:00+02:00 (SAST)
+> **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
-> **Main branch:** clean — PR #6 and PR #7 merged
-> **Active branch:** `feat/stitch-ui-integration-issues-3-4` — PR pending
+> **Main:** governed contracts / provider / receipt / presentation semantics + bounded canonical orchestration translation seam validated
 
 ---
 
 ### Current objective
 
-Interface integration complete. PR open for Issues #3 + #4. Remaining gates: Alpaca MCP live proof (Issue #2) and engine map (Issue #5).
+Preserve LEFA's **truth and provider boundary** while the deadline-facing UI/UX/GUI is deployed from `RobynAwesome/Lefa-ai-google-stitch`.
+
+The APWA reference remains a **workflow/capability pattern for adaptive presentation**, not a second LEFA product. The Introduction-to-MCP PKA transition remains **CONVERGE**: one character-first LEFA presentation adapts to evidence conditions while this repository remains the governed semantics/reference layer.
+
+### Deadline repository topology
+
+| Repository | Deadline authority |
+|---|---|
+| `RobynAwesome/Lefa-ai-google-stitch` | **Human-facing UI/UX/GUI + Vercel presentation surface** |
+| `RobynAwesome/lefa-ai` | **Contracts, providers, MCP observation receipts, deterministic risk semantics, orchestration translation boundary, fail-closed presentation semantics** |
+| `RobynAwesome/kopano-sovereign-hub` | **Server-side Alpaca PAPER observation / canonical decision receipt / any execution authority** |
+| `RobynAwesome/Introduction-to-MCP` | **Governance / KPGS / PKA transition machinery** |
+
+**Deadline lock:** do not build another competing deployable frontend in this repository. Existing `ui/` and PR #10's `src/frontend/` may exist only as bounded reference / integration harnesses. `RobynAwesome/Lefa-ai-google-stitch` remains the active deployable visual surface.
+
+### PR #10 — governed repair / reference-harness admission
+
+PR #10 originally claimed UI connection success from a timer and carried a stale frontend credential form. That was **FOC_FLAGGED** against the current Introduction-to-MCP / KPGS truth boundary.
+
+Corrective transition:
+
+```text
+FALSE CLIENT CONNECTION CLAIM
+        ↓
+REMOVE BROWSER CREDENTIAL OWNERSHIP
+        ↓
+BACKEND-OWNED /api/mcp/status
+        ↓
+FAIL CLOSED UNTIL REAL PAPER MCP EVIDENCE
+        ↓
+REFERENCE HARNESS ONLY
+```
+
+Current corrections on `feat/stitch-ui-integration-issues-3-4`:
+
+- browser no longer accepts Alpaca API key / secret;
+- connect action reads backend-owned `/api/mcp/status` instead of self-asserting proof;
+- current runtime evidence intentionally returns BLOCKED until Issue #2 produces a witnessed local proof;
+- Vite preserves `/api/*` paths instead of stripping the API prefix;
+- frontend companion consumes the governed root asset through Vite `publicDir`;
+- FastAPI / TestClient / Uvicorn development dependencies are explicit;
+- CI now has separate backend and frontend validation jobs;
+- `src/frontend/` is classified as a **reference / integration harness**, not the deadline deployable UI authority.
+
+**POC/FOC:** correction is **POC_CANDIDATE** pending exact-head GitHub Actions receipts. Do not promote to POC_VALIDATED until both backend and frontend CI are green.
+
+### Human-approved orchestration evolution — POST-SEED / VALIDATED
+
+The previously approved AntiGravity bridge was **not reverted**. Human authority explicitly directed that implementation mistakes be evolved into architecture rather than discarded.
+
+The implementation graduates that bridge into five bounded concepts:
+
+1. **Translation Boundary** — `CanonicalTradingOrchestrator` translates between LEFA-native risk semantics and KPGS canonical semantics.
+2. **Dual-Axis Governance** — deterministic financial risk and canonical governance proof remain independently inspectable.
+3. **Execution Jurisdiction** — `OBSERVE_ONLY`, `PAPER`, and `LIVE` are explicit authority states; `LIVE` is representable but inadmissible here and fails closed to HOLD.
+4. **Receipt Projection** — LEFA may expose a sanitized local projection/reference while canonical authority remains upstream.
+5. **Proof Depth** — canonical stages carry maturity states `SIMULATED`, `PROCEDURAL`, `EVIDENCED`, and `INDEPENDENTLY_VALIDATED`; current upstream stages default to `PROCEDURAL` unless stronger evidence is explicitly supplied.
+
+Validated fail-closed behavior:
+- deterministic LEFA risk REJECT short-circuits canonical orchestration;
+- unavailable KPGS bridge becomes HOLD rather than false approval;
+- explicit canonical HOLD/FAIL/REJECT becomes HOLD;
+- recycled FOC canonical state becomes HOLD even when a receipt hash exists;
+- incomplete canonical receipt becomes HOLD;
+- `LIVE` execution jurisdiction becomes HOLD;
+- no Alpaca order/cancel/replace/exercise method was added.
+
+### Validation receipt
+
+**PR #9 — canonical trading orchestration evolution**
+- merged to `main` as `6224aa2cac4894f6af78d40850fb8a7151319867`;
+- exact feature head `919ba12d0518e379d588cff4a99a380a28747058`;
+- first workflow run `33339250958` exposed a Ruff-only FOC: `FURB157` on three exact-integer `Decimal` constructors in the new tests;
+- pytest was skipped because lint failed;
+- architecture/code semantics were retained; lint policy was not weakened.
+
+**PR #11 — CI correction**
+- exact head `57ae526c3df4dcd0b8e3f17dc5e8648059af1fe6`;
+- GitHub Actions run `33339303847`, job `99331907068`: **SUCCESS**;
+- `ruff check .`: **PASS**;
+- `pytest -q`: **36 passed in 0.22s**;
+- merged to `main` as `a2c95a6e415f280d258dd80a337aa53fddfbd3d9`.
+
+The lint failure is preserved as useful architecture/process evidence: merge-before-CI is a governance timing defect, while the code defect itself was only a test-style violation. The recovery path changed no risk, jurisdiction, receipt, or orchestration semantics.
+
+### Introduction-to-MCP transition receipt
+
+`trigger -> evidence -> invariant -> authority -> transition -> receipt`
+
+- **Trigger:** human correction that approved mistakes should be evolved into architecture.
+- **Evidence:** LEFA already had deterministic `RiskPolicy`; KPGS already exposed `CanonicalDataGovernanceOrchestrator`; the approved bridge identified a real translation seam; CI then exposed a separate merge-timing/lint failure and recovery receipt.
+- **Invariant:** risk authority and canonical proof remain distinguishable; UI projection cannot manufacture truth; missing proof is HOLD; execution authority remains external.
+- **Authority:** human owner.
+- **Transition:** **CONVERGE / GRADUATE**.
+- **Receipt:** PR #9 + corrective PR #11, exact-head CI green.
 
 ### Active lanes
 
 | Lane | State | Next |
 |---|---|---|
-| **#2 — Alpaca MCP proof** | Repo layer done; **live proof HOLD** | Human configures local Alpaca paper credentials → JIRO runs runtime MCP discovery |
-| **#3 — POC-0 governed data/assets** | **PR OPEN** (`feat/stitch-ui-integration-issues-3-4`) | Review + merge |
-| **#4 — Interface-first LEFA** | **PR OPEN** (`feat/stitch-ui-integration-issues-3-4`) | Review + merge |
-| **#5 — Engine map discovery** | **Explicit HOLD** | Return after interface is accepted and merged |
+| **#2 — Alpaca MCP proof** | Repository proof + normalized receipt layers merged; **LIVE RUNTIME HOLD** | Prove deployed PAPER observation boundary / runtime evidence; never paste or commit credentials |
+| **#3 — POC-0 governed data/assets** | **PARTIAL POC VALIDATED** | Close only after the deployed Stitch surface consumes proven PAPER observation through the governed boundary without screen-semantic rewrites |
+| **#4 — Interface-first LEFA** | **VISUAL LANGUAGE ACCEPTED / DEPLOYMENT MOVED TO STITCH** | Witness responsive/mobile runtime in the Stitch deployment; PR #10 is reference harness only |
+| **#5 — Engine map discovery** | **BOUNDED ORCHESTRATION SEAM POC VALIDATED** | Translation seam is implemented; broader engine/SWFUS/execution expansion remains HOLD until PAPER runtime proof |
 
 ---
 
-### 2026-08-30 — Stitch UI integration (Issues #3 + #4)
+### Validated repository receipts
 
-- **Status:** DONE — PR open at exact head `99d4052`
-- **WHO:** JIRO (AWS / Junior RTC Seat 11) via Kiro — human owner approval
-- **WHAT:** Integrated full Google Stitch export into governed `src/frontend/` structure; wired to Python backend contracts
-- **WHERE:** `src/frontend/` (22 files), `src/lefa/web_api.py`, `tests/test_web_api.py`, `DESIGN.md`
-- **WHY:** Issues #3 (governed data/assets) and #4 (interface-first) both gate on accepted Stitch direction being bound to governed contracts — this PR closes both gates
-- **Evidence / receipts:**
-  - Local `python -m pytest tests/ -q`: **34 passed in 2.64s**
-  - Exact commit head: `99d4052`
-  - Branch: `feat/stitch-ui-integration-issues-3-4`
-  - PR pending — will have GitHub Actions receipt on push
-- **POC/FOC:** POC_VALIDATED for frontend integration and backend API bridge at local test level. CI receipt pending push.
+**PR #6** — governed contracts / provider boundary / asset manifest
+- merged at `d69523d81fa222f2601c4ecda6b6f38c09740d0e`;
+- GitHub Actions `33328126241` / `99301791559`: **PASS**.
 
-### What this PR adds
+**PR #7** — normalized read-only MCP observation receipts
+- validated head `102be1acb98c87aec5b8cbde26ddc361b86d4d6d`;
+- GitHub Actions `33330807107` / `99308898777`: **PASS**.
 
-**Frontend (`src/frontend/`)**
-- React 19 + Vite 6 + Tailwind v4 + Framer Motion 12
-- 10 components from Stitch: DirectionA (Living Companion), DirectionB (Living Ledger), DirectionC (Conversational Control Room), CanvasMatrix, CompanionAvatar, StateSimulatorBar, CritiqueModal, ExpressionCodexModal, DesignSystemSpec, AlpacaConnectModal
-- `SnapshotBanner` — governed account/market display, shows `—` in fixture mode (no fake balances)
-- `api/lefa.ts` — `verifyMCPEvidence()` + `getSnapshot()` — credentials never forwarded
-- `AlpacaConnectModal` fixed: empty string defaults (not fake keys); calls `/api/mcp/verify`
+**PR #8** — governed Stitch convergence reference interface
+- merged at `c75eaea642c82abaf89f35303b9a3ba41ac4f0a8`;
+- validated head `f4f7b9fcccf9b931af2616cbe921d0b78d66a98e`;
+- GitHub Actions `33335120769` / `99320543503`: **SUCCESS**;
+- Ruff: **PASS**;
+- pytest: **27 passed in 0.19s**.
 
-**Backend (`src/lefa/web_api.py`)**
-- `POST /api/mcp/verify` — evaluates `MCPRuntimeEvidence` via `evaluate_read_only_mcp_evidence()`
-- `GET /api/snapshot` — returns `LEFASnapshot` (fixture when unconnected, explicit zero-value fixture when connected — live Alpaca proof HOLD)
-- `GET /api/health` — `execution_authority: none`
+**PR #9 + #11** — bounded canonical orchestration evolution + CI recovery
+- dual-axis financial/canonical governance semantics;
+- explicit execution jurisdiction;
+- local receipt projection;
+- proof-depth maturity model;
+- fail-closed translation behavior;
+- final CI: **36 passed**, Ruff **PASS**.
 
-**Tests (`tests/test_web_api.py`)**
-- 9 new tests covering: paper/live/missing-namespace/order-tool/auth-failure gates + disconnected null financials + connected zero fixture + no execution state in snapshot
+What remains canonical from PR #8:
+- Living Companion = human center;
+- Living Ledger = temporal depth;
+- Conversational Control Room = low-friction evidence interaction;
+- `OBSERVE -> LEDGER -> TIME -> REVEAL`;
+- fixture values fail closed;
+- no fake credential verification;
+- no browser order route;
+- no synthetic financial claim promoted to runtime truth.
 
-### Governance satisfied
+### Cross-repo UI convergence receipt
 
-- No credentials in any committed file
-- No believable fake financial state in fixture mode (null/zero/dash)
-- No execution authority added
-- No engine from Issue #5 implemented
-- Companion portrait asset path noted — canonical image admission required before rendering
+`RobynAwesome/Lefa-ai-google-stitch` POC-2:
+- Issue #5 created from the Introduction-to-MCP CONVERGE decision;
+- PR #6 merged as `edeaf1a5355e3408da16ee868a09fbe78a7537fa`;
+- validated exact head `c30505c41cf603d96eba4ed72052c79b3d6e6ed9`;
+- GitHub Actions run `33336153166`, job `99323296773`: **SUCCESS**;
+- runtime now remains character-first instead of switching to a generic dashboard;
+- runtime state derives only from `SovereignBridgeStatus` / canonical decision receipts;
+- no verified bridge -> DISCONNECTED;
+- verified provider + missing receipt -> HOLD;
+- canonical HOLD -> HOLD + reasons;
+- canonical APPROVE/REJECT -> LEDGERED + exact backend decision;
+- TIME / REVEAL remain unclaimed without outcome evidence.
 
-### Known uncertainty / blockers
+A Vercel UI witness is live at `https://lefa-ai-live.vercel.app` and returned **200 OK**. This is a presentation/runtime witness, **not proof of a current Alpaca/Sovereign Hub bridge**.
 
-- **GitHub Actions CI** not yet run — will confirm on push
-- **Companion portrait** (`src/assets/images/lefa_companion_portrait_*.jpg`) not included — requires canonical admission via `assets/manifest.json`
-- **Live Alpaca MCP proof** (Issue #2) still HOLD — credentials needed locally
-- **Issue #5 engine map** still HOLD
+---
 
-### Next admissible actions
+### Truth boundary
 
-1. **JIRO:** push branch + open PR → await CI receipt
-2. **Human:** review PR, merge if CI passes
-3. **Human (parallel):** configure Alpaca paper credentials locally → JIRO closes Issue #2 live proof gate
-4. **JIRO (after merge + Alpaca proof):** Issue #5 engine boundaries → SWFUS swarm → LEFA Companion brain → Demo script
+- No live market/account state is currently claimed by this repository.
+- No order placement, cancellation, liquidation, replacement, exercise, autonomous trading, or autonomous scheduling authority exists here.
+- The orchestration adapter may evaluate and translate proposals but cannot execute them.
+- `LIVE` jurisdiction is representable as a governance concept but is not an admissible execution path in this repository.
+- No Stitch-generated asset becomes canonical without explicit asset admission.
+- Live Alpaca PAPER runtime evidence remains HOLD until the deployed provider boundary is proven.
+- A Vercel page loading successfully is UI/deployment evidence, not financial/runtime proof.
+
+### Next admissible action — deadline path
+
+1. Complete PR #10 correction and require green backend + frontend CI before merge.
+2. Return to Issue #2 and complete the real Alpaca PAPER MCP runtime observation proof.
+3. Prove paper mode, active account telemetry, SPY quote, option-chain observation, runtime tool/schema discovery, and sanitized receipts.
+4. Feed that real observation evidence into the validated LEFA risk + canonical translation seam.
+5. Wire the resulting governed state through Sovereign Hub into the Stitch presentation surface.
+6. Only after the observation POC is receipted may Sovereign Hub consider a separately bounded PAPER execution path.
+7. Keep broader engine/SWFUS expansion and all LIVE execution authority on HOLD.
 
 ---
 
 ## HOW TO USE THIS FILE
 
-Repository-root `NOW.md` is the volatile current-state authority. Update before every handoff.
-
-```text
-## [TIMESTAMP SAST] — [LANE / TASK]
-- Status: IN-PROGRESS | DONE | BLOCKED | PAUSED
-- WHO: actor / validator
-- WHAT: what changed
-- WHERE: repo / file / issue / PR
-- WHY: why it matters
-- Evidence / receipts: commit, PR, workflow run, test result
-- POC/FOC: POC_VALIDATED | FOC_FLAGGED | BLOCKED | UNKNOWN
-- Known errors / uncertainty: explicit
-- Next admissible action: exact handoff
-```
-
-If evidence is insufficient: **HOLD. Do not invent continuity or capability.**
+Repository-root `NOW.md` is volatile continuity, not architecture canon. If evidence is insufficient: **HOLD. Do not invent continuity or capability.**
 
 `I_AM_STATELESS_RENTER_NOT_LANDLORD`
