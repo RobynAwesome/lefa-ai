@@ -9,6 +9,26 @@ from pydantic import BaseModel, Field
 class Decision(StrEnum):
     APPROVE = "approve"
     REJECT = "reject"
+    HOLD = "hold"
+
+
+class ExecutionJurisdiction(StrEnum):
+    OBSERVE_ONLY = "observe_only"
+    PAPER = "paper"
+    LIVE = "live"
+
+
+class ProofStageMaturity(StrEnum):
+    SIMULATED = "simulated"
+    PROCEDURAL = "procedural"
+    EVIDENCED = "evidenced"
+    INDEPENDENTLY_VALIDATED = "independently_validated"
+
+
+class ProofStage(BaseModel):
+    stage: str
+    maturity: ProofStageMaturity
+    evidence_ref: str | None = None
 
 
 class AccountState(BaseModel):
@@ -29,6 +49,12 @@ class GovernanceReceipt(BaseModel):
     decision: Decision
     reasons: list[str]
     proposal: TradeProposal
+    canonical_receipt_hash: str | None = None
+    trace_id: str | None = None
+    purity_score: float | None = Field(default=None, ge=0)
+    canonical_proof_state: str | None = None
+    execution_jurisdiction: ExecutionJurisdiction = ExecutionJurisdiction.OBSERVE_ONLY
+    proof_depth: tuple[ProofStage, ...] = ()
 
 
 class RiskPolicy(BaseModel):
