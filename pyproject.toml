@@ -21,6 +21,7 @@ dev = ["pytest>=8,<9", "ruff>=0.12,<1"]
 
 [project.scripts]
 lefa = "lefa.cli:app"
+lefa-ui = "lefa.demo_server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lefa"]

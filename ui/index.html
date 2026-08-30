@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LEFA — Governed Financial Intelligence</title>
+  <link rel="stylesheet" href="/lefa.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">LEFA AI</p>
+        <h1>Governed financial intelligence, without invented certainty.</h1>
+      </div>
+      <button id="gateButton" class="quiet-button" type="button">Paper observation gate</button>
+    </header>
+
+    <section class="companion-zone" aria-labelledby="companionTitle">
+      <div class="halo" aria-hidden="true"></div>
+      <img
+        class="companion"
+        src="/assets/companion/lefa-companion-root.svg"
+        alt="LEFA companion — canonical interface interpretation"
+      />
+      <div class="state-pill"><span id="connectionDot"></span><span id="connectionLabel">Loading governed state…</span></div>
+      <h2 id="companionTitle">Meet LEFA</h2>
+      <p class="lede">Observe what is known. Preserve it. Let time move. Reveal what survived.</p>
+    </section>
+
+    <section class="truth-grid" aria-label="Current governed truth">
+      <article>
+        <span>Observation</span>
+        <strong id="observationLabel">Awaiting observation</strong>
+      </article>
+      <article>
+        <span>Truth anchor</span>
+        <strong id="truthAnchor">Unknown</strong>
+      </article>
+      <article>
+        <span>Execution authority</span>
+        <strong id="executionAuthority">Zero</strong>
+      </article>
+      <article>
+        <span>Market value</span>
+        <strong id="latestPrice">—</strong>
+      </article>
+    </section>
+
+    <section class="timeline" aria-label="Observe Ledger Time Reveal">
+      <article class="stage" data-stage="observe">
+        <div class="stage-number">01</div>
+        <div><p>OBSERVE</p><strong id="stage-observe-status">Awaiting</strong><span id="stage-observe-detail">No observation receipt yet.</span></div>
+      </article>
+      <article class="stage" data-stage="ledger">
+        <div class="stage-number">02</div>
+        <div><p>LEDGER</p><strong id="stage-ledger-status">Empty</strong><span id="stage-ledger-detail">Nothing preserved yet.</span></div>
+      </article>
+      <article class="stage" data-stage="time">
+        <div class="stage-number">03</div>
+        <div><p>TIME</p><strong id="stage-time-status">Waiting</strong><span id="stage-time-detail">No replay claimed.</span></div>
+      </article>
+      <article class="stage" data-stage="reveal">
+        <div class="stage-number">04</div>
+        <div><p>REVEAL</p><strong id="stage-reveal-status">Waiting</strong><span id="stage-reveal-detail">Nothing to compare yet.</span></div>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span id="provenance">Source: loading…</span>
+      <span>Built in South Africa · Heavy architecture. Light interface.</span>
+    </footer>
+  </main>
+
+  <dialog id="gateDialog">
+    <form method="dialog" class="gate-card">
+      <p class="eyebrow">ALPACA PAPER OBSERVATION GATE</p>
+      <h2>Runtime proof is still required.</h2>
+      <p>LEFA does not accept credentials in this interface and does not claim a paper connection until the repository MCP proof gate receives admissible read-only runtime evidence.</p>
+      <div class="gate-rules">
+        <span>READ-ONLY</span>
+        <span>NO ORDER ROUTES</span>
+        <span>NO SECRET STORAGE</span>
+        <span>FAIL CLOSED</span>
+      </div>
+      <button class="primary-button" value="close">Understood</button>
+    </form>
+  </dialog>
+
+  <script src="/lefa.js" defer></script>
+</body>
+</html>
