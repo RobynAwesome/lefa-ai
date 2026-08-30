@@ -1,80 +1,86 @@
 ## CURRENT STATE — 2026-08-30
 
-> **Updated:** 2026-08-30T~21:45:00+02:00 (SAST)
+> **Updated:** 2026-08-30T~22:30:00+02:00 (SAST)
 > **Authority:** Human owner + repository issues; JIRO (AWS/Kiro) is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
 > **Main branch:** clean — PR #6 and PR #7 merged
+> **Active branch:** `feat/stitch-ui-integration-issues-3-4` — PR pending
 
 ---
 
 ### Current objective
 
-Interface-first. Stitch output is the active human-side gate. Backend engines and SWFUS swarm remain on HOLD until accepted visual direction returns.
+Interface integration complete. PR open for Issues #3 + #4. Remaining gates: Alpaca MCP live proof (Issue #2) and engine map (Issue #5).
 
 ### Active lanes
 
 | Lane | State | Next |
 |---|---|---|
-| **#2 — Alpaca MCP proof** | Repo layer done (PR #7 merged); **live proof HOLD** | Configure local Alpaca paper credentials (never in chat/commits), then run runtime MCP discovery against `MCPRuntimeEvidence` |
-| **#3 — POC-0 governed data/assets** | Repo contracts merged (PR #6); **waiting for accepted Stitch output** | Stitch output → bind accepted UI to governed contracts |
-| **#4 — Interface-first LEFA** | **Active human design lane** | Open Google Stitch → upload `LEFA AI Logo.png` → paste `docs/STITCH-ULTIMATE-PROMPT.md` → 3 divergent character-first directions |
-| **#5 — Engine map discovery** | **Explicit HOLD by issue contract** | Return only after interface is accepted and engine boundaries separately canonised |
+| **#2 — Alpaca MCP proof** | Repo layer done; **live proof HOLD** | Human configures local Alpaca paper credentials → JIRO runs runtime MCP discovery |
+| **#3 — POC-0 governed data/assets** | **PR OPEN** (`feat/stitch-ui-integration-issues-3-4`) | Review + merge |
+| **#4 — Interface-first LEFA** | **PR OPEN** (`feat/stitch-ui-integration-issues-3-4`) | Review + merge |
+| **#5 — Engine map discovery** | **Explicit HOLD** | Return after interface is accepted and merged |
 
 ---
 
-### 2026-08-30 — PR #6 + PR #7 merged receipts
+### 2026-08-30 — Stitch UI integration (Issues #3 + #4)
 
-**PR #6** — `POC-0: governed contracts, provider boundary, and asset manifest`
-- Merged into `main` at `d69523d81fa222f2601c4ecda6b6f38c09740d0e`
-- Adds: `src/lefa/contracts.py`, `src/lefa/providers.py`, `src/lefa/mcp_observation.py` (pre-seed gate), `assets/manifest.json`, `docs/STITCH-ACCEPTANCE-HANDOFF.md`, `docs/ALPACA-MCP-READONLY-PROOF.md`, `docs/STITCH-ULTIMATE-PROMPT.md`
-- GitHub Actions run `33328126241`, job `99301791559`: **PASS**
-- `ruff check .`: PASS | `pytest -q`: PASS (19 tests)
-- **POC_VALIDATED:** truth contracts, provider boundary, freshness invariants, fixture behavior, asset governance, Stitch handoff, MCP proof pre-seed gate
+- **Status:** DONE — PR open at exact head `99d4052`
+- **WHO:** JIRO (AWS / Junior RTC Seat 11) via Kiro — human owner approval
+- **WHAT:** Integrated full Google Stitch export into governed `src/frontend/` structure; wired to Python backend contracts
+- **WHERE:** `src/frontend/` (22 files), `src/lefa/web_api.py`, `tests/test_web_api.py`, `DESIGN.md`
+- **WHY:** Issues #3 (governed data/assets) and #4 (interface-first) both gate on accepted Stitch direction being bound to governed contracts — this PR closes both gates
+- **Evidence / receipts:**
+  - Local `python -m pytest tests/ -q`: **34 passed in 2.64s**
+  - Exact commit head: `99d4052`
+  - Branch: `feat/stitch-ui-integration-issues-3-4`
+  - PR pending — will have GitHub Actions receipt on push
+- **POC/FOC:** POC_VALIDATED for frontend integration and backend API bridge at local test level. CI receipt pending push.
 
-**PR #7** — `Issue #2: normalize read-only MCP observation receipts`
-- Merged at exact head `102be1acb98c87aec5b8cbde26ddc361b86d4d6d`
-- Adds: `MCPObservationKind`, `MCPObservationReceipt` — normalized read-only receipt layer
-- GitHub Actions run `33330807107`, job `99308898777`: **PASS**
-- `ruff check .`: PASS | `pytest -q`: PASS (25 tests)
-- **POC_VALIDATED:** receipt normalization for account / asset / clock / market_quote / option_chain
-- **HOLD:** live Alpaca MCP runtime proof remains externally unproven
+### What this PR adds
 
----
+**Frontend (`src/frontend/`)**
+- React 19 + Vite 6 + Tailwind v4 + Framer Motion 12
+- 10 components from Stitch: DirectionA (Living Companion), DirectionB (Living Ledger), DirectionC (Conversational Control Room), CanvasMatrix, CompanionAvatar, StateSimulatorBar, CritiqueModal, ExpressionCodexModal, DesignSystemSpec, AlpacaConnectModal
+- `SnapshotBanner` — governed account/market display, shows `—` in fixture mode (no fake balances)
+- `api/lefa.ts` — `verifyMCPEvidence()` + `getSnapshot()` — credentials never forwarded
+- `AlpacaConnectModal` fixed: empty string defaults (not fake keys); calls `/api/mcp/verify`
 
-### Truth boundary
+**Backend (`src/lefa/web_api.py`)**
+- `POST /api/mcp/verify` — evaluates `MCPRuntimeEvidence` via `evaluate_read_only_mcp_evidence()`
+- `GET /api/snapshot` — returns `LEFASnapshot` (fixture when unconnected, explicit zero-value fixture when connected — live Alpaca proof HOLD)
+- `GET /api/health` — `execution_authority: none`
 
-- No live market/account state is claimed by any current code.
-- No order placement, cancellation, liquidation, replacement, exercise, or autonomous scheduling authority exists.
-- No Stitch-generated asset is canonical until explicitly admitted via `assets/manifest.json`.
-- No engine from Issue #5 is implemented.
-- Receipt kinds remain bounded to read-only observations only.
-- Future Alpaca observations must carry explicit provenance and freshness metadata; insufficient evidence must fail closed.
-- **Do not start SWFUS / engine / backend depth before visual POC lands.**
+**Tests (`tests/test_web_api.py`)**
+- 9 new tests covering: paper/live/missing-namespace/order-tool/auth-failure gates + disconnected null financials + connected zero fixture + no execution state in snapshot
 
----
+### Governance satisfied
+
+- No credentials in any committed file
+- No believable fake financial state in fixture mode (null/zero/dash)
+- No execution authority added
+- No engine from Issue #5 implemented
+- Companion portrait asset path noted — canonical image admission required before rendering
 
 ### Known uncertainty / blockers
 
-- **Stitch accepted direction** has not yet been returned to the repository lane — this is the primary visual gate for Issues #3 and #4.
-- **Alpaca MCP runtime evidence** (namespace / tool schemas / paper-mode receipts) remains externally unproven for Issue #2 — requires local credential configuration by human owner; credentials must never appear in chat, commits, logs, or artifacts.
-- Issue #5 engine architecture: HOLD until interface is accepted.
-
----
+- **GitHub Actions CI** not yet run — will confirm on push
+- **Companion portrait** (`src/assets/images/lefa_companion_portrait_*.jpg`) not included — requires canonical admission via `assets/manifest.json`
+- **Live Alpaca MCP proof** (Issue #2) still HOLD — credentials needed locally
+- **Issue #5 engine map** still HOLD
 
 ### Next admissible actions
 
-1. **Human → Stitch:** open Google Stitch → upload `LEFA AI Logo.png` → paste `docs/STITCH-ULTIMATE-PROMPT.md` → generate 3 divergent character-first directions → return accepted screenshots to repository lane
-2. **JIRO (after Stitch output received):** audit every visible dynamic value against governed contracts → build interface against `LEFADataProvider` → no believable fake financial state → bind to `OBSERVE → LEDGER → TIME → REVEAL` loop
-3. **Human (parallel, when credentials ready):** configure Alpaca paper credentials locally → JIRO runs live MCP runtime discovery → sanitize evidence into `MCPRuntimeEvidence` → close Issue #2 live proof gate
-4. **JIRO (after interface + Alpaca proof):** Issue #5 engine boundaries → SWFUS 5-agent swarm → LEFA Companion brain → Demo script + hackathon submission package
+1. **JIRO:** push branch + open PR → await CI receipt
+2. **Human:** review PR, merge if CI passes
+3. **Human (parallel):** configure Alpaca paper credentials locally → JIRO closes Issue #2 live proof gate
+4. **JIRO (after merge + Alpaca proof):** Issue #5 engine boundaries → SWFUS swarm → LEFA Companion brain → Demo script
 
 ---
 
 ## HOW TO USE THIS FILE
 
-Repository-root `NOW.md` is the volatile current-state authority. It records what is happening now; it does not replace durable architecture or issue contracts.
-
-When material state changes, update using at least:
+Repository-root `NOW.md` is the volatile current-state authority. Update before every handoff.
 
 ```text
 ## [TIMESTAMP SAST] — [LANE / TASK]
