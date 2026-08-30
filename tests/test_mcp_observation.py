@@ -1,5 +1,10 @@
+import pytest
+from pydantic import ValidationError
+
 from lefa.mcp_observation import (
     MCPFailureCode,
+    MCPObservationKind,
+    MCPObservationReceipt,
     MCPProofStatus,
     MCPRuntimeEvidence,
     evaluate_read_only_mcp_evidence,
@@ -88,3 +93,80 @@ def test_order_authority_is_rejected_even_in_paper_mode() -> None:
 
     assert proof.status is MCPProofStatus.BLOCKED
     assert MCPFailureCode.ORDER_TOOL_REACHABLE in proof.failures
+
+
+def test_accepts_normalized_account_observation_receipt() -> None:
+    proof = evaluate_read_only_mcp_evidence(ready_evidence())
+
+    receipt = MCPObservationReceipt(
+        proof=proof,
+        kind=MCPObservationKind.ACCOUNT,
+        source_tool="get_account",
+        summary={
+            "account_status": "ACTIVE",
+            "account_blocked": False,
+            "trading_blocked": False,
+        },
+    )
+
+    assert receipt.kind is MCPObservationKind.ACCOUNT
+    assert receipt.source_tool == "get_account"
+    assert receipt.summary["account_status"] == "ACTIVE"
+
+
+def test_observation_receipt_requires_ready_proof() -> None:
+    proof = evaluate_read_only_mcp_evidence(ready_evidence(paper_trade=None))
+
+    with pytest.raises(ValidationError, match="proof_not_ready"):
+        MCPObservationReceipt(
+            proof=proof,
+            kind=MCPObservationKind.ACCOUNT,
+            source_tool="get_account",
+        )
+
+
+def test_observation_receipt_requires_discovered_tool() -> None:
+    proof = evaluate_read_only_mcp_evidence(ready_evidence())
+
+    with pytest.raises(ValidationError, match="tool_not_discovered"):
+        MCPObservationReceipt(
+            proof=proof,
+            kind=MCPObservationKind.ACCOUNT,
+            source_tool="unknown_account_reader",
+        )
+
+
+def test_observation_receipt_rejects_execution_tool_even_if_supplied_manually() -> None:
+    proof = evaluate_read_only_mcp_evidence(
+        ready_evidence(tool_names=("get_account", "submit_order"), paper_trade=True)
+    ).model_copy(update={"status": MCPProofStatus.READY, "failures": ()})
+
+    with pytest.raises(ValidationError, match="execution_tool"):
+        MCPObservationReceipt(
+            proof=proof,
+            kind=MCPObservationKind.ACCOUNT,
+            source_tool="submit_order",
+        )
+
+
+def test_symbol_receipts_require_symbol() -> None:
+    proof = evaluate_read_only_mcp_evidence(ready_evidence())
+
+    with pytest.raises(ValidationError, match="symbol_required"):
+        MCPObservationReceipt(
+            proof=proof,
+            kind=MCPObservationKind.MARKET_QUOTE,
+            source_tool="get_stock_quote",
+        )
+
+
+def test_observation_receipt_rejects_sensitive_summary_keys() -> None:
+    proof = evaluate_read_only_mcp_evidence(ready_evidence())
+
+    with pytest.raises(ValidationError, match="sensitive_field"):
+        MCPObservationReceipt(
+            proof=proof,
+            kind=MCPObservationKind.ACCOUNT,
+            source_tool="get_account",
+            summary={"account_id": "must-not-enter-receipts"},
+        )
