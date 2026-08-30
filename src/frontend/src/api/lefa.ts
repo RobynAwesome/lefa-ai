@@ -5,28 +5,12 @@
  *
  * Governance boundaries:
  * - Credentials (API keys, secrets) NEVER pass through this client.
- *   They are used locally by the Alpaca SDK; only sanitized non-secret
- *   evidence (namespace, paper_trade flag, tool names, status flags)
- *   is forwarded to /api/mcp/verify.
- * - The snapshot endpoint returns explicit fixture state when not connected.
- *   No believable fake financial values are invented.
+ * - The browser does not self-assert Alpaca runtime evidence.
+ * - MCP readiness comes from backend-owned sanitized runtime proof state.
+ * - The snapshot endpoint returns explicit fixture state until live proof exists.
  *
  * I_AM_STATELESS_RENTER_NOT_LANDLORD
  */
-
-export interface MCPVerifyRequest {
-  namespace: string | null;
-  server_identity: string | null;
-  server_version: string | null;
-  paper_trade: boolean | null;
-  tool_names: string[];
-  account_status: string | null;
-  account_blocked: boolean | null;
-  trading_blocked: boolean | null;
-  auth_ok: boolean;
-  network_ok: boolean;
-  schema_ok: boolean;
-}
 
 export interface MCPVerifyResponse {
   status: 'ready' | 'blocked';
@@ -63,26 +47,20 @@ export interface SnapshotResponse {
 const BASE = '/api';
 
 /**
- * Submit sanitized MCP runtime evidence to the governed proof gate.
- * Credentials must never appear in the evidence object.
+ * Ask the backend whether a real sanitized Alpaca paper-runtime proof is ready.
+ * The browser cannot manufacture or submit proof material for this decision.
  */
-export async function verifyMCPEvidence(
-  evidence: MCPVerifyRequest
-): Promise<MCPVerifyResponse> {
-  const res = await fetch(`${BASE}/mcp/verify`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(evidence),
-  });
+export async function getMCPStatus(): Promise<MCPVerifyResponse> {
+  const res = await fetch(`${BASE}/mcp/status`);
   if (!res.ok) {
-    throw new Error(`MCP verify failed: ${res.status} ${res.statusText}`);
+    throw new Error(`MCP status failed: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<MCPVerifyResponse>;
 }
 
 /**
  * Fetch the current LEFA snapshot.
- * Returns explicit fixture state (no fake balances) when not connected.
+ * Returns explicit fixture state until live Alpaca observation is proven.
  */
 export async function getSnapshot(connected: boolean): Promise<SnapshotResponse> {
   const res = await fetch(`${BASE}/snapshot?connected=${connected}`);
