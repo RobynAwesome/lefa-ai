@@ -13,9 +13,9 @@ from lefa.orchestration import CanonicalTradingOrchestrator
 
 def account() -> AccountState:
     return AccountState(
-        equity=Decimal("100000"),
-        open_risk=Decimal("0"),
-        daily_pnl=Decimal("0"),
+        equity=Decimal(100000),
+        open_risk=Decimal(0),
+        daily_pnl=Decimal(0),
     )
 
 
