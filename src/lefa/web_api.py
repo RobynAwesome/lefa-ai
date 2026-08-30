@@ -4,12 +4,11 @@ LEFA AI — Web API
 FastAPI routes that bridge the governed Python backend to the React frontend.
 
 Boundaries:
-- /api/mcp/verify  — accepts sanitized runtime evidence, returns ReadOnlyMCPProof
-- /api/snapshot    — returns a LEFASnapshot (fixture or live depending on proof state)
+- /api/mcp/status  — backend-owned runtime proof status for the UI
+- /api/mcp/verify  — pure evaluator for sanitized evidence (tests/internal tooling)
+- /api/snapshot    — governed snapshot surface; fixture until live proof exists
 - No order, execution, or autonomous-trade routes exist here.
 - Credentials are never accepted or forwarded through this API surface.
-  The frontend sends only non-secret evidence (namespace, server_identity,
-  paper_trade flag, tool_names, account_status flags).
 
 I_AM_STATELESS_RENTER_NOT_LANDLORD
 """
@@ -20,22 +19,17 @@ from decimal import Decimal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from lefa.contracts import (
     AccountContext,
     ActivityEvent,
-    AgentDecision,
     ConnectionState,
     DataSource,
-    DecisionState,
     LEFASnapshot,
     MarketContext,
     MarketState,
     Provenance,
-    ValidationState,
-    ValidationStatus,
 )
 from lefa.mcp_observation import (
     MCPRuntimeEvidence,
@@ -49,7 +43,6 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Allow the Vite dev server to call this API during development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -59,23 +52,14 @@ app.add_middleware(
 )
 
 
-# ---------------------------------------------------------------------------
-# Request / Response shapes (frontend ↔ backend contract)
-# ---------------------------------------------------------------------------
-
-
 class MCPVerifyRequest(BaseModel):
-    """
-    Sanitized runtime facts the frontend collected during Alpaca MCP discovery.
-    Credentials MUST NOT appear in this payload — the frontend must never
-    forward API keys through this endpoint.
-    """
+    """Sanitized, non-secret Alpaca MCP facts for deterministic evaluation."""
 
     namespace: str | None = None
     server_identity: str | None = None
     server_version: str | None = None
     paper_trade: bool | None = None
-    tool_names: list[str] = []
+    tool_names: list[str] = Field(default_factory=list)
     account_status: str | None = None
     account_blocked: bool | None = None
     trading_blocked: bool | None = None
@@ -85,17 +69,18 @@ class MCPVerifyRequest(BaseModel):
 
 
 class MCPVerifyResponse(BaseModel):
-    status: str          # "ready" | "blocked"
-    failures: list[str]  # MCPFailureCode values
+    status: str
+    failures: list[str]
     namespace: str | None
     server_identity: str | None
     paper_trade: bool | None
     readable_tool_names: list[str]
-    observed_at: str     # ISO-8601
+    observed_at: str
 
 
 class SnapshotResponse(BaseModel):
-    """Serialisable view of LEFASnapshot for the frontend."""
+    """Serializable view of LEFASnapshot for the frontend."""
+
     connection_state: str
     account_status: str | None
     cash: str | None
@@ -111,18 +96,46 @@ class SnapshotResponse(BaseModel):
     activity_count: int
 
 
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
+def _proof_response(proof: ReadOnlyMCPProof) -> MCPVerifyResponse:
+    return MCPVerifyResponse(
+        status=proof.status.value,
+        failures=[failure.value for failure in proof.failures],
+        namespace=proof.namespace,
+        server_identity=proof.server_identity,
+        paper_trade=proof.paper_trade,
+        readable_tool_names=list(proof.readable_tool_names),
+        observed_at=proof.observed_at.isoformat(),
+    )
+
+
+def _current_runtime_evidence() -> MCPRuntimeEvidence:
+    """Return backend-owned runtime evidence.
+
+    Issue #2 is still HOLD: live Alpaca MCP discovery has not yet been witnessed in
+    this runtime. Returning an empty evidence object deliberately fails closed.
+    Replace this seam only when local credential-backed discovery produces a
+    sanitized receipt.
+    """
+
+    return MCPRuntimeEvidence()
+
+
+@app.get("/api/mcp/status", response_model=MCPVerifyResponse)
+def get_mcp_status() -> MCPVerifyResponse:
+    """Expose backend-owned read-only Alpaca MCP proof state to the UI."""
+
+    proof = evaluate_read_only_mcp_evidence(_current_runtime_evidence())
+    return _proof_response(proof)
 
 
 @app.post("/api/mcp/verify", response_model=MCPVerifyResponse)
 def verify_mcp_evidence(req: MCPVerifyRequest) -> MCPVerifyResponse:
+    """Deterministically evaluate supplied sanitized evidence.
+
+    This endpoint is an evaluator, not a connection authority. The user-facing UI
+    reads /api/mcp/status, whose evidence is owned by the backend runtime.
     """
-    Evaluate sanitized Alpaca MCP runtime evidence.
-    Returns READY only when all fail-closed checks pass.
-    This endpoint never touches credentials.
-    """
+
     evidence = MCPRuntimeEvidence(
         namespace=req.namespace,
         server_identity=req.server_identity,
@@ -136,32 +149,23 @@ def verify_mcp_evidence(req: MCPVerifyRequest) -> MCPVerifyResponse:
         network_ok=req.network_ok,
         schema_ok=req.schema_ok,
     )
-    proof: ReadOnlyMCPProof = evaluate_read_only_mcp_evidence(evidence)
-    return MCPVerifyResponse(
-        status=proof.status.value,
-        failures=[f.value for f in proof.failures],
-        namespace=proof.namespace,
-        server_identity=proof.server_identity,
-        paper_trade=proof.paper_trade,
-        readable_tool_names=list(proof.readable_tool_names),
-        observed_at=proof.observed_at.isoformat(),
-    )
+    proof = evaluate_read_only_mcp_evidence(evidence)
+    return _proof_response(proof)
 
 
 @app.get("/api/snapshot", response_model=SnapshotResponse)
 def get_snapshot(connected: bool = False) -> SnapshotResponse:
+    """Return a governed LEFASnapshot.
+
+    The connected flag is presentation state only. Until Issue #2 supplies real
+    backend-owned Alpaca observation evidence, every snapshot remains explicitly
+    fixture-sourced and therefore cannot masquerade as live account truth.
     """
-    Return a LEFASnapshot.
-    When connected=false (default), returns explicit fixture state with no
-    believable live financial values — truthfulness mandate per Issue #3.
-    When connected=true, returns the same fixture until live Alpaca MCP proof
-    is implemented (Issue #2 live gate).
-    """
+
     now = datetime.now(UTC)
 
     if not connected:
-        # Disconnected — fully unpopulated, never fabricate live state
-        prov = Provenance(
+        provenance = Provenance(
             source=DataSource.FIXTURE,
             observed_at=now,
             provider="fixture",
@@ -174,20 +178,18 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
                 cash=None,
                 buying_power=None,
                 portfolio_equity=None,
-                provenance=prov,
+                provenance=provenance,
             ),
             market=MarketContext(
                 symbol="—",
                 latest_price=None,
                 market_state=MarketState.UNKNOWN,
-                provenance=prov,
+                provenance=provenance,
             ),
         )
     else:
-        # Connected but live Alpaca proof not yet implemented — fixture with
-        # explicit non-believable placeholder values per governed data contract.
         fresh_until = now + timedelta(seconds=30)
-        prov = Provenance(
+        provenance = Provenance(
             source=DataSource.FIXTURE,
             observed_at=now,
             valid_until=fresh_until,
@@ -201,21 +203,20 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
                 cash=Decimal("0.00"),
                 buying_power=Decimal("0.00"),
                 portfolio_equity=Decimal("0.00"),
-                provenance=prov,
+                provenance=provenance,
             ),
             market=MarketContext(
                 symbol="FIXTURE",
                 latest_price=None,
                 market_state=MarketState.UNKNOWN,
-                provenance=prov,
+                provenance=provenance,
             ),
             activity=(
                 ActivityEvent(
                     event_type="fixture_mode",
                     description=(
-                        "Fixture mode active. "
-                        "Live Alpaca MCP observation not yet proven (Issue #2). "
-                        "No real account data is displayed."
+                        "Fixture mode active. Live Alpaca MCP observation is not yet "
+                        "proven (Issue #2). No real account data is displayed."
                     ),
                 ),
             ),
@@ -266,4 +267,8 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
 
 @app.get("/api/health")
 def health() -> dict:
-    return {"status": "ok", "service": "lefa-ai-backend", "execution_authority": "none"}
+    return {
+        "status": "ok",
+        "service": "lefa-ai-backend",
+        "execution_authority": "none",
+    }
