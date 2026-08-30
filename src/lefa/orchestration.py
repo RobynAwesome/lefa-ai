@@ -139,7 +139,26 @@ class CanonicalTradingOrchestrator:
         receipt_hash = _read(result, "receipt_hash")
         trace_id = _read(result, "trace_id")
         proof_state = _read(result, "rtcp_proof_state")
+        recycled_status = _read(result, "recycled_status")
         purity_score = _read(result, "btth_purity_score")
+
+        canonical_state = str(proof_state or "").upper()
+        recycled_state = str(recycled_status or "").upper()
+        if (
+            any(marker in canonical_state for marker in ("HOLD", "FAIL", "REJECT"))
+            or recycled_state.startswith("RECYCLED")
+        ):
+            return risk_receipt.model_copy(
+                update={
+                    "decision": Decision.HOLD,
+                    "reasons": [*risk_receipt.reasons, "canonical_governance_not_admissible"],
+                    "canonical_receipt_hash": str(receipt_hash) if receipt_hash else None,
+                    "trace_id": str(trace_id) if trace_id else None,
+                    "purity_score": float(purity_score) if purity_score is not None else None,
+                    "canonical_proof_state": str(proof_state) if proof_state is not None else None,
+                    "proof_depth": _proof_depth(result),
+                }
+            )
 
         if not receipt_hash or not trace_id:
             return risk_receipt.model_copy(
