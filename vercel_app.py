@@ -12,8 +12,8 @@ SRC_ROOT = PROJECT_ROOT / "src"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
-from lefa.presentation import snapshot_to_ui_view  # noqa: E402
-from lefa.providers import FixtureProvider  # noqa: E402
+from lefa.presentation import snapshot_to_ui_view
+from lefa.providers import FixtureProvider
 
 UI_ROOT = PROJECT_ROOT / "ui"
 ASSET_ROOT = PROJECT_ROOT / "assets"
