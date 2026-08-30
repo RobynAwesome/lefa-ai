@@ -1,1 +1,0 @@
-TEMPORARY: repository-local binary ingest is being completed through Git data objects; this marker can be removed after the image/video blobs are attached and README references are verified.
