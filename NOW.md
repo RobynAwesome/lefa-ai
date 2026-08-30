@@ -1,6 +1,6 @@
 ## CURRENT STATE — 2026-08-30
 
-> **Updated:** 2026-08-30T20:31:00+02:00 (SAST)
+> **Updated:** 2026-08-30T21:25:00+02:00 (SAST)
 > **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
 > **Active implementation branch:** `feat/poc0-governed-contracts`
@@ -16,20 +16,20 @@ Execute the repository-side half of POC-0 while the human explores the character
 |---|---|---|
 | Issue #3 — POC-0 governed data/assets | **IN PROGRESS / EXACT-HEAD GREEN** | PR #6 implements the first contract/provider/asset slice and is validated at head `2ca4080d6d831dd0174071308024a92041bc08fb`. |
 | Issue #4 — character-first interface | **PARALLEL / HUMAN STITCH LANE** | Governed return contract exists at `docs/STITCH-ACCEPTANCE-HANDOFF.md`; await accepted Stitch evidence before canonizing interface structure. |
-| Issue #2 — read-only Alpaca MCP observation | **PRESEEDED / EXTERNAL RUNTIME GATE** | Repository now has the deterministic sanitized MCP proof gate; live paper-MCP receipts remain externally unproven. No order authority is admitted. |
+| Issue #2 — read-only Alpaca MCP observation | **PRESEEDED / PR #7 CI-GREEN** | Repository now has the deterministic sanitized MCP proof gate plus normalized read-only observation receipts; live paper-MCP receipts remain externally unproven. No order authority is admitted. |
 | Issue #5 — engine map discovery | **HOLD BY ISSUE CONTRACT** | Do not implement engines until interface exploration is accepted and engine boundaries are separately canonized. |
 
 ### 2026-08-30T20:45:00+02:00 — Issue #2 sanitized observation receipts
 
-- Status: IN-PROGRESS
+- Status: DONE for repository receipt layer; HOLD for live runtime proof
 - WHO: Forge/DPF stateless renter under human owner issue authority
 - WHAT: Added normalized read-only MCP observation receipts on top of the pre-seed proof gate.
 - WHERE: `src/lefa/mcp_observation.py`, `tests/test_mcp_observation.py`, `docs/ALPACA-MCP-READONLY-PROOF.md`
 - WHY: Issue #2 needs a receipt layer that can preserve sanitized account/asset/clock/quote/option-chain observations without storing raw payload dumps, credentials, account IDs, account numbers, or execution-capable tool use.
-- Evidence / receipts: local `python -m ruff check .` PASS; local `python -m pytest -q` PASS, 25 passed in 0.09s.
+- Evidence / receipts: local `python -m ruff check .` PASS; local `python -m pytest -q` PASS, 25 passed in 0.09s; PR #7 GitHub Actions run `33330743369`, job `99308729787` PASS at exact head `257092f31313335f295ba41ad477029afdcc1929`.
 - POC/FOC: POC_PRESEEDED; live Alpaca MCP proof remains HOLD until runtime evidence exists.
 - Known errors / uncertainty: no live MCP schema has been consumed; receipt kinds remain bounded to read-only observations.
-- Next admissible action: commit remote updates to PR #6 branch, then record exact-head CI result.
+- Next admissible action: review/merge PR #7, then perform live Alpaca MCP runtime discovery and sanitize the resulting evidence into the receipt models.
 
 ### 2026-08-30T20:31:00+02:00 — Issue #2 pre-seed proof gate
 
@@ -45,7 +45,8 @@ Execute the repository-side half of POC-0 while the human explores the character
 
 ### Current receipts
 
-- PR #6 exact implementation head: `2ca4080d6d831dd0174071308024a92041bc08fb`.
+- PR #7 exact implementation head: `257092f31313335f295ba41ad477029afdcc1929`.
+- PR #6 merged into `main` at `d69523d81fa222f2601c4ecda6b6f38c09740d0e`.
 - GitHub Actions run `33328126241`, job `99301791559`: **PASS**.
   - `ruff check .`: **PASS**.
   - `pytest -q`: **PASS**.
@@ -55,13 +56,14 @@ Execute the repository-side half of POC-0 while the human explores the character
 - `Provenance.is_stale(...)` evaluates supplied freshness deterministically and returns `None` when no freshness window was provided rather than inventing one.
 - `src/lefa/providers.py` exposes one `LEFADataProvider` boundary and a deterministic non-live `FixtureProvider`.
 - `src/lefa/mcp_observation.py` evaluates sanitized Alpaca MCP proof evidence and blocks missing namespace, auth failure, schema drift, live/unproven mode, network failure, blocked account/trading state, and reachable execution semantics.
+- `MCPObservationReceipt` normalizes read-only account/asset/clock/quote/option-chain receipts and rejects blocked proof, undiscovered tools, execution-like tools, missing symbols for symbol-scoped observations, and sensitive summary keys.
 - `assets/manifest.json` registers the canonical root `LEFA AI Logo.png` without regenerating/replacing it.
 - `docs/STITCH-ACCEPTANCE-HANDOFF.md` defines the candidate/accepted visual handoff, truth-binding audit, fake-state prohibitions, responsive checks, and asset admission gate.
 - `docs/ALPACA-MCP-READONLY-PROOF.md` defines the sanitized read-only MCP proof lane for Issue #2.
 
 ### POC / FOC receipt
 
-- **POC_VALIDATED:** bounded repository-side POC-0 truth contracts, provider boundary, provenance freshness invariants, fixture behavior, asset registration, Stitch acceptance handoff, and Issue #2 read-only MCP proof pre-seed at exact head `2ca4080d6d831dd0174071308024a92041bc08fb`.
+- **POC_VALIDATED:** bounded repository-side POC-0 truth contracts, provider boundary, provenance freshness invariants, fixture behavior, asset registration, Stitch acceptance handoff, Issue #2 read-only MCP proof pre-seed, and normalized read-only observation receipts at PR #7 exact head `257092f31313335f295ba41ad477029afdcc1929`.
 - **FOC caught and corrected:** CI detected lint-invalid naive datetime test fixtures on the first revalidation pass. The test intent was preserved and the lint exception was narrowly scoped; exact-head CI is now green.
 - **NOT VALIDATED / HOLD:** live Alpaca MCP observation, execution authority, accepted Stitch screen/layout implementation, and Issue #5 engine architecture.
 
