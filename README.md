@@ -1,255 +1,157 @@
 <p align="center">
-  <img src="assets/readme/meet-lefa-readme-hero.svg" alt="Meet LEFA — Financial Intelligence through AI, powered by Spiritual Intelligence" width="100%" />
+  <img src="./assets/readme/meet-lefa-readme-hero.svg" alt="Meet LEFA — governed financial intelligence companion" width="100%" />
 </p>
-
-<h1 align="center">LEFA AI</h1>
-<p align="center"><strong>Your companion for governed financial intelligence.</strong></p>
-<p align="center"><strong>FI through AI, powered by SI.</strong></p>
-<p align="center">Built in South Africa 🇿🇦 · Alpaca AI Trading Agents Hackathon · POC first</p>
 
 <div align="center">
   <img src="https://img.shields.io/badge/STATUS-POC-111111?style=for-the-badge" alt="POC status" />
-  <img src="https://img.shields.io/badge/ALPACA-AI_TRADING_AGENTS-FFD43B?style=for-the-badge" alt="Alpaca AI Trading Agents Hackathon" />
+  <img src="https://img.shields.io/badge/ALPACA-AI_TRADING_AGENTS-F2D16B?style=for-the-badge&logoColor=111111" alt="Alpaca AI Trading Agents Hackathon" />
   <img src="https://img.shields.io/badge/PYTHON-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
 </div>
+
+<p align="center">
+  <strong>Your companion for governed financial intelligence.</strong><br/>
+  <em>FI through AI, powered by SI.</em>
+</p>
+
+<p align="center">
+  🇿🇦 <strong>Built in South Africa.</strong> · POC before narrative · receipts before claims · time reveals
+</p>
 
 ---
 
 ## 👋 Meet LEFA
 
 <p align="center">
-  <img src="assets/companion/lefa-companion-root.svg" alt="Canonical LEFA companion" width="360" />
+  <img src="./assets/companion/lefa-companion-root.svg" alt="Canonical LEFA companion" width="42%" />
 </p>
 
-Most finance products introduce themselves with numbers, charts and buttons.
+Most finance products introduce themselves with charts, balances and buttons.
 
 **LEFA starts with a companion.**
 
-You talk to **LEFA**. LEFA listens, interprets, asks what matters, receives governed evidence from the backend, and comes back to you with a decision or explanation.
-
-The financial layer is the benefit.
-
-The product experience is the relationship:
+You speak to **LEFA**. LEFA is the user-facing base intelligence. The complicated architecture underneath exists to help LEFA make a better decision — not to make the user learn the architecture.
 
 > **You bring the human question. LEFA brings governed financial intelligence.**
 
-LEFA is being designed around three connected ideas:
-
-- **FI — Financial Intelligence:** financial context, market context, risk and outcomes;
-- **AI — Artificial Intelligence:** the base intelligence that speaks with the user and makes the final judgment;
-- **SI — Spiritual Intelligence:** the governance and value layer that asks what should survive, what should be held, and what should never be treated as truth without evidence.
-
-The goal is not to make finance feel more complicated.
-
-The goal is to make intelligence feel **understandable, trustworthy and alive**.
+<div align="center">
+  <a href="#-what-moves-under-lefa"><img src="https://img.shields.io/badge/SEE_THE_ENGINE_ROOM-111111?style=for-the-badge&logoColor=F2D16B" alt="See the engine room" /></a>
+  <a href="./assets/INDEX.md"><img src="https://img.shields.io/badge/INSPECT_ASSETS-17140B?style=for-the-badge&logoColor=F2D16B" alt="Inspect assets" /></a>
+  <a href="./docs/MVP-POC-0-STITCH-DATA-ASSET-GOVERNANCE.md"><img src="https://img.shields.io/badge/READ_POC_0-241F10?style=for-the-badge&logoColor=F2D16B" alt="Read POC 0" /></a>
+</div>
 
 ---
 
-# 👁️ Observe → 📖 Ledger → ✨ Reveal
+## 👁️ Observe → 📖 Ledger → ✨ Reveal
 
-LEFA's public behavior should be simple enough to understand without an architecture document.
+<p align="center">
+  <img src="./assets/readme/lefa-observe-ledger-reveal.svg" alt="Animated LEFA Observe Ledger Time Reveal timeline" width="100%" />
+</p>
 
-```text
-OBSERVE
-   ↓
-LEDGER
-   ↓
-TIME
-   ↓
-REVEAL
-```
+LEFA does not treat a convincing first answer as reality.
 
-**Observe** — something happened.
-
-**Ledger** — preserve what was known, who knew it, when, why and from where.
-
-**Time** — let reality continue instead of pretending the first prediction was automatically correct.
-
-**Reveal** — compare the earlier belief with what reality eventually produced.
+**Observe** what is happening. **Ledger** what was known. Let **time** continue. **Reveal** what survived.
 
 > **The frontend tells the story. The backend preserves the truth. Time decides what survives.**
 
 ---
 
-# 🧠 What actually happens behind LEFA?
+## 🧠 What moves under LEFA?
 
 <p align="center">
-  <img src="assets/readme/lefa-architecture-readme.svg" alt="LEFA backend architecture — User to LEFA to CRUD to ARK to BMP to MAO to SWFUS to Decision and Reveal" width="100%" />
+  <img src="./assets/readme/lefa-control-room.svg" alt="Animated LEFA backend control room" width="100%" />
 </p>
 
-The user should not have to think about this every time they speak to LEFA.
-
-But the system underneath is intentionally heavy.
-
-```mermaid
-flowchart LR
-    U[User] --> L[LEFA Base Model]
-    L --> C[CRUD]
-    C --> A[ARK]
-    A --> B[BMP]
-    B --> M[MAO]
-
-    M --> S1[S]
-    M --> W[W]
-    M --> F[F]
-    M --> U1[U]
-    M --> S2[S]
-
-    S1 --> R[Bounded findings]
-    W --> R
-    F --> R
-    U1 --> R
-    S2 --> R
-
-    R --> L
-    L --> D[Decision / explanation]
-    D --> U
-```
-
-### Dumbest possible explanation
+The public experience stays light. The backend is intentionally heavy.
 
 ```text
-You talk.
-   ↓
-LEFA understands the human.
-   ↓
-The backend takes the messy meaning apart.
-   ↓
-It preserves the useful possibilities.
-   ↓
-It filters unsupported certainty.
-   ↓
-Five bounded agents investigate only their own lane.
-   ↓
-They return receipts, evidence, disagreement and uncertainty.
-   ↓
-LEFA makes the final decision.
-   ↓
-LEFA talks to you.
+HUMAN
+  ↓
+LEFA — base identity / final decision-maker
+  ↓
+CRUD — capture the event
+  ↓
+ARK — governed structured bloat
+  ↓
+BMP — stress-test, filter and compress
+  ↓
+MAO — route bounded responsibility
+  ↓
+SWFUS — five internal ecosystems
+  ↓
+EVIDENCE + RECEIPTS + UNCERTAINTY
+  ↓
+LEFA
+  ↓
+DECISION / EXPLANATION
 ```
 
-**LEFA is the base model.**
+The internal system does **not** replace LEFA's judgment. It filters unsupported certainty, preserves useful ambiguity, and returns better governed evidence to the base model.
 
-The five internal agents do **not** talk directly to the user. They exist underneath LEFA to make the base model's judgment better grounded.
+<details>
+<summary><strong>OPEN // Why the backend expands before it compresses</strong></summary>
+<br/>
+
+Human language can carry emotion, memory, contradiction, testimony, uncertainty and several valid meanings at once.
+
+The ARK gives that ambiguity room to become **structured bloat** instead of prematurely flattening it into one intent. BMP then earns compression by stress-testing what should survive.
+
+```text
+HUMAN AMBIGUITY
+      ↓
+GOVERNED EXPANSION
+      ↓
+POC / FOC PRESSURE
+      ↓
+BMP FILTER + COMPRESSION
+      ↓
+BOUNDED DATA
+```
+
+**POC:** what can actually be supported.
+
+**FOC:** what merely looks complete, plausible or polished.
+
+</details>
 
 ---
 
-# 🌱 Five internal ecosystems — SWFUS
+## 🌱 Five agents. Five ecosystems. One LEFA.
 
-LEFA currently explores five bounded internal lanes using the existing KPGS SWFUS structure.
+<p align="center">
+  <img src="./assets/readme/lefa-swfus-ecosystem.svg" alt="Animated LEFA SWFUS five-agent ecosystem" width="100%" />
+</p>
 
-```mermaid
-flowchart LR
-    S1["S\nSovereign Ingestion"] --> W["W\nWitness Isolation"]
-    W --> F["F\nFluid Vectoring"]
-    F --> U["U\nUnified Synchronization"]
-    U --> S2["S\nSeverance Execution"]
-```
+The five internal agents do **not** talk to the user. They receive governed information from LEFA's backend and operate inside bounded ecosystems.
 
-The important idea is **boundary**.
-
-Each internal agent receives only the governed information needed for its own ecosystem.
-
-The Observer should not suddenly become the Executor.
-
-The Witness should not rewrite history.
-
-The analytical lane can explore possibilities without silently turning them into facts.
-
-The severance lane can reject what does not survive governance.
+| Lane | Ecosystem | Core concern |
+| :---: | :--- | :--- |
+| **S** | Sovereign Ingestion | What may enter as governed signal? |
+| **W** | Witness Isolation | What must be preserved independently as testimony? |
+| **F** | Fluid Vectoring | What interpretations or directions remain plausible? |
+| **U** | Unified Synchronization | What accepted state must align before action? |
+| **S** | Severance Execution | What must be cut, held or rejected? |
 
 > **Rich at the center. Minimal at the edges.**
 
----
-
-# 🛶 The ARK: let the meaning expand before compression
-
-Human language is messy because humans are not APIs.
-
-One sentence can carry emotion, intention, uncertainty, memory, contradiction and multiple valid interpretations at the same time.
-
-LEFA does not want to destroy that too early.
-
-The ARK is where incoming CRUD information can become **governed structured bloat**: a wider field of possible meaning, provenance, known facts, unknowns, contradictions, testimony and candidate interpretations.
-
-That is deliberate.
-
-Then BMP can do what it was built to do:
-
-```text
-AMBIGUITY
-   ↓
-GOVERNED EXPANSION
-   ↓
-BMP FILTER / COMPRESSION
-   ↓
-POC survives
-FOC is exposed / held
-   ↓
-BOUNDED AGENT DATA
-```
-
-The system is not trying to move hallucination around.
-
-**It is trying to filter hallucination out before unsupported certainty reaches LEFA as truth.**
+The agent receives its identity, role, hierarchy and boundary. It does not need the entire city. It needs its ecosystem.
 
 ---
 
-# 🧊 POC vs FOC
+## 🧊 POC vs FOC
 
-LEFA is built around one practical habit:
-
-> **Do not confuse a convincing idea with a validated result.**
+LEFA grows through one loop:
 
 ```text
 POC → TEST → FEEDBACK → IMPROVE → NEXT POC
 ```
 
-A model can make a strong argument.
-
-A market can still disagree.
-
-A beautiful interface can look finished.
-
-The backend can still be unproven.
-
-A prediction can sound intelligent.
-
-Time can still reveal that it was wrong.
+A model can sound intelligent and still be wrong. A market can disagree. A beautiful interface can look finished while the backend remains unproven.
 
 So LEFA keeps receipts.
 
----
-
-# 🎨 Heavy architecture. Light interface.
-
-The interface direction begins with the **LEFA companion**: black, white and gold; calm; recognizable; simple enough to become a living interface rather than a mascot beside another dashboard.
-
-The companion is intended to carry system state visually over time:
-
-- observing;
-- thinking / waiting;
-- governed hold;
-- risk / protection;
-- reveal;
-- learning;
-- temporal replay.
-
-The backend may become complicated.
-
-The user's experience should become **simpler**.
-
-That is the design law:
-
-> **Realism accommodates aesthetics. Aesthetics must help people understand reality.**
-
-Asset governance and the visual registry live in [`assets/INDEX.md`](assets/INDEX.md).
-
----
-
-# 🚪 Current hackathon POC
-
-The first external reality proof remains intentionally bounded:
+<details>
+<summary><strong>OPEN // The hackathon proof</strong></summary>
+<br/>
 
 ```text
 CONNECT TO ALPACA PAPER ENVIRONMENT
@@ -269,31 +171,59 @@ COMPARE THESIS WITH OUTCOME
 REVEAL
 ```
 
-We are not proving autonomous finance in one sprint.
+We are not claiming autonomous finance in one sprint.
 
-We are proving that **LEFA can observe reality, preserve what it knew, make a bounded judgment, and remain accountable to what happens next.**
+The POC is smaller and harder to fake:
 
----
+> **Can LEFA observe reality, preserve what it knew, make a bounded judgment, and remain accountable to what happens next?**
 
-# 🛠️ Current project seed
-
-The repository currently includes:
-
-- a Python package;
-- a small CLI;
-- Alpaca SDK integration;
-- configuration support;
-- governance experiments;
-- tests and CI scaffolding;
-- governed companion and README visuals;
-- interface / asset governance planning;
-- engine discovery issues for the next backend phase.
-
-The code stays deliberately small while the architecture is being validated.
+</details>
 
 ---
 
-# ⚡ Run LEFA
+## 🎨 Heavy architecture. Light interface.
+
+LEFA's visual identity is not decoration attached to a dashboard. The companion is the interface anchor.
+
+- black, white and gold;
+- calm, recognizable identity;
+- circular / halo framing;
+- motion maps to system state;
+- financial truth must come from real providers, never invented UI values;
+- the interface should become simpler as the backend becomes stronger.
+
+Asset governance lives in [`./assets/INDEX.md`](./assets/INDEX.md).
+
+---
+
+## 🛠️ Current project seed
+
+```text
+lefa-ai/
+├── assets/
+│   ├── companion/
+│   │   └── lefa-companion-root.svg
+│   ├── readme/
+│   │   ├── meet-lefa-readme-hero.svg
+│   │   ├── lefa-control-room.svg
+│   │   ├── lefa-observe-ledger-reveal.svg
+│   │   └── lefa-swfus-ecosystem.svg
+│   └── INDEX.md
+├── docs/
+├── src/lefa/
+├── tests/
+├── .github/
+├── .env.example
+├── pyproject.toml
+├── LEFA AI Logo.png
+└── README.md
+```
+
+The code remains deliberately small while the architecture is being validated.
+
+---
+
+## ⚡ Run LEFA
 
 ```bash
 python -m venv .venv
@@ -303,39 +233,19 @@ cp .env.example .env
 pytest
 ```
 
-CLI entry point:
+CLI:
 
 ```bash
 lefa
 ```
 
-Keep credentials in your local `.env` file. Never commit them.
+Keep credentials in your local `.env`. Never commit them.
 
 ---
 
-# 🗂️ Repository map
+## 🏁 The question
 
-```text
-lefa-ai/
-├── assets/
-│   ├── companion/    # canonical LEFA companion identity
-│   ├── readme/       # public hero + architecture visuals
-│   └── INDEX.md      # asset governance registry
-├── docs/             # POC, interface and architecture discovery
-├── src/lefa/         # LEFA Python package
-├── tests/            # POC tests
-├── .github/          # CI and repository automation
-├── .env.example      # environment template
-├── pyproject.toml    # Python project configuration
-├── LEFA AI Logo.png  # canonical product logo
-└── README.md          # public front door
-```
-
----
-
-# 🏁 The question
-
-LEFA AI is being built to answer something larger than:
+LEFA is not being built merely to answer:
 
 > "Can an LLM place a trade?"
 
@@ -343,12 +253,8 @@ The question is:
 
 > **Can one human-facing intelligence receive messy human intent, use governed internal agents and real financial evidence, preserve uncertainty instead of inventing certainty, and make a decision that time can later validate?**
 
-That is the POC.
-
----
-
 <p align="center">
-  <strong>Observe → Ledger → Reveal.</strong><br />
-  <strong>FI through AI, powered by SI.</strong><br />
+  <strong>OBSERVE → LEDGER → REVEAL</strong><br/>
+  <strong>FI through AI, powered by SI.</strong><br/>
   <em>Heavy architecture. Light interface.</em>
 </p>
