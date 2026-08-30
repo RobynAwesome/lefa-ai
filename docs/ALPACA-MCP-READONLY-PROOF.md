@@ -41,6 +41,28 @@ The result is a `ReadOnlyMCPProof` with either:
 - `READY` and no failures; or
 - `BLOCKED` plus explicit fail-closed reasons.
 
+## Observation receipt contract
+
+After proof is `READY`, normalize each accepted read-only observation through `MCPObservationReceipt`.
+
+Allowed receipt kinds:
+
+- `account`
+- `asset`
+- `clock`
+- `market_quote`
+- `option_chain`
+
+Each receipt must:
+
+- reference a ready `ReadOnlyMCPProof`;
+- name one runtime-discovered read-only source tool;
+- include a symbol for asset, quote, or option-chain observations;
+- keep only a small sanitized summary;
+- reject sensitive summary keys such as secrets, tokens, passwords, API keys, authorization data, account IDs, and account numbers.
+
+The receipt layer exists so LEFA can preserve evidence without committing raw provider payloads, credentials, or account identifiers.
+
 ## Required fail-closed cases
 
 The proof lane blocks when any of these are true:
@@ -52,6 +74,11 @@ The proof lane blocks when any of these are true:
 - paper mode is false or unproven;
 - account/trading is blocked;
 - any reachable tool name contains order/cancel/replace/liquidate/exercise semantics.
+- a receipt is built from blocked proof;
+- a receipt names a tool that was not discovered at runtime;
+- a receipt tries to use an execution-like tool;
+- a symbol-scoped receipt omits its symbol;
+- a receipt summary contains sensitive keys.
 
 ## Governance hold
 
