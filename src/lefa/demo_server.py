@@ -18,7 +18,7 @@ ASSET_ROOT = PROJECT_ROOT / "assets"
 class LEFADemoHandler(BaseHTTPRequestHandler):
     provider = FixtureProvider()
 
-    def do_GET(self) -> None:  # noqa: N802 - required by BaseHTTPRequestHandler
+    def do_GET(self) -> None:
         parsed = urlparse(self.path)
         if parsed.path == "/api/snapshot":
             self._serve_snapshot(parsed.query)
