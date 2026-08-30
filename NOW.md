@@ -1,9 +1,9 @@
 ## CURRENT STATE — 2026-08-31
 
-> **Updated:** 2026-08-31T00:25:00+02:00 (SAST)
+> **Updated:** 2026-08-31T00:31:00+02:00 (SAST)
 > **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
-> **Main:** governed contracts / provider / receipt / presentation semantics validated
+> **Main:** governed contracts / provider / receipt / presentation semantics + bounded canonical orchestration translation seam validated
 
 ---
 
@@ -24,35 +24,55 @@ The APWA reference remains a **workflow/capability pattern for adaptive presenta
 
 **Deadline lock:** do not build another competing frontend in this repository. Existing `ui/` remains a bounded truth/projection POC and implementation reference; the Stitch repo is the active deployable visual surface.
 
-### Human-approved orchestration evolution — PRE-SEED
+### Human-approved orchestration evolution — POST-SEED / VALIDATED
 
-The previously approved AntiGravity bridge is **not reverted**. Human authority explicitly directed that implementation mistakes be evolved into architecture rather than discarded.
+The previously approved AntiGravity bridge was **not reverted**. Human authority explicitly directed that implementation mistakes be evolved into architecture rather than discarded.
 
-This branch therefore graduates the approved direct bridge into five bounded concepts:
+The implementation graduates that bridge into five bounded concepts:
 
 1. **Translation Boundary** — `CanonicalTradingOrchestrator` translates between LEFA-native risk semantics and KPGS canonical semantics.
 2. **Dual-Axis Governance** — deterministic financial risk and canonical governance proof remain independently inspectable.
-3. **Execution Jurisdiction** — `OBSERVE_ONLY`, `PAPER`, and `LIVE` become explicit authority states; this POC remains non-executing.
-4. **Receipt Projection** — LEFA may store a local projection/reference while canonical authority remains external.
-5. **Proof Depth** — canonical stages carry maturity states such as `SIMULATED`, `PROCEDURAL`, `EVIDENCED`, and `INDEPENDENTLY_VALIDATED` instead of treating all pipeline completion as equal truth.
+3. **Execution Jurisdiction** — `OBSERVE_ONLY`, `PAPER`, and `LIVE` are explicit authority states; `LIVE` is representable but inadmissible here and fails closed to HOLD.
+4. **Receipt Projection** — LEFA may expose a sanitized local projection/reference while canonical authority remains upstream.
+5. **Proof Depth** — canonical stages carry maturity states `SIMULATED`, `PROCEDURAL`, `EVIDENCED`, and `INDEPENDENTLY_VALIDATED`; current upstream stages default to `PROCEDURAL` unless stronger evidence is explicitly supplied.
 
-Implementation scope for this branch:
-- extend `GovernanceReceipt` with canonical trace linkage without weakening `RiskPolicy.evaluate()`;
-- add a lazy/injectable `CanonicalTradingOrchestrator` adapter so LEFA remains importable and testable standalone;
-- fail closed to HOLD when financial risk rejects, canonical proof is unavailable, or execution jurisdiction is not admissible;
-- add tests for reject, hold, approve, translation, jurisdiction, and proof-depth semantics;
-- do **not** add Alpaca order methods or browser execution authority.
+Validated fail-closed behavior:
+- deterministic LEFA risk REJECT short-circuits canonical orchestration;
+- unavailable KPGS bridge becomes HOLD rather than false approval;
+- explicit canonical HOLD/FAIL/REJECT becomes HOLD;
+- recycled FOC canonical state becomes HOLD even when a receipt hash exists;
+- incomplete canonical receipt becomes HOLD;
+- `LIVE` execution jurisdiction becomes HOLD;
+- no Alpaca order/cancel/replace/exercise method was added.
+
+### Validation receipt
+
+**PR #9 — canonical trading orchestration evolution**
+- merged to `main` as `6224aa2cac4894f6af78d40850fb8a7151319867`;
+- exact feature head `919ba12d0518e379d588cff4a99a380a28747058`;
+- first workflow run `33339250958` exposed a Ruff-only FOC: `FURB157` on three exact-integer `Decimal` constructors in the new tests;
+- pytest was skipped because lint failed;
+- architecture/code semantics were retained; lint policy was not weakened.
+
+**PR #11 — CI correction**
+- exact head `57ae526c3df4dcd0b8e3f17dc5e8648059af1fe6`;
+- GitHub Actions run `33339303847`, job `99331907068`: **SUCCESS**;
+- `ruff check .`: **PASS**;
+- `pytest -q`: **36 passed in 0.22s**;
+- merged to `main` as `a2c95a6e415f280d258dd80a337aa53fddfbd3d9`.
+
+The lint failure is preserved as useful architecture/process evidence: merge-before-CI is a governance timing defect, while the code defect itself was only a test-style violation. The recovery path changed no risk, jurisdiction, receipt, or orchestration semantics.
 
 ### Introduction-to-MCP transition receipt
 
 `trigger -> evidence -> invariant -> authority -> transition -> receipt`
 
 - **Trigger:** human correction that approved mistakes should be evolved into architecture.
-- **Evidence:** LEFA already has deterministic `RiskPolicy`; KPGS already exposes `CanonicalDataGovernanceOrchestrator`; the approved bridge identifies a real translation seam.
-- **Invariant:** risk authority and canonical proof must remain distinguishable; UI projection cannot manufacture truth; missing proof is HOLD; execution authority remains external.
+- **Evidence:** LEFA already had deterministic `RiskPolicy`; KPGS already exposed `CanonicalDataGovernanceOrchestrator`; the approved bridge identified a real translation seam; CI then exposed a separate merge-timing/lint failure and recovery receipt.
+- **Invariant:** risk authority and canonical proof remain distinguishable; UI projection cannot manufacture truth; missing proof is HOLD; execution authority remains external.
 - **Authority:** human owner.
 - **Transition:** **CONVERGE / GRADUATE**.
-- **Receipt:** branch `feat/canonical-trading-orchestration-evolution` pre-seed.
+- **Receipt:** PR #9 + corrective PR #11, exact-head CI green.
 
 ### Active lanes
 
@@ -61,7 +81,7 @@ Implementation scope for this branch:
 | **#2 — Alpaca MCP proof** | Repository proof + normalized receipt layers merged; **LIVE RUNTIME HOLD** | Prove deployed PAPER observation boundary / runtime evidence; never paste or commit credentials |
 | **#3 — POC-0 governed data/assets** | **PARTIAL POC VALIDATED** | Close only after the deployed Stitch surface consumes proven PAPER observation through the governed boundary without screen-semantic rewrites |
 | **#4 — Interface-first LEFA** | **VISUAL LANGUAGE ACCEPTED / DEPLOYMENT MOVED TO STITCH** | Witness responsive/mobile runtime in the Stitch deployment; do not duplicate visual implementation here |
-| **#5 — Engine map discovery** | **HUMAN-APPROVED BOUNDED IMPLEMENTATION** | Implement only the orchestration translation seam and governance contracts; no execution engine expansion |
+| **#5 — Engine map discovery** | **BOUNDED ORCHESTRATION SEAM POC VALIDATED** | Translation seam is implemented; broader engine/SWFUS/execution expansion remains HOLD until PAPER runtime proof |
 
 ---
 
@@ -81,6 +101,14 @@ Implementation scope for this branch:
 - GitHub Actions `33335120769` / `99320543503`: **SUCCESS**;
 - Ruff: **PASS**;
 - pytest: **27 passed in 0.19s**.
+
+**PR #9 + #11** — bounded canonical orchestration evolution + CI recovery
+- dual-axis financial/canonical governance semantics;
+- explicit execution jurisdiction;
+- local receipt projection;
+- proof-depth maturity model;
+- fail-closed translation behavior;
+- final CI: **36 passed**, Ruff **PASS**.
 
 What remains canonical from PR #8:
 - Living Companion = human center;
@@ -115,7 +143,7 @@ A Vercel UI witness is live at `https://lefa-ai-live.vercel.app` and returned **
 
 - No live market/account state is currently claimed by this repository.
 - No order placement, cancellation, liquidation, replacement, exercise, autonomous trading, or autonomous scheduling authority exists here.
-- The new orchestration adapter may evaluate and translate proposals but cannot execute them.
+- The orchestration adapter may evaluate and translate proposals but cannot execute them.
 - `LIVE` jurisdiction is representable as a governance concept but is not an admissible execution path in this repository.
 - No Stitch-generated asset becomes canonical without explicit asset admission.
 - Live Alpaca PAPER runtime evidence remains HOLD until the deployed provider boundary is proven.
@@ -123,12 +151,12 @@ A Vercel UI witness is live at `https://lefa-ai-live.vercel.app` and returned **
 
 ### Next admissible action — deadline path
 
-1. Implement the bounded orchestration translation seam on this branch.
-2. Preserve deterministic LEFA risk behavior and existing tests.
-3. Add fail-closed canonical HOLD behavior and proof-depth tests.
-4. Open a PR and require CI before merge.
-5. In parallel/after merge, complete Issue #2 deployed PAPER observation proof.
-6. Only then permit Sovereign Hub to consider a bounded PAPER execution path.
+1. Return to Issue #2 and complete the real Alpaca PAPER MCP runtime observation proof.
+2. Prove paper mode, active account telemetry, SPY quote, option-chain observation, runtime tool/schema discovery, and sanitized receipts.
+3. Feed that real observation evidence into the validated LEFA risk + canonical translation seam.
+4. Wire the resulting governed state through Sovereign Hub into the Stitch presentation surface.
+5. Only after the observation POC is receipted may Sovereign Hub consider a separately bounded PAPER execution path.
+6. Keep broader engine/SWFUS expansion and all LIVE execution authority on HOLD.
 
 ---
 
