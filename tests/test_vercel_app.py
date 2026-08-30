@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 
-from vercel_app import app, snapshot_payload
+from lefa.vercel_app import app, snapshot_payload
 
 
 def test_vercel_app_exposes_governed_fixture_projection() -> None:
