@@ -91,7 +91,7 @@ def test_provenance_rejects_invalid_or_naive_freshness_windows() -> None:
     with pytest.raises(ValidationError):
         Provenance(
             source=DataSource.ALPACA,
-            observed_at=datetime(2026, 8, 30, 14, 0),
-            valid_until=datetime(2026, 8, 30, 14, 1),
+            observed_at=datetime(2026, 8, 30, 14, 0),  # noqa: DTZ001 - intentional invalid input
+            valid_until=datetime(2026, 8, 30, 14, 1),  # noqa: DTZ001 - intentional invalid input
             provider="alpaca-provider",
         )
