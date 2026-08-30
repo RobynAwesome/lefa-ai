@@ -18,7 +18,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8,<9", "ruff>=0.12,<1"]
+dev = [
+  "httpx>=0.27,<1",
+  "pytest>=8,<9",
+  "ruff>=0.12,<1",
+  "uvicorn>=0.30,<1",
+]
 
 [project.scripts]
 lefa = "lefa.cli:app"
@@ -36,4 +41,4 @@ line-length = 100
 target-version = "py311"
 
 [tool.vercel]
-entrypoint = "lefa.vercel_app:app"
+entrypoint = "vercel_app:app"

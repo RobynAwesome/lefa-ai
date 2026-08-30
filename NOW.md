@@ -1,6 +1,6 @@
 ## CURRENT STATE — 2026-08-31
 
-> **Updated:** 2026-08-31T00:31:00+02:00 (SAST)
+> **Updated:** 2026-08-31T00:48:00+02:00 (SAST)
 > **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
 > **Main:** governed contracts / provider / receipt / presentation semantics + bounded canonical orchestration translation seam validated
@@ -22,7 +22,38 @@ The APWA reference remains a **workflow/capability pattern for adaptive presenta
 | `RobynAwesome/kopano-sovereign-hub` | **Server-side Alpaca PAPER observation / canonical decision receipt / any execution authority** |
 | `RobynAwesome/Introduction-to-MCP` | **Governance / KPGS / PKA transition machinery** |
 
-**Deadline lock:** do not build another competing frontend in this repository. Existing `ui/` remains a bounded truth/projection POC and implementation reference; the Stitch repo is the active deployable visual surface.
+**Deadline lock:** do not build another competing deployable frontend in this repository. Existing `ui/` and PR #10's `src/frontend/` may exist only as bounded reference / integration harnesses. `RobynAwesome/Lefa-ai-google-stitch` remains the active deployable visual surface.
+
+### PR #10 — governed repair / reference-harness admission
+
+PR #10 originally claimed UI connection success from a timer and carried a stale frontend credential form. That was **FOC_FLAGGED** against the current Introduction-to-MCP / KPGS truth boundary.
+
+Corrective transition:
+
+```text
+FALSE CLIENT CONNECTION CLAIM
+        ↓
+REMOVE BROWSER CREDENTIAL OWNERSHIP
+        ↓
+BACKEND-OWNED /api/mcp/status
+        ↓
+FAIL CLOSED UNTIL REAL PAPER MCP EVIDENCE
+        ↓
+REFERENCE HARNESS ONLY
+```
+
+Current corrections on `feat/stitch-ui-integration-issues-3-4`:
+
+- browser no longer accepts Alpaca API key / secret;
+- connect action reads backend-owned `/api/mcp/status` instead of self-asserting proof;
+- current runtime evidence intentionally returns BLOCKED until Issue #2 produces a witnessed local proof;
+- Vite preserves `/api/*` paths instead of stripping the API prefix;
+- frontend companion consumes the governed root asset through Vite `publicDir`;
+- FastAPI / TestClient / Uvicorn development dependencies are explicit;
+- CI now has separate backend and frontend validation jobs;
+- `src/frontend/` is classified as a **reference / integration harness**, not the deadline deployable UI authority.
+
+**POC/FOC:** correction is **POC_CANDIDATE** pending exact-head GitHub Actions receipts. Do not promote to POC_VALIDATED until both backend and frontend CI are green.
 
 ### Human-approved orchestration evolution — POST-SEED / VALIDATED
 
@@ -80,7 +111,7 @@ The lint failure is preserved as useful architecture/process evidence: merge-bef
 |---|---|---|
 | **#2 — Alpaca MCP proof** | Repository proof + normalized receipt layers merged; **LIVE RUNTIME HOLD** | Prove deployed PAPER observation boundary / runtime evidence; never paste or commit credentials |
 | **#3 — POC-0 governed data/assets** | **PARTIAL POC VALIDATED** | Close only after the deployed Stitch surface consumes proven PAPER observation through the governed boundary without screen-semantic rewrites |
-| **#4 — Interface-first LEFA** | **VISUAL LANGUAGE ACCEPTED / DEPLOYMENT MOVED TO STITCH** | Witness responsive/mobile runtime in the Stitch deployment; do not duplicate visual implementation here |
+| **#4 — Interface-first LEFA** | **VISUAL LANGUAGE ACCEPTED / DEPLOYMENT MOVED TO STITCH** | Witness responsive/mobile runtime in the Stitch deployment; PR #10 is reference harness only |
 | **#5 — Engine map discovery** | **BOUNDED ORCHESTRATION SEAM POC VALIDATED** | Translation seam is implemented; broader engine/SWFUS/execution expansion remains HOLD until PAPER runtime proof |
 
 ---
@@ -151,12 +182,13 @@ A Vercel UI witness is live at `https://lefa-ai-live.vercel.app` and returned **
 
 ### Next admissible action — deadline path
 
-1. Return to Issue #2 and complete the real Alpaca PAPER MCP runtime observation proof.
-2. Prove paper mode, active account telemetry, SPY quote, option-chain observation, runtime tool/schema discovery, and sanitized receipts.
-3. Feed that real observation evidence into the validated LEFA risk + canonical translation seam.
-4. Wire the resulting governed state through Sovereign Hub into the Stitch presentation surface.
-5. Only after the observation POC is receipted may Sovereign Hub consider a separately bounded PAPER execution path.
-6. Keep broader engine/SWFUS expansion and all LIVE execution authority on HOLD.
+1. Complete PR #10 correction and require green backend + frontend CI before merge.
+2. Return to Issue #2 and complete the real Alpaca PAPER MCP runtime observation proof.
+3. Prove paper mode, active account telemetry, SPY quote, option-chain observation, runtime tool/schema discovery, and sanitized receipts.
+4. Feed that real observation evidence into the validated LEFA risk + canonical translation seam.
+5. Wire the resulting governed state through Sovereign Hub into the Stitch presentation surface.
+6. Only after the observation POC is receipted may Sovereign Hub consider a separately bounded PAPER execution path.
+7. Keep broader engine/SWFUS expansion and all LIVE execution authority on HOLD.
 
 ---
 
