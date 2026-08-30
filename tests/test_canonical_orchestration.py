@@ -50,6 +50,27 @@ class IncompleteCanonical:
         return {"rtcp_proof_state": "HOLD"}
 
 
+class RecycledCanonical:
+    def orchestrate_task(self, **kwargs: object) -> dict[str, object]:
+        return {
+            "trace_id": "TRACE-RECYCLED",
+            "receipt_hash": "sha256:recycled",
+            "btth_purity_score": 1.0,
+            "rtcp_proof_state": "POC_VALIDATED",
+            "recycled_status": "RECYCLED_FOC_PURGED",
+        }
+
+
+class HeldCanonical:
+    def orchestrate_task(self, **kwargs: object) -> dict[str, object]:
+        return {
+            "trace_id": "TRACE-HOLD",
+            "receipt_hash": "sha256:hold",
+            "rtcp_proof_state": "HOLD",
+            "recycled_status": "POC_VERIFIED",
+        }
+
+
 def test_risk_rejection_short_circuits_canonical_bridge() -> None:
     class MustNotRun:
         def orchestrate_task(self, **kwargs: object) -> object:
@@ -94,7 +115,7 @@ def test_incomplete_canonical_receipt_fails_closed_to_hold() -> None:
     ).evaluate(account(), proposal())
 
     assert receipt.decision is Decision.HOLD
-    assert "canonical_receipt_incomplete" in receipt.reasons
+    assert "canonical_governance_not_admissible" in receipt.reasons
 
 
 def test_live_jurisdiction_is_representable_but_not_admissible() -> None:
@@ -135,3 +156,25 @@ def test_receipt_projection_is_local_and_sanitized() -> None:
     assert projection["canonical_receipt_hash"] == "sha256:abc"
     assert projection["execution_jurisdiction"] == "paper"
     assert "account" not in projection
+
+
+def test_recycled_canonical_result_is_held_even_with_receipt_hash() -> None:
+    receipt = CanonicalTradingOrchestrator(
+        canonical_orchestrator=RecycledCanonical(),
+        operating_mode="TEST",
+    ).evaluate(account(), proposal())
+
+    assert receipt.decision is Decision.HOLD
+    assert "canonical_governance_not_admissible" in receipt.reasons
+    assert receipt.canonical_receipt_hash == "sha256:recycled"
+
+
+def test_explicit_canonical_hold_survives_translation() -> None:
+    receipt = CanonicalTradingOrchestrator(
+        canonical_orchestrator=HeldCanonical(),
+        operating_mode="TEST",
+    ).evaluate(account(), proposal())
+
+    assert receipt.decision is Decision.HOLD
+    assert receipt.canonical_proof_state == "HOLD"
+    assert "canonical_governance_not_admissible" in receipt.reasons
