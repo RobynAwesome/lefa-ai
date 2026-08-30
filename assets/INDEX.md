@@ -2,8 +2,6 @@
 
 This folder is the governed registry for the visual identity of **LEFA AI**.
 
-The rule is simple:
-
 > **LEFA's interface may evolve. LEFA's identity must remain recognizable.**
 
 ## Canonical visual language
@@ -27,14 +25,30 @@ The visual language is anchored in:
 | Asset | Role | State | Notes |
 |---|---|---|---|
 | `../LEFA AI Logo.png` | Product logo | **CANONICAL** | Existing repository logo. Do not silently replace. |
-| `lefa-companion-root.jpg` | Companion identity root | **CANONICAL SOURCE — BINARY INGEST PENDING** | The hand-drawn black/white/gold companion image supplied during product discovery. This is the primary character/style reference for the interface. |
-| `lefa-companion-motion.mp4` | Companion motion reference | **CANONICAL SOURCE — BINARY INGEST PENDING** | Short motion reference showing how the companion should feel when alive on-screen. Motion should remain restrained, intentional and state-driven. |
-| `meet-lefa-readme-hero.png` | README/product hero | **GENERATED CANDIDATE — BINARY INGEST PENDING** | Marketing-style interpretation of the canonical companion for public introduction. Must not replace the root identity without acceptance. |
-| `lefa-architecture-readme.png` | Backend visual explainer | **GENERATED CANDIDATE — BINARY INGEST PENDING** | Visual explanation of `User → LEFA → CRUD → ARK → BMP → MAO → SWFUS → Decision → Reveal`. Architecture is still discovery-stage and this image is illustrative, not an implementation receipt. |
+| `companion/lefa-companion-root.svg` | Companion identity root | **CANONICAL VISUAL** | Repository-renderable wrapper of the black/white/gold companion source. This is the primary character/style reference. |
+| `readme/meet-lefa-readme-hero.svg` | README/product hero | **PUBLIC PRESENTATION** | Companion-first launch visual used at the README front door. It does not replace the canonical companion identity. |
+| `readme/lefa-architecture-readme.svg` | Backend visual explainer | **PUBLIC EXPLAINER** | Visualizes `User → LEFA → CRUD → ARK → BMP → MAO → SWFUS → Decision → Reveal`. It explains current architecture discovery; it is not implementation proof. |
+| `lefa-companion-motion.mp4` | Companion motion reference | **SOURCE — INGEST PENDING** | Canonical motion reference still waiting for a binary-capable ingest path. Motion must remain restrained, intentional and state-driven. |
+
+## Folder map
+
+```text
+assets/
+├── companion/
+│   ├── lefa-companion-root.svg
+│   ├── CANONICAL.md
+│   └── README.md
+├── readme/
+│   ├── meet-lefa-readme-hero.svg
+│   ├── lefa-architecture-readme.svg
+│   └── README.md
+├── INDEX.md
+└── README.md
+```
 
 ## Naming law
 
-Use lowercase kebab-case for new visual assets:
+Use lowercase kebab-case for visual assets:
 
 ```text
 lefa-[subject]-[purpose].[ext]
@@ -43,11 +57,11 @@ lefa-[subject]-[purpose].[ext]
 Examples:
 
 ```text
-lefa-companion-root.jpg
+lefa-companion-root.svg
 lefa-companion-observe.mp4
-lefa-companion-ledger.png
-lefa-companion-reveal.png
-lefa-architecture-readme.png
+lefa-companion-ledger.svg
+lefa-companion-reveal.svg
+lefa-architecture-readme.svg
 ```
 
 ## Governance law
@@ -57,10 +71,8 @@ lefa-architecture-readme.png
 3. **Aesthetic state must map to system state.** Animation, glow, posture, cards, symbols and transitions should eventually be driven by governed backend events.
 4. **No fake financial truth.** Artwork may illustrate concepts, but balances, positions, returns, market state and outcomes must not be presented as live unless sourced from the real provider layer.
 5. **Heavy architecture. Light interface.** Backend complexity should increase user confidence and simplicity, not visual clutter.
-6. **Observe → Ledger → Reveal.** The product's visual language should make the system's behavior understandable without requiring the user to read the architecture.
+6. **Observe → Ledger → Reveal.** The product's visual language should make system behavior understandable without requiring the user to read the architecture.
 
-## Binary ingest hold
+## Current hold
 
-The GitHub connector available in this session can create and update UTF-8 repository files, but it cannot write raw binary image/video files. The source and generated binary assets therefore remain **pending binary ingest** rather than being falsely recorded as uploaded.
-
-Once a binary-capable Git write surface is available, place the files at the names above and remove the pending markers in this registry.
+Only the motion reference remains pending repository ingest. The still visual identity and README explainer assets are now repository-addressable and wired into the public README.
