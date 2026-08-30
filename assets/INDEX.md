@@ -25,10 +25,13 @@ The visual language is anchored in:
 | Asset | Role | State | Notes |
 |---|---|---|---|
 | `../LEFA AI Logo.png` | Product logo | **CANONICAL** | Existing repository logo. Do not silently replace. |
-| `companion/lefa-companion-root.svg` | Companion identity root | **CANONICAL VISUAL** | Repository-renderable wrapper of the black/white/gold companion source. This is the primary character/style reference. |
-| `readme/meet-lefa-readme-hero.svg` | README/product hero | **PUBLIC PRESENTATION** | Companion-first launch visual used at the README front door. It does not replace the canonical companion identity. |
-| `readme/lefa-architecture-readme.svg` | Backend visual explainer | **PUBLIC EXPLAINER** | Visualizes `User → LEFA → CRUD → ARK → BMP → MAO → SWFUS → Decision → Reveal`. It explains current architecture discovery; it is not implementation proof. |
-| `lefa-companion-motion.mp4` | Companion motion reference | **SOURCE — INGEST PENDING** | Canonical motion reference still waiting for a binary-capable ingest path. Motion must remain restrained, intentional and state-driven. |
+| `companion/lefa-companion-root.svg` | Companion identity root | **CANONICAL VISUAL** | Self-contained SVG. Primary companion/style reference for public surfaces. |
+| `readme/meet-lefa-readme-hero.svg` | README hero | **PUBLIC PRESENTATION** | Animated full-width product introduction. |
+| `readme/lefa-observe-ledger-reveal.svg` | Product behavior visual | **PUBLIC EXPLAINER** | Animated Observe → Ledger → Time → Reveal timeline. |
+| `readme/lefa-control-room.svg` | Backend control-room visual | **PUBLIC EXPLAINER** | Animated Human → LEFA → CRUD → ARK → BMP → SWFUS route. |
+| `readme/lefa-swfus-ecosystem.svg` | Agent ecosystem visual | **PUBLIC EXPLAINER** | Animated five-agent / five-ecosystem topology around LEFA. |
+| `readme/lefa-architecture-readme.svg` | Legacy architecture visual | **REFERENCE** | Earlier architecture explainer retained as a reference asset; the current README uses the newer animated control-room and SWFUS visuals. |
+| `lefa-companion-motion.mp4` | Companion motion reference | **SOURCE — INGEST PENDING** | Canonical motion reference still waiting for a binary-capable ingest path. |
 
 ## Folder map
 
@@ -40,6 +43,9 @@ assets/
 │   └── README.md
 ├── readme/
 │   ├── meet-lefa-readme-hero.svg
+│   ├── lefa-observe-ledger-reveal.svg
+│   ├── lefa-control-room.svg
+│   ├── lefa-swfus-ecosystem.svg
 │   ├── lefa-architecture-readme.svg
 │   └── README.md
 ├── INDEX.md
@@ -54,16 +60,6 @@ Use lowercase kebab-case for visual assets:
 lefa-[subject]-[purpose].[ext]
 ```
 
-Examples:
-
-```text
-lefa-companion-root.svg
-lefa-companion-observe.mp4
-lefa-companion-ledger.svg
-lefa-companion-reveal.svg
-lefa-architecture-readme.svg
-```
-
 ## Governance law
 
 1. **Canonical assets are explicit.** Generated variants do not silently become canon.
@@ -72,7 +68,8 @@ lefa-architecture-readme.svg
 4. **No fake financial truth.** Artwork may illustrate concepts, but balances, positions, returns, market state and outcomes must not be presented as live unless sourced from the real provider layer.
 5. **Heavy architecture. Light interface.** Backend complexity should increase user confidence and simplicity, not visual clutter.
 6. **Observe → Ledger → Reveal.** The product's visual language should make system behavior understandable without requiring the user to read the architecture.
+7. **README assets must be GitHub-renderable.** Prefer self-contained SVG primitives and `./assets/...` relative paths. Do not depend on embedded base64 raster payloads inside SVG wrappers.
 
 ## Current hold
 
-Only the motion reference remains pending repository ingest. The still visual identity and README explainer assets are now repository-addressable and wired into the public README.
+Only the motion reference remains pending repository ingest. The still companion identity and the public animated README explainer surfaces are repository-addressable and wired into the README.
