@@ -3,7 +3,7 @@ from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class DataSource(StrEnum):
@@ -42,8 +42,41 @@ class ValidationStatus(StrEnum):
 class Provenance(BaseModel):
     source: DataSource
     observed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    valid_until: datetime | None = None
     provider: str
     is_fixture: bool = False
+
+    @model_validator(mode="after")
+    def validate_truth_boundary(self) -> "Provenance":
+        if self.observed_at.tzinfo is None or self.observed_at.utcoffset() is None:
+            raise ValueError("observed_at must be timezone-aware")
+
+        if self.valid_until is not None:
+            if self.valid_until.tzinfo is None or self.valid_until.utcoffset() is None:
+                raise ValueError("valid_until must be timezone-aware")
+            if self.valid_until < self.observed_at:
+                raise ValueError("valid_until cannot be earlier than observed_at")
+
+        if self.source is DataSource.FIXTURE and not self.is_fixture:
+            raise ValueError("fixture provenance must declare is_fixture=true")
+        if self.source is not DataSource.FIXTURE and self.is_fixture:
+            raise ValueError("non-fixture provenance cannot declare is_fixture=true")
+
+        if self.source is DataSource.ALPACA and self.valid_until is None:
+            raise ValueError("Alpaca provenance requires an explicit freshness window")
+
+        return self
+
+    def is_stale(self, at: datetime | None = None) -> bool | None:
+        """Return freshness without inventing a window when none was supplied."""
+
+        if self.valid_until is None:
+            return None
+
+        reference_time = at or datetime.now(UTC)
+        if reference_time.tzinfo is None or reference_time.utcoffset() is None:
+            raise ValueError("freshness comparison time must be timezone-aware")
+        return reference_time >= self.valid_until
 
 
 class AccountContext(BaseModel):
