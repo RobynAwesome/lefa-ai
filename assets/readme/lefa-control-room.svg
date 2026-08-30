@@ -1,0 +1,28 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">LEFA governed control room</title>
+  <desc id="desc">Animated control room showing human input becoming governed evidence before LEFA decides.</desc>
+  <defs>
+    <linearGradient id="edge" x1="70" y1="150" x2="1130" y2="150"><stop stop-color="#FFF1A6"/><stop offset="0.45" stop-color="#D5A72F"/><stop offset="1" stop-color="#F8E28A"/></linearGradient>
+    <filter id="g" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1200" height="300" rx="26" fill="#080807"/>
+  <rect x="18" y="18" width="1164" height="264" rx="20" fill="none" stroke="#D5A72F" stroke-opacity="0.22"/>
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="58" y="58" fill="#F5F1E7" font-size="18" font-weight="800" letter-spacing="3">LEFA // GOVERNED CONTROL ROOM</text>
+    <text x="58" y="82" fill="#8E8878" font-size="12" letter-spacing="2">HUMAN SIGNAL → GOVERNED EVIDENCE → LEFA JUDGMENT</text>
+  </g>
+  <path id="route" d="M90 170H1110" stroke="url(#edge)" stroke-width="2" stroke-dasharray="8 12" opacity="0.65"><animate attributeName="stroke-dashoffset" values="0;-80" dur="4s" repeatCount="indefinite"/></path>
+  <g font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+    <g fill="#11100C" stroke="#4B4020"><rect x="60" y="125" width="140" height="88" rx="18"/><rect x="230" y="125" width="140" height="88" rx="18"/><rect x="400" y="125" width="140" height="88" rx="18"/><rect x="570" y="125" width="140" height="88" rx="18"/><rect x="740" y="125" width="140" height="88" rx="18"/><rect x="910" y="125" width="220" height="88" rx="18"/></g>
+    <g font-size="15" font-weight="800" fill="#F3D56E"><text x="130" y="160">HUMAN</text><text x="300" y="160">LEFA</text><text x="470" y="160">CRUD</text><text x="640" y="160">ARK</text><text x="810" y="160">BMP</text><text x="1020" y="160">SWFUS</text></g>
+    <g font-size="11" fill="#A8A08E"><text x="130" y="185">messy language</text><text x="300" y="185">base identity</text><text x="470" y="185">event receipt</text><text x="640" y="185">structured bloat</text><text x="810" y="185">filter + compress</text><text x="1020" y="185">bounded ecosystems</text></g>
+    <text x="1020" y="201" fill="#6D6658" font-size="10">S · W · F · U · S</text>
+  </g>
+  <circle r="7" fill="#FFF1A6" filter="url(#g)"><animateMotion dur="7.5s" repeatCount="indefinite" path="M90 170H1110"/></circle>
+  <g font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700">
+    <text x="62" y="255" fill="#F3D56E">UNKNOWN IS ALLOWED</text>
+    <text x="330" y="255" fill="#C8C0AE">POC ≠ FOC</text>
+    <text x="565" y="255" fill="#C8C0AE">RECEIPTS BEFORE CLAIMS</text>
+    <text x="905" y="255" fill="#F3D56E">LEFA DECIDES</text>
+  </g>
+</svg>
