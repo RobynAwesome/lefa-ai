@@ -22,8 +22,15 @@
 ## 👋 Meet LEFA
 
 <p align="center">
-  <img src="./assets/companion/lefa-companion-root.svg" alt="Canonical LEFA companion" width="42%" />
+  <a href="./assets/companion/lefa-companion-root.jpg">
+    <img src="./assets/companion/lefa-companion-root.jpg" alt="Canonical hand-drawn LEFA companion source" width="38%" />
+  </a>
+  <a href="./assets/companion/lefa-companion-root.svg">
+    <img src="./assets/companion/lefa-companion-root.svg" alt="Animated LEFA companion interface interpretation" width="38%" />
+  </a>
 </p>
+
+<p align="center"><sub>Canonical source → animated interface interpretation. The drawing owns identity; the interface may evolve around it.</sub></p>
 
 Most finance products introduce themselves with charts, balances and buttons.
 
@@ -202,7 +209,8 @@ Asset governance lives in [`./assets/INDEX.md`](./assets/INDEX.md).
 lefa-ai/
 ├── assets/
 │   ├── companion/
-│   │   └── lefa-companion-root.svg
+│   │   ├── lefa-companion-root.jpg  # canonical drawing source
+│   │   └── lefa-companion-root.svg  # animated interface interpretation
 │   ├── readme/
 │   │   ├── meet-lefa-readme-hero.svg
 │   │   ├── lefa-control-room.svg
