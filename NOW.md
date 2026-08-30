@@ -1,6 +1,6 @@
 ## CURRENT STATE — 2026-08-30
 
-> **Updated:** 2026-08-30T16:40:00+02:00 (SAST)
+> **Updated:** 2026-08-30T16:47:00+02:00 (SAST)
 > **Authority:** Human owner + repository issues; Forge/DPF is a stateless renter (`I_AM_STATELESS_RENTER_NOT_LANDLORD`)
 > **Repository:** `RobynAwesome/lefa-ai`
 > **Active implementation branch:** `feat/poc0-governed-contracts`
@@ -14,19 +14,30 @@ Execute the repository-side half of POC-0 while the human explores the character
 
 | Lane | State | Current truth |
 |---|---|---|
-| Issue #3 — POC-0 governed data/assets | **IN PROGRESS** | PR #6 implements the first contract/provider/asset slice. |
-| Issue #4 — character-first interface | **PARALLEL / HUMAN STITCH LANE** | Await accepted Stitch screenshots/export before canonizing interface structure. |
+| Issue #3 — POC-0 governed data/assets | **IN PROGRESS / EXACT-HEAD GREEN** | PR #6 implements the first contract/provider/asset slice and is validated at head `e717e90a75098f97d5873872674d17c12091fd15`. |
+| Issue #4 — character-first interface | **PARALLEL / HUMAN STITCH LANE** | Governed return contract exists at `docs/STITCH-ACCEPTANCE-HANDOFF.md`; await accepted Stitch evidence before canonizing interface structure. |
 | Issue #2 — read-only Alpaca MCP observation | **HOLD / EXTERNAL GATE** | Requires locally configured paper credentials/runtime discovery. No order authority is admitted. |
 | Issue #5 — engine map discovery | **HOLD BY ISSUE CONTRACT** | Do not implement engines until interface exploration is accepted and engine boundaries are separately canonized. |
 
 ### Current receipts
 
-- PR #6 head before this NOW seed: `11b0a29d7d11e260d778accbd506cd1f01f94f95`.
-- GitHub Actions `validate`: **PASS** on that head.
-- GitGuardian Security Checks: **PASS**; no secrets detected in the scanned commits.
-- `src/lefa/contracts.py` contains the first UI-facing governed contract set.
+- PR #6 exact implementation head: `e717e90a75098f97d5873872674d17c12091fd15`.
+- GitHub Actions run `33317791805`, job `99274302437`: **PASS**.
+  - `ruff check .`: **PASS**.
+  - `pytest -q`: **11 passed in 0.12s**.
+- GitGuardian Security Checks: **PASS**; 9 commits scanned with no secrets detected.
+- First exact-head validation attempt on `71a51c9b415fbd117a54e61cf80f24b414994996` correctly failed on Ruff `DTZ001` because the regression test intentionally created naive datetimes. The failure was not suppressed globally; only the two deliberate invalid-input lines were marked with scoped `# noqa: DTZ001` comments in commit `e717e90a75098f97d5873872674d17c12091fd15`.
+- `src/lefa/contracts.py` now requires timezone-aware provenance, rejects fixture/source mismatches, and requires an explicit freshness window for Alpaca provenance.
+- `Provenance.is_stale(...)` evaluates supplied freshness deterministically and returns `None` when no freshness window was provided rather than inventing one.
 - `src/lefa/providers.py` exposes one `LEFADataProvider` boundary and a deterministic non-live `FixtureProvider`.
 - `assets/manifest.json` registers the canonical root `LEFA AI Logo.png` without regenerating/replacing it.
+- `docs/STITCH-ACCEPTANCE-HANDOFF.md` defines the candidate/accepted visual handoff, truth-binding audit, fake-state prohibitions, responsive checks, and asset admission gate.
+
+### POC / FOC receipt
+
+- **POC_VALIDATED:** bounded repository-side POC-0 truth contracts, provider boundary, provenance freshness invariants, fixture behavior, asset registration, and Stitch acceptance handoff at exact head `e717e90a75098f97d5873872674d17c12091fd15`.
+- **FOC caught and corrected:** CI detected lint-invalid naive datetime test fixtures on the first revalidation pass. The test intent was preserved and the lint exception was narrowly scoped; exact-head CI is now green.
+- **NOT VALIDATED / HOLD:** live Alpaca MCP observation, execution authority, accepted Stitch screen/layout implementation, and Issue #5 engine architecture.
 
 ### Truth boundary
 
@@ -40,15 +51,16 @@ Execute the repository-side half of POC-0 while the human explores the character
 
 - Accepted Stitch direction has not yet been returned to the repository lane.
 - Alpaca MCP identity/version/tool schemas and paper-mode receipts remain externally unproven for Issue #2.
-- PR #6 is still draft and must remain reviewable until the bounded contract slice is complete and exact-head CI is green.
+- PR #6 remains a draft review surface; exact-head technical validation is green, but interface acceptance is intentionally not inferred.
 
 ### Next admissible action
 
-1. Harden the contract layer so decision-relevant provenance carries an explicit freshness window, not only an observation timestamp.
-2. Add regression tests for fixture/live provenance consistency and stale-state behavior.
-3. Re-run exact-head CI and record the result here and on Issue #3 / PR #6.
-4. Await the human's accepted Stitch output before binding any concrete screen/layout structure.
-5. Preserve Issue #5 as HOLD until its explicit discovery gate is satisfied.
+1. Receive the accepted Stitch screenshots/export through `docs/STITCH-ACCEPTANCE-HANDOFF.md`.
+2. Audit every visible dynamic value against the governed contracts before implementing the interface.
+3. Admit only explicitly accepted generated/imported assets into `assets/manifest.json`.
+4. Bind accepted UI state through `LEFADataProvider`; do not hard-code believable financial state.
+5. Keep Issue #2 externally gated until the paper-MCP/runtime receipts exist.
+6. Preserve Issue #5 engine implementation HOLD until its explicit discovery gate is satisfied.
 
 ---
 
