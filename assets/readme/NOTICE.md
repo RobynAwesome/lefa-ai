@@ -1,0 +1,1 @@
+Binary visual assets are stored in this folder and referenced from the root README.
