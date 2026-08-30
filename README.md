@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="LEFA%20AI%20Logo.png" alt="LEFA AI logo" width="320" />
+  <img src="assets/readme/meet-lefa-readme-hero.svg" alt="Meet LEFA — Financial Intelligence through AI, powered by Spiritual Intelligence" width="100%" />
 </p>
 
 <h1 align="center">LEFA AI</h1>
@@ -16,6 +16,10 @@
 ---
 
 ## 👋 Meet LEFA
+
+<p align="center">
+  <img src="assets/companion/lefa-companion-root.svg" alt="Canonical LEFA companion" width="360" />
+</p>
 
 Most finance products introduce themselves with numbers, charts and buttons.
 
@@ -68,6 +72,10 @@ REVEAL
 ---
 
 # 🧠 What actually happens behind LEFA?
+
+<p align="center">
+  <img src="assets/readme/lefa-architecture-readme.svg" alt="LEFA backend architecture — User to LEFA to CRUD to ARK to BMP to MAO to SWFUS to Decision and Reveal" width="100%" />
+</p>
 
 The user should not have to think about this every time they speak to LEFA.
 
@@ -277,6 +285,7 @@ The repository currently includes:
 - configuration support;
 - governance experiments;
 - tests and CI scaffolding;
+- governed companion and README visuals;
 - interface / asset governance planning;
 - engine discovery issues for the next backend phase.
 
@@ -308,7 +317,10 @@ Keep credentials in your local `.env` file. Never commit them.
 
 ```text
 lefa-ai/
-├── assets/           # governed visual identity + asset registry
+├── assets/
+│   ├── companion/    # canonical LEFA companion identity
+│   ├── readme/       # public hero + architecture visuals
+│   └── INDEX.md      # asset governance registry
 ├── docs/             # POC, interface and architecture discovery
 ├── src/lefa/         # LEFA Python package
 ├── tests/            # POC tests
