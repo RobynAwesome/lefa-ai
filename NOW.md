@@ -19,6 +19,18 @@ Execute the repository-side half of POC-0 while the human explores the character
 | Issue #2 — read-only Alpaca MCP observation | **HOLD / EXTERNAL GATE** | Requires locally configured paper credentials/runtime discovery. No order authority is admitted. |
 | Issue #5 — engine map discovery | **HOLD BY ISSUE CONTRACT** | Do not implement engines until interface exploration is accepted and engine boundaries are separately canonized. |
 
+### 2026-08-30T17:42:00+02:00 — Issue #2 pre-seed proof gate
+
+- Status: IN-PROGRESS
+- WHO: Forge/DPF stateless renter under human owner issue authority
+- WHAT: Added a deterministic read-only Alpaca MCP evidence evaluator and operator handoff before accepting any live account/market observation receipts.
+- WHERE: `src/lefa/mcp_observation.py`, `tests/test_mcp_observation.py`, `docs/ALPACA-MCP-READONLY-PROOF.md`
+- WHY: Issue #2 needs a fail-closed repository boundary for missing namespace, auth failure, schema drift, live/unproven mode, network failure, blocked account/trading state, and accidental order-authority exposure.
+- Evidence / receipts: local `python -m ruff check .` PASS; local `python -m pytest -q` PASS, 19 passed in 0.14s.
+- POC/FOC: POC_PRESEEDED; live Alpaca MCP proof remains HOLD until runtime evidence exists.
+- Known errors / uncertainty: local runtime initially lacked `ruff` and `pytest`; remote PR #6 was previously CI-green before this pre-seed addition.
+- Next admissible action: commit/push to PR #6 branch, then record exact-head CI result.
+
 ### Current receipts
 
 - PR #6 exact implementation head: `e717e90a75098f97d5873872674d17c12091fd15`.
