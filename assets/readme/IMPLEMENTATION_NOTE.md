@@ -1,0 +1,1 @@
+README visuals are now being ingested into `assets/readme/` and the canonical companion into `assets/companion/`. The public README references repository-local assets only; no external image host is required for the core product story.
