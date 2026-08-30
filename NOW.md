@@ -19,6 +19,18 @@ Execute the repository-side half of POC-0 while the human explores the character
 | Issue #2 — read-only Alpaca MCP observation | **PRESEEDED / EXTERNAL RUNTIME GATE** | Repository now has the deterministic sanitized MCP proof gate; live paper-MCP receipts remain externally unproven. No order authority is admitted. |
 | Issue #5 — engine map discovery | **HOLD BY ISSUE CONTRACT** | Do not implement engines until interface exploration is accepted and engine boundaries are separately canonized. |
 
+### 2026-08-30T20:45:00+02:00 — Issue #2 sanitized observation receipts
+
+- Status: IN-PROGRESS
+- WHO: Forge/DPF stateless renter under human owner issue authority
+- WHAT: Added normalized read-only MCP observation receipts on top of the pre-seed proof gate.
+- WHERE: `src/lefa/mcp_observation.py`, `tests/test_mcp_observation.py`, `docs/ALPACA-MCP-READONLY-PROOF.md`
+- WHY: Issue #2 needs a receipt layer that can preserve sanitized account/asset/clock/quote/option-chain observations without storing raw payload dumps, credentials, account IDs, account numbers, or execution-capable tool use.
+- Evidence / receipts: local `python -m ruff check .` PASS; local `python -m pytest -q` PASS, 25 passed in 0.09s.
+- POC/FOC: POC_PRESEEDED; live Alpaca MCP proof remains HOLD until runtime evidence exists.
+- Known errors / uncertainty: no live MCP schema has been consumed; receipt kinds remain bounded to read-only observations.
+- Next admissible action: commit remote updates to PR #6 branch, then record exact-head CI result.
+
 ### 2026-08-30T20:31:00+02:00 — Issue #2 pre-seed proof gate
 
 - Status: DONE for repository pre-seed; HOLD for live runtime proof
