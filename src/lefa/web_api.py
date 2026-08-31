@@ -271,4 +271,69 @@ def health() -> dict:
         "status": "ok",
         "service": "lefa-ai-backend",
         "execution_authority": "none",
+        "ai_inference_provider": "Featherless AI (Lablab.ai Hackathon Partner)",
     }
+
+
+class AIExplainRequest(BaseModel):
+    symbol: str = "SPY"
+    price: str | None = None
+    market_state: str = "open"
+    decision_action: str | None = None
+    rationale: str | None = None
+    custom_prompt: str | None = None
+
+
+class AIExplainResponse(BaseModel):
+    explanation: str
+    model: str
+    provider: str
+
+
+@app.post("/api/ai/explain", response_model=AIExplainResponse)
+def explain_market_state(req: AIExplainRequest) -> AIExplainResponse:
+    """Generate governed natural language explanation via Featherless AI open-source inference."""
+    from lefa.featherless import FeatherlessReasoner
+
+    reasoner = FeatherlessReasoner()
+    if req.custom_prompt:
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are LEFA AI, the Governed Financial Intelligence Companion. "
+                    "Provide clear, professional, risk-aware explanations."
+                ),
+            },
+            {"role": "user", "content": req.custom_prompt},
+        ]
+        explanation = reasoner.complete(messages, max_tokens=150)
+    else:
+        explanation = reasoner.explain_market_observation(
+            symbol=req.symbol,
+            price=req.price,
+            market_state=req.market_state,
+            decision_action=req.decision_action,
+            rationale=req.rationale,
+        )
+
+    return AIExplainResponse(
+        explanation=explanation,
+        model=reasoner.model,
+        provider="Featherless AI",
+    )
+
+
+@app.get("/api/ai/dual-axis-explainer", response_model=AIExplainResponse)
+def get_dual_axis_explanation() -> AIExplainResponse:
+    """Return live Featherless AI explanation of LEFA's dual-axis governance architecture."""
+    from lefa.featherless import FeatherlessReasoner
+
+    reasoner = FeatherlessReasoner()
+    explanation = reasoner.explain_dual_axis_governance()
+    return AIExplainResponse(
+        explanation=explanation,
+        model=reasoner.model,
+        provider="Featherless AI",
+    )
+

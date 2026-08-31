@@ -78,3 +78,43 @@ export async function healthCheck(): Promise<{ status: string }> {
   if (!res.ok) throw new Error('Backend unreachable');
   return res.json();
 }
+
+export interface AIExplainResponse {
+  explanation: string;
+  model: string;
+  provider: string;
+}
+
+/**
+ * Request governed natural language market reasoning from Featherless AI open-source models.
+ */
+export async function getAIExplanation(params: {
+  symbol: string;
+  price?: string | null;
+  market_state?: string;
+  decision_action?: string | null;
+  rationale?: string | null;
+  custom_prompt?: string | null;
+}): Promise<AIExplainResponse> {
+  const res = await fetch(`${BASE}/ai/explain`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  if (!res.ok) {
+    throw new Error(`AI explanation failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<AIExplainResponse>;
+}
+
+/**
+ * Fetch Featherless AI live explanation of dual-axis governance.
+ */
+export async function getDualAxisExplanation(): Promise<AIExplainResponse> {
+  const res = await fetch(`${BASE}/ai/dual-axis-explainer`);
+  if (!res.ok) {
+    throw new Error(`Dual-axis explainer failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<AIExplainResponse>;
+}
+
