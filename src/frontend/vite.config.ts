@@ -17,7 +17,9 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: '../../dist/frontend',
+    // Keep the frontend artifact inside the frontend project so Vercel's
+    // outputDirectory (src/frontend/dist) and Vite agree on one path.
+    outDir: 'dist',
     emptyOutDir: true,
   },
 });
