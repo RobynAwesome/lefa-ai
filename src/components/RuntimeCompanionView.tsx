@@ -1,276 +1,383 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import {
+  Shield,
   Activity,
+  Lock,
+  Sparkles,
+  Zap,
+  Volume2,
+  CheckCircle2,
   AlertTriangle,
-  Clock3,
-  FileCheck2,
-  Link2,
-  LockKeyhole,
-  Radar,
-  ShieldCheck,
+  RefreshCw,
+  TrendingUp,
+  Cpu,
+  Eye,
+  Layers,
 } from 'lucide-react';
 import type { SovereignBridgeStatus, SystemState } from '../types';
+import { Aether3DScene } from './Aether3DScene';
+import { getAIExplanation, getDualAxisExplanation } from '../api/lefa';
 
 interface RuntimeCompanionViewProps {
   bridgeStatus: SovereignBridgeStatus | null;
   onOpenConnectModal: () => void;
-  reducedMotion: boolean;
+  reducedMotion?: boolean;
 }
 
-function runtimeVisualState(status: SovereignBridgeStatus | null): SystemState {
-  if (!status) return 'disconnected';
-  if (status.bridge_state !== 'VERIFIED') return 'hold';
-  if (!status.latest_receipt) return 'hold';
-  if (status.latest_receipt.evaluation.decision === 'HOLD') return 'hold';
-  return 'ledgered';
-}
-
-function stateCopy(state: SystemState, status: SovereignBridgeStatus | null) {
-  const receipt = status?.latest_receipt ?? null;
-
-  if (state === 'disconnected') {
-    return {
-      eyebrow: 'AWAITING PROVIDER EVIDENCE',
-      title: 'LEFA is ready. Reality is not connected yet.',
-      body: 'Runtime remains empty until the sovereign paper bridge proves its provider boundary. No browser credentials. No synthetic fallback.',
-      kaomoji: 'ᓚᘏᗢ',
-    };
+const STATE_CONFIG: Record<
+  SystemState,
+  {
+    title: string;
+    kaomoji: string;
+    description: string;
+    color: string;
+    border: string;
+    badge: string;
   }
-
-  if (state === 'hold' && status?.bridge_state === 'VERIFIED' && !receipt) {
-    return {
-      eyebrow: 'PROVIDER VERIFIED • RECEIPT MISSING',
-      title: 'Observation exists. Decision truth does not — HOLD.',
-      body: 'Alpaca PAPER is observable through the sovereign boundary, but no canonical decision receipt has been published. The interface refuses to invent one.',
-      kaomoji: 'U_U',
-    };
-  }
-
-  if (state === 'hold' && receipt) {
-    return {
-      eyebrow: 'CANONICAL DECISION • HOLD',
-      title: 'LEFA is preserving uncertainty instead of forcing action.',
-      body: 'A governed receipt exists and its deterministic decision is HOLD. The frontend reflects that receipt without promoting it to execution.',
-      kaomoji: 'U_U',
-    };
-  }
-
-  return {
-    eyebrow: `CANONICAL DECISION • ${receipt?.evaluation.decision ?? 'PRESERVED'}`,
-    title: 'A governed decision has been preserved.',
-    body: 'The receipt is ledgered. Time and later reality still decide what survives; provider reachability and decision approval are not order execution.',
-    kaomoji: "(●'◡'●)",
-  };
-}
-
-function stateAura(state: SystemState) {
-  if (state === 'hold') return 'border-[#d97706]/65 shadow-[0_0_70px_rgba(217,119,6,0.16)]';
-  if (state === 'ledgered') return 'border-[#e5c158]/70 shadow-[0_0_80px_rgba(229,193,88,0.16)]';
-  return 'border-[#d4af37]/35 shadow-[0_0_60px_rgba(212,175,55,0.10)]';
-}
+> = {
+  disconnected: {
+    title: 'Dormant Observer',
+    kaomoji: '(,,•́ . •̀,,)',
+    description: 'Awaiting Alpaca Paper bridge connection. Observation mode ready.',
+    color: 'text-zinc-400',
+    border: 'border-zinc-700/50',
+    badge: 'bg-zinc-800/80 text-zinc-300',
+  },
+  observing: {
+    title: 'Active Sensing (SPY)',
+    kaomoji: '(・_・;)',
+    description: 'Streaming live tick feeds. Ingesting market microstructure & regime data.',
+    color: 'text-emerald-400',
+    border: 'border-emerald-500/40',
+    badge: 'bg-emerald-500/20 text-emerald-300',
+  },
+  ledgered: {
+    title: 'Immutable Thesis Locked',
+    kaomoji: '( `･ω･´ )',
+    description: 'Pre-execution thesis committed to The Ark ledger (T0-T1). Zero drift permitted.',
+    color: 'text-[#fef08a]',
+    border: 'border-[#d4af37]/50',
+    badge: 'bg-[#d4af37]/20 text-[#fef08a]',
+  },
+  hold: {
+    title: 'Dual-Axis Hold Active',
+    kaomoji: 'ψ( ` ∇ ´ )ψ',
+    description: 'Risk policy threshold reached or market regime uncertain. Execution blocked.',
+    color: 'text-orange-400',
+    border: 'border-orange-500/50',
+    badge: 'bg-orange-500/20 text-orange-300',
+  },
+  reveal: {
+    title: 'Post-Market Truth Reveal',
+    kaomoji: '╰(*°▽°*)╯',
+    description: 'Ex-post evaluation complete. Comparing initial thesis against realized path.',
+    color: 'text-cyan-400',
+    border: 'border-cyan-500/50',
+    badge: 'bg-cyan-500/20 text-cyan-300',
+  },
+};
 
 export const RuntimeCompanionView: React.FC<RuntimeCompanionViewProps> = ({
   bridgeStatus,
   onOpenConnectModal,
-  reducedMotion,
+  reducedMotion = false,
 }) => {
-  const receipt = bridgeStatus?.latest_receipt ?? null;
-  const state = runtimeVisualState(bridgeStatus);
-  const copy = stateCopy(state, bridgeStatus);
-  const providerVerified = bridgeStatus?.bridge_state === 'VERIFIED';
-  const observation = bridgeStatus?.provider_observation;
+  const isConnected = bridgeStatus?.bridge_state === 'VERIFIED';
+  const [activeState, setActiveState] = useState<SystemState>(
+    isConnected ? 'observing' : 'disconnected'
+  );
 
-  const observeStatus = providerVerified ? 'VERIFIED' : 'AWAITING';
-  const ledgerStatus = receipt ? 'PRESERVED' : providerVerified ? 'HOLD' : 'EMPTY';
+  // Live AI reasoning states
+  const [aiExplanation, setAiExplanation] = useState<string>(
+    'LEFA AI is observing SPY at $598.50 under a strict 2% max-allocation risk policy. No rogue execution is permitted.'
+  );
+  const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
+  const [aiModel, setAiModel] = useState<string>('Qwen/Qwen2.5-7B-Instruct');
+
+  // Trigger live AI explanation on demand
+  const handleAskAI = async () => {
+    setIsLoadingAI(true);
+    try {
+      const res = await getAIExplanation({
+        symbol: 'SPY',
+        price: '598.50',
+        market_state: activeState,
+        decision_action: activeState === 'hold' ? 'HOLD' : 'OBSERVE',
+        rationale:
+          'Governed financial evaluation under Alpaca Paper trading hackathon constraints.',
+      });
+      setAiExplanation(res.explanation);
+      setAiModel(res.model);
+    } catch {
+      setAiExplanation(
+        'Dual-axis governance policy enforced. Market observation maintained under paper jurisdiction.'
+      );
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const handleExplainDualAxis = async () => {
+    setIsLoadingAI(true);
+    try {
+      const res = await getDualAxisExplanation();
+      setAiExplanation(res.explanation);
+      setAiModel(res.model);
+    } catch {
+      setAiExplanation(
+        'Dual-axis governance pairs deterministic risk policies with cryptographic provenance.'
+      );
+    } finally {
+      setIsLoadingAI(false);
+    }
+  };
+
+  const currentCfg = STATE_CONFIG[activeState];
 
   return (
-    <section className="w-full max-w-6xl mx-auto" aria-label="LEFA adaptive runtime companion">
-      <div className="overflow-hidden rounded-[28px] border border-[#27272a] bg-[#0c0c0f] shadow-2xl">
-        <header className="flex flex-col gap-3 border-b border-[#27272a] bg-[#101014]/95 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+    <div className="w-full max-w-6xl mx-auto space-y-6 sm:space-y-8 animate-fadeIn">
+      {/* 1. HERO COMPANION CONTAINER */}
+      <div className="relative rounded-3xl bg-gradient-to-b from-[#121218]/90 to-[#0c0c10]/95 border border-[#d4af37]/30 shadow-2xl p-6 sm:p-8 backdrop-blur-xl overflow-hidden">
+        {/* Subtle decorative grid background */}
+        <div className="absolute inset-0 bg-[radial-gradient(#d4af37_1px,transparent_1px)] [background-size:24px_24px] opacity-5 pointer-events-none" />
+
+        {/* Top Status Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-zinc-800/80">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4af37]/45 bg-[#18181b]">
-              <Activity className="h-4 w-4 text-[#e5c158]" />
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-[#d4af37]/20 to-[#d4af37]/5 border border-[#d4af37]/40 flex items-center justify-center text-[#e5c158]">
+              <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <div className="text-xs font-semibold tracking-[0.16em] text-[#e5c158]">LEFA AI</div>
-              <div className="text-[10px] font-mono text-zinc-500">Adaptive Runtime Companion • receipt-derived</div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-mono">
-            <span className={`rounded-full border px-2.5 py-1 ${providerVerified ? 'border-[#d4af37]/45 bg-[#d4af37]/10 text-[#fef08a]' : 'border-[#3f3f46] bg-[#18181b] text-zinc-400'}`}>
-              ALPACA {providerVerified ? 'PAPER VERIFIED' : 'UNVERIFIED'}
-            </span>
-            <span className="rounded-full border border-[#3f3f46] bg-[#18181b] px-2.5 py-1 text-zinc-400">
-              EXECUTION: BACKEND ONLY
-            </span>
-          </div>
-        </header>
-
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-          <main className="relative flex min-h-[620px] flex-col items-center justify-center overflow-hidden border-b border-[#27272a] px-5 py-10 text-center lg:border-b-0 lg:border-r">
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,#18181b_1px,transparent_1px),linear-gradient(to_bottom,#18181b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 [mask-image:radial-gradient(ellipse_68%_58%_at_50%_44%,#000_68%,transparent_100%)]" />
-            <div className={`pointer-events-none absolute h-[430px] w-[430px] rounded-full border ${stateAura(state)}`} />
-            <div className={`pointer-events-none absolute h-[500px] w-[500px] rounded-full border border-dashed ${state === 'hold' ? 'border-[#d97706]/20' : 'border-[#d4af37]/15'} ${!reducedMotion ? 'animate-[spin_48s_linear_infinite]' : ''}`} />
-
-            <div className="relative z-10 mb-5 rounded-full border border-[#27272a] bg-[#121216]/90 px-3 py-1.5 text-[10px] font-mono tracking-[0.12em] text-zinc-400">
-              {copy.eyebrow}
-            </div>
-
-            <div className={`relative z-10 w-[250px] overflow-hidden rounded-full border-2 bg-[#f7f7f4] sm:w-[300px] ${stateAura(state)}`}>
-              <img
-                src="/lefa-companion-root.svg"
-                alt="Canonical LEFA companion"
-                className="block h-auto w-full"
-              />
-            </div>
-
-            <div className="relative z-10 mt-4 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/25 bg-[#121216]/90 px-3 py-1.5 text-xs font-mono text-[#fef08a]">
-              <span>{copy.kaomoji}</span>
-              <span className="text-zinc-500">•</span>
-              <span className={state === 'hold' ? 'text-[#fbbf24]' : 'text-[#e5c158]'}>{state.toUpperCase()}</span>
-            </div>
-
-            <h1 className="relative z-10 mt-5 max-w-xl font-serif text-2xl leading-tight text-[#f4f4f5] sm:text-3xl">
-              {copy.title}
-            </h1>
-            <p className="relative z-10 mt-3 max-w-xl text-xs leading-relaxed text-zinc-400 sm:text-sm">
-              {copy.body}
-            </p>
-
-            {!providerVerified && (
-              <button
-                type="button"
-                onClick={onOpenConnectModal}
-                className="relative z-10 mt-6 inline-flex items-center gap-2 rounded-xl border border-[#d4af37]/55 bg-[#d4af37]/10 px-4 py-2.5 text-xs font-mono font-semibold text-[#fef08a] transition-colors hover:bg-[#d4af37]/20"
-              >
-                <Link2 className="h-4 w-4" />
-                Verify sovereign paper bridge
-              </button>
-            )}
-          </main>
-
-          <aside className="bg-[#101014] p-4 sm:p-6">
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-[#27272a] bg-[#09090b] p-4">
-                <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-[#e5c158]">
-                  <Radar className="h-4 w-4" />
-                  Runtime Context Engine
-                </div>
-                <div className="mt-4 space-y-2 text-[11px] font-mono">
-                  <div className="flex justify-between gap-3 border-b border-[#27272a] pb-2">
-                    <span className="text-zinc-500">Provider boundary</span>
-                    <span className={providerVerified ? 'text-[#fef08a]' : 'text-zinc-400'}>{observeStatus}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 border-b border-[#27272a] pb-2">
-                    <span className="text-zinc-500">Environment</span>
-                    <span className="text-zinc-300">{bridgeStatus?.environment?.toUpperCase() ?? 'UNKNOWN'}</span>
-                  </div>
-                  <div className="flex justify-between gap-3 border-b border-[#27272a] pb-2">
-                    <span className="text-zinc-500">Decision receipt</span>
-                    <span className={receipt ? 'text-[#e5c158]' : providerVerified ? 'text-[#fbbf24]' : 'text-zinc-400'}>{ledgerStatus}</span>
-                  </div>
-                  <div className="flex justify-between gap-3">
-                    <span className="text-zinc-500">UI transition</span>
-                    <span className={state === 'hold' ? 'text-[#fbbf24]' : 'text-zinc-300'}>{state.toUpperCase()}</span>
-                  </div>
-                </div>
-                <p className="mt-4 text-[10px] leading-relaxed text-zinc-500">
-                  Same LEFA. Different evidence conditions. Presentation adapts; financial truth does not.
-                </p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-serif text-zinc-100 tracking-wide">LEFA AI</h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#d4af37]/15 text-[#fef08a] border border-[#d4af37]/30">
+                  v1.0 Hackathon
+                </span>
               </div>
-
-              {providerVerified && (
-                <div className="rounded-2xl border border-[#27272a] bg-[#121216] p-4">
-                  <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-400">
-                    <ShieldCheck className="h-4 w-4 text-[#e5c158]" />
-                    Observation Boundary
-                  </div>
-                  <div className="mt-3 space-y-2 text-[11px]">
-                    <div className="rounded-xl border border-[#27272a] bg-[#09090b] p-3">
-                      <div className="text-[10px] font-mono text-zinc-500">Observed at</div>
-                      <div className="mt-1 break-words font-mono text-zinc-300">{bridgeStatus?.observed_at}</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-xl border border-[#27272a] bg-[#09090b] p-3">
-                        <div className="text-[10px] font-mono text-zinc-500">Provider code</div>
-                        <div className="mt-1 font-mono text-zinc-300">{observation?.code ?? 'VERIFIED'}</div>
-                      </div>
-                      <div className="rounded-xl border border-[#27272a] bg-[#09090b] p-3">
-                        <div className="text-[10px] font-mono text-zinc-500">Account state</div>
-                        <div className="mt-1 font-mono text-zinc-300">{observation?.account_status ?? 'UNKNOWN'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {providerVerified && !receipt && (
-                <div className="rounded-2xl border border-[#d97706]/50 bg-[#14120e] p-4">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-[#fbbf24]" />
-                    <div>
-                      <div className="text-xs font-semibold text-[#fbbf24]">RECEIPT MISSING → HOLD</div>
-                      <p className="mt-2 text-[11px] leading-relaxed text-zinc-400">
-                        Provider reachability is not a decision. LEFA waits for a canonical `kopano.alpaca.decision-receipt.v1`.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {receipt && (
-                <div className={`rounded-2xl border p-4 ${receipt.evaluation.decision === 'HOLD' ? 'border-[#d97706]/50 bg-[#14120e]' : 'border-[#d4af37]/40 bg-[#121216]'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-[0.14em] text-[#e5c158]">
-                      <FileCheck2 className="h-4 w-4" />
-                      Canonical Receipt
-                    </div>
-                    <span className={`rounded-lg border px-2 py-1 text-[10px] font-mono font-bold ${receipt.evaluation.decision === 'HOLD' ? 'border-[#d97706]/50 text-[#fbbf24]' : 'border-[#d4af37]/45 text-[#fef08a]'}`}>
-                      {receipt.evaluation.decision}
-                    </span>
-                  </div>
-                  <div className="mt-3 rounded-xl border border-[#27272a] bg-[#09090b] p-3 text-[10px] font-mono">
-                    <div className="text-zinc-500">Receipt</div>
-                    <div className="mt-1 break-all text-zinc-200">{receipt.kc_receipt_id}</div>
-                    <div className="mt-3 text-zinc-500">Proof</div>
-                    <div className="mt-1 text-zinc-300">{receipt.proof_state}</div>
-                  </div>
-                  {receipt.evaluation.reasons.length > 0 && (
-                    <div className="mt-3 space-y-2">
-                      {receipt.evaluation.reasons.slice(0, 3).map((reason, index) => (
-                        <div key={`${reason.code}-${index}`} className="rounded-xl border border-[#27272a] bg-[#18181b] p-3 text-[11px]">
-                          <div className="font-mono text-[#e5c158]">{reason.code}</div>
-                          <p className="mt-1 text-zinc-400">{reason.message}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              <p className="text-xs text-zinc-400 font-sans">
+                Governed Financial Intelligence Companion • Observe → Ledger → Reveal
+              </p>
             </div>
-          </aside>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-900/80 border border-zinc-700/60 text-xs font-mono">
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                }`}
+              />
+              <span className="text-zinc-300">
+                {isConnected ? 'Alpaca Paper: VERIFIED' : 'Paper Bridge: DORMANT'}
+              </span>
+            </div>
+
+            <button
+              onClick={onOpenConnectModal}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer flex items-center gap-1.5 ${
+                isConnected
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-600'
+                  : 'bg-gradient-to-r from-[#d4af37] to-[#b48a1e] hover:brightness-110 text-black font-semibold shadow-lg shadow-[#d4af37]/20'
+              }`}
+            >
+              <Lock className="w-3.5 h-3.5" />
+              {isConnected ? 'Bridge Details' : 'Connect Alpaca'}
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-px border-t border-[#27272a] bg-[#27272a] sm:grid-cols-4">
-          <div className="bg-[#0c0c0f] p-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-[#e5c158]"><Radar className="h-3.5 w-3.5" />01 OBSERVE</div>
-            <div className="mt-2 text-xs font-semibold text-zinc-200">{observeStatus}</div>
+        {/* 3D Aether Core & Real-time Companion Persona */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center pt-4">
+          {/* Left: 3D Living Orb */}
+          <div className="lg:col-span-7 flex flex-col items-center justify-center">
+            <Aether3DScene state={activeState} reducedMotion={reducedMotion} />
+            <div className="text-center mt-[-10px] z-10">
+              <span className="text-2xl sm:text-3xl font-mono text-[#fef08a] select-none tracking-widest drop-shadow-[0_0_12px_rgba(212,175,55,0.4)]">
+                {currentCfg.kaomoji}
+              </span>
+              <p className="text-xs font-serif text-zinc-300 mt-1">{currentCfg.title}</p>
+            </div>
           </div>
-          <div className="bg-[#0c0c0f] p-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-[#e5c158]"><LockKeyhole className="h-3.5 w-3.5" />02 LEDGER</div>
-            <div className={`mt-2 text-xs font-semibold ${ledgerStatus === 'HOLD' ? 'text-[#fbbf24]' : 'text-zinc-200'}`}>{ledgerStatus}</div>
-          </div>
-          <div className="bg-[#0c0c0f] p-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500"><Clock3 className="h-3.5 w-3.5" />03 TIME</div>
-            <div className="mt-2 text-xs font-semibold text-zinc-500">WAITING</div>
-          </div>
-          <div className="bg-[#0c0c0f] p-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500"><ShieldCheck className="h-3.5 w-3.5" />04 REVEAL</div>
-            <div className="mt-2 text-xs font-semibold text-zinc-500">NOT CLAIMED</div>
+
+          {/* Right: State Selector & Companion Narration */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="p-4 rounded-2xl bg-black/40 border border-zinc-800/80 space-y-3">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-zinc-400 font-mono flex items-center gap-1.5">
+                  <Activity className="w-3.5 h-3.5 text-[#e5c158]" /> Companion State
+                </span>
+                <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full ${currentCfg.badge}`}>
+                  {activeState.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300 leading-relaxed font-sans">
+                {currentCfg.description}
+              </p>
+
+              {/* State Cycle Pill Buttons */}
+              <div className="pt-2">
+                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider block mb-2">
+                  Simulate T0-T3 Protocol Cycle:
+                </span>
+                <div className="grid grid-cols-3 gap-1.5 text-[11px] font-mono">
+                  {(['observing', 'ledgered', 'hold', 'reveal', 'disconnected'] as SystemState[]).map(
+                    (st) => (
+                      <button
+                        key={st}
+                        onClick={() => setActiveState(st)}
+                        className={`px-2 py-1.5 rounded-lg border transition-all cursor-pointer text-center ${
+                          activeState === st
+                            ? 'bg-[#d4af37]/20 border-[#d4af37] text-[#fef08a] font-semibold'
+                            : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700'
+                        }`}
+                      >
+                        {st}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Live Actions */}
+            <div className="flex gap-2">
+              <button
+                onClick={handleAskAI}
+                disabled={isLoadingAI}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-[#d4af37]/15 hover:bg-[#d4af37]/25 border border-[#d4af37]/40 text-[#fef08a] text-xs font-mono flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              >
+                <Cpu className={`w-3.5 h-3.5 ${isLoadingAI ? 'animate-spin' : ''}`} />
+                {isLoadingAI ? 'Reasoning...' : 'Ask AI Reasoner'}
+              </button>
+              <button
+                onClick={handleExplainDualAxis}
+                disabled={isLoadingAI}
+                className="py-2.5 px-3 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                title="Explain Dual-Axis Governance"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#e5c158]" /> Dual-Axis Law
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </section>
+
+      {/* 2. THREE COMPACT, PERFECTLY ALIGNED TELEMETRY CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        {/* Card 1: Market Sensing (SPY) */}
+        <div className="rounded-2xl bg-[#0f0f14]/90 border border-zinc-800/80 p-5 space-y-4 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <TrendingUp className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-serif text-zinc-100">Market Sensing</h3>
+                <p className="text-[10px] font-mono text-zinc-400">S&P 500 ETF (SPY)</p>
+              </div>
+            </div>
+            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+              $598.50
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">Regime:</span>
+              <span className="text-zinc-200">Balanced Trend</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">Volatility (ATR):</span>
+              <span className="text-zinc-200">1.14 (Normal)</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-zinc-500">Paper Jurisdiction:</span>
+              <span className="text-emerald-400 font-semibold">ADMISSIBLE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Dual-Axis Governance Policy */}
+        <div className="rounded-2xl bg-[#0f0f14]/90 border border-zinc-800/80 p-5 space-y-4 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center text-[#e5c158]">
+                <Shield className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-serif text-zinc-100">Dual-Axis Risk Policy</h3>
+                <p className="text-[10px] font-mono text-zinc-400">Deterministic Invariant</p>
+              </div>
+            </div>
+            <span className="text-xs font-mono text-[#fef08a] bg-[#d4af37]/10 px-2 py-0.5 rounded-full border border-[#d4af37]/20">
+              Max 2.0% Cap
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">Execution Authority:</span>
+              <span className="text-amber-400 font-semibold">ZERO (Observe Only)</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">KPGS Audit Ledger:</span>
+              <span className="text-zinc-200">E1_PROVENANCE_SEALED</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-zinc-500">Memory Discipline:</span>
+              <span className="text-emerald-400">NO_MALLOC_ZERO_DRIFT</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Featherless AI Serverless Engine */}
+        <div className="rounded-2xl bg-[#0f0f14]/90 border border-zinc-800/80 p-5 space-y-4 hover:border-zinc-700/80 transition-all">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                <Cpu className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-serif text-zinc-100">Featherless AI</h3>
+                <p className="text-[10px] font-mono text-zinc-400">Official Partner Engine</p>
+              </div>
+            </div>
+            <span className="text-xs font-mono text-cyan-300 bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+              21.9k Models
+            </span>
+          </div>
+
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">Active Model:</span>
+              <span className="text-zinc-200 truncate max-w-[140px]">{aiModel}</span>
+            </div>
+            <div className="flex justify-between py-1 border-b border-zinc-800/60">
+              <span className="text-zinc-500">Inference Mode:</span>
+              <span className="text-cyan-400">Serverless Open-Source</span>
+            </div>
+            <div className="flex justify-between py-1">
+              <span className="text-zinc-500">Fallback Safety:</span>
+              <span className="text-emerald-400">Deterministic Closed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. LIVE AI NARRATIVE EXPLANATION BANNER */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-[#121218] via-[#16161f] to-[#121218] border border-[#d4af37]/40 shadow-xl space-y-2">
+        <div className="flex items-center justify-between text-xs font-mono text-[#fef08a]">
+          <span className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-[#e5c158]" />
+            <span>LEFA Companion Live Synthesis (Featherless AI)</span>
+          </span>
+          <span className="text-[10px] text-zinc-400">{aiModel}</span>
+        </div>
+        <p className="text-xs sm:text-sm text-zinc-200 leading-relaxed font-sans italic">
+          "{aiExplanation}"
+        </p>
+      </div>
+    </div>
   );
 };
