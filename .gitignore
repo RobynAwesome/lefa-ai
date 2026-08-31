@@ -7,6 +7,9 @@ __pycache__/
 dist/
 build/
 *.egg-info/
+node_modules/
+*.bak
+.DS_Store
 
 # Local sovereign governance / feedback ledger — never commit.
 .lefa-private/

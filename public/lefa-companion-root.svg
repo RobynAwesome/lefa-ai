@@ -1,0 +1,34 @@
+<svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Canonical LEFA companion</title>
+  <desc id="desc">Black, white and gold companion identity with circular halo, black hat and geometric gold trim.</desc>
+  <defs>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(300 300) rotate(90) scale(260)"><stop stop-color="#D6A53A" stop-opacity="0.18"/><stop offset="1" stop-color="#D6A53A" stop-opacity="0"/></radialGradient>
+    <linearGradient id="gold" x1="160" y1="170" x2="450" y2="500"><stop stop-color="#FFF1A6"/><stop offset="0.45" stop-color="#E0B94D"/><stop offset="1" stop-color="#A97918"/></linearGradient>
+    <filter id="glow" x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="600" height="600" rx="48" fill="#F7F7F4"/>
+  <circle cx="300" cy="300" r="248" fill="url(#halo)"/>
+  <circle cx="300" cy="300" r="222" fill="#050505" stroke="#141414" stroke-width="8"/>
+  <circle cx="300" cy="300" r="226" fill="none" stroke="url(#gold)" stroke-width="3" stroke-opacity="0.8"><animate attributeName="stroke-opacity" values="0.35;0.95;0.35" dur="4.2s" repeatCount="indefinite"/></circle>
+  <g transform="translate(145 75)">
+    <path d="M77 102C94 45 215 29 260 88C212 68 129 72 77 102Z" fill="#080808" stroke="#F7F7F4" stroke-width="5"/>
+    <path d="M86 92C112 52 206 50 251 84C218 80 138 84 86 92Z" fill="#111"/>
+    <ellipse cx="168" cy="145" rx="66" ry="73" fill="#B76B2D"/>
+    <path d="M139 137C147 132 155 132 162 137" stroke="#1A120D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M178 137C186 132 194 132 201 137" stroke="#1A120D" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="150" cy="144" r="4" fill="#111"/><circle cx="190" cy="144" r="4" fill="#111"/>
+    <path d="M169 153L162 174L174 175" stroke="#4A2B19" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M149 194C160 201 178 201 190 194" stroke="#422518" stroke-width="4" stroke-linecap="round"/>
+    <path d="M120 218H215L255 438H75L120 218Z" fill="#090909" stroke="#F7F7F4" stroke-width="5"/>
+    <path d="M126 220L169 251L209 220" stroke="url(#gold)" stroke-width="7" fill="none"/>
+    <path d="M104 354L135 318L168 347L201 318L229 354L247 394" stroke="url(#gold)" stroke-width="8" fill="none"/>
+    <path d="M112 218L77 366M220 218L256 366" stroke="#090909" stroke-width="34" stroke-linecap="round"/>
+    <path d="M112 218L77 366M220 218L256 366" stroke="url(#gold)" stroke-width="5" stroke-linecap="round"/>
+    <path d="M138 231L169 259L200 231L169 283L138 231Z" fill="none" stroke="url(#gold)" stroke-width="5"/>
+  </g>
+  <g filter="url(#glow)">
+    <circle cx="119" cy="300" r="5" fill="#F5D875"><animate attributeName="r" values="4;8;4" dur="2.8s" repeatCount="indefinite"/></circle>
+    <circle cx="481" cy="300" r="5" fill="#F5D875"><animate attributeName="r" values="4;8;4" dur="2.8s" begin="1.4s" repeatCount="indefinite"/></circle>
+  </g>
+  <text x="300" y="563" text-anchor="middle" fill="#6E5A27" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="800" letter-spacing="4">LEFA · COMPANION IDENTITY</text>
+</svg>

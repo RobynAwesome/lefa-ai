@@ -4,8 +4,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Reuse the repository-governed visual assets instead of duplicating them.
-  publicDir: '../../assets',
+  publicDir: 'public',
   server: {
     port: 3000,
     host: '0.0.0.0',
@@ -17,8 +16,6 @@ export default defineConfig({
     },
   },
   build: {
-    // Keep the frontend artifact inside the frontend project so Vercel's
-    // outputDirectory (src/frontend/dist) and Vite agree on one path.
     outDir: 'dist',
     emptyOutDir: true,
   },
