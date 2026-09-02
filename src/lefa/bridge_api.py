@@ -153,7 +153,7 @@ def _read_upstream_status() -> Any:
     )
 
     try:
-        with urlopen(request, timeout=4) as response:  # noqa: S310 - operator-owned HTTPS URL
+        with urlopen(request, timeout=4) as response:
             body = response.read().decode("utf-8")
     except HTTPError as exc:
         # Sovereign Hub intentionally uses HTTP 503 for a governed HOLD. The JSON
