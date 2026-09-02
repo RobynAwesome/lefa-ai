@@ -11,15 +11,6 @@ from lefa.web_api import app
 client = TestClient(app)
 
 
-def _mock_completion(text: str = "Governed explanation") -> MagicMock:
-    response = MagicMock()
-    response.read.return_value = (
-        '{"choices": [{"message": {"content": ' + repr(text).replace("'", '"') + "}}]}"
-    ).encode("utf-8")
-    response.__enter__.return_value = response
-    return response
-
-
 def test_featherless_reasoner_requires_explicit_configuration():
     with patch.dict(os.environ, {}, clear=True):
         reasoner = FeatherlessReasoner()
@@ -37,9 +28,11 @@ def test_featherless_reasoner_explicit_key_is_configured():
 def test_featherless_reasoner_provider_error_is_not_fake_success():
     reasoner = FeatherlessReasoner(api_key="test-only-key")
     error = urllib.error.HTTPError("url", 403, "Forbidden", {}, None)
-    with patch("urllib.request.urlopen", side_effect=error):
-        with pytest.raises(FeatherlessUnavailable, match="HTTP_403"):
-            reasoner.complete([{"role": "user", "content": "Hello"}])
+    with (
+        patch("urllib.request.urlopen", side_effect=error),
+        pytest.raises(FeatherlessUnavailable, match="HTTP_403"),
+    ):
+        reasoner.complete([{"role": "user", "content": "Hello"}])
 
 
 def test_featherless_explain_market_observation_mocked():
