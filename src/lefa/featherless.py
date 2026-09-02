@@ -1,13 +1,12 @@
 """
 LEFA AI — Featherless AI Serverless Inference Engine
 =====================================================
-Integrates Featherless AI (Lablab.ai Hackathon Official Partner) for open-source
-LLM market reasoning, companion dialog, and governed decision explanations.
+Open-source LLM explanation support for LEFA.
 
 Governance boundaries:
 - Pure advisory / explanation only. Zero broker execution authority.
-- Every reasoning request is logged with provenance metadata.
-- Graceful offline fallback ensures zero interruption to deterministic risk logic.
+- Credentials are environment-only and never have a source-code fallback.
+- Provider failure is explicit; it is never converted into synthetic "live" reasoning.
 
 I_AM_STATELESS_RENTER_NOT_LANDLORD
 """
@@ -18,11 +17,9 @@ import logging
 import os
 import urllib.error
 import urllib.request
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_FEATHERLESS_API_KEY = "rc_895ea88f311a6126b5384f28bfc84b329ded642650ac69edbcca38cf2c95c871"
 DEFAULT_FEATHERLESS_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 FEATHERLESS_BASE_URL = "https://api.featherless.ai/v1/chat/completions"
 
@@ -34,8 +31,16 @@ Your role:
 4. Keep explanations concise, professional, and accessible (2-3 sentences max unless asked for deep analysis)."""
 
 
+class FeatherlessUnavailable(RuntimeError):
+    """Raised when live Featherless inference cannot be truthfully produced."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
+
+
 class FeatherlessReasoner:
-    """Serverless AI inference client for Featherless AI."""
+    """Server-side advisory inference client for Featherless AI."""
 
     def __init__(
         self,
@@ -43,20 +48,12 @@ class FeatherlessReasoner:
         model: str | None = None,
         timeout: float = 12.0,
     ) -> None:
-        self.api_key = (
-            api_key
-            or os.getenv("FEATHERLESS_API_KEY")
-            or DEFAULT_FEATHERLESS_API_KEY
-        )
-        self.model = (
-            model
-            or os.getenv("FEATHERLESS_MODEL")
-            or DEFAULT_FEATHERLESS_MODEL
-        )
+        self.api_key = api_key or os.getenv("FEATHERLESS_API_KEY", "").strip()
+        self.model = model or os.getenv("FEATHERLESS_MODEL") or DEFAULT_FEATHERLESS_MODEL
         self.timeout = timeout
 
     def is_configured(self) -> bool:
-        return bool(self.api_key and self.api_key.startswith("rc_"))
+        return bool(self.api_key)
 
     def complete(
         self,
@@ -66,7 +63,10 @@ class FeatherlessReasoner:
         temperature: float = 0.2,
         model: str | None = None,
     ) -> str:
-        """Execute chat completion request against Featherless AI endpoint."""
+        """Execute one live completion or fail explicitly without synthetic success."""
+        if not self.is_configured():
+            raise FeatherlessUnavailable("NOT_CONFIGURED")
+
         target_model = model or self.model
         payload = {
             "model": target_model,
@@ -89,17 +89,33 @@ class FeatherlessReasoner:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
-                choices = data.get("choices", [])
-                if choices and "message" in choices[0]:
-                    return choices[0]["message"].get("content", "").strip()
-                return "LEFA AI reasoning generated with no content choices."
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode("utf-8", errors="ignore")
-            logger.warning("Featherless API HTTP error %d: %s", e.code, err_body)
-            return self._fallback_explanation(messages, reason=f"HTTP_{e.code}")
-        except Exception as e:
-            logger.warning("Featherless API invocation failed: %s", e)
-            return self._fallback_explanation(messages, reason=str(type(e).__name__))
+        except urllib.error.HTTPError as exc:
+            logger.warning("Featherless inference HTTP status %d", exc.code)
+            raise FeatherlessUnavailable(f"HTTP_{exc.code}") from exc
+        except urllib.error.URLError as exc:
+            logger.warning("Featherless inference network unavailable")
+            raise FeatherlessUnavailable("NETWORK_UNAVAILABLE") from exc
+        except (TimeoutError, OSError) as exc:
+            logger.warning("Featherless inference transport unavailable")
+            raise FeatherlessUnavailable("TRANSPORT_UNAVAILABLE") from exc
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            logger.warning("Featherless inference returned invalid JSON")
+            raise FeatherlessUnavailable("INVALID_RESPONSE") from exc
+
+        choices = data.get("choices") if isinstance(data, dict) else None
+        if not isinstance(choices, list) or not choices:
+            raise FeatherlessUnavailable("EMPTY_RESPONSE")
+
+        first = choices[0]
+        if not isinstance(first, dict):
+            raise FeatherlessUnavailable("INVALID_RESPONSE")
+        message = first.get("message")
+        if not isinstance(message, dict):
+            raise FeatherlessUnavailable("INVALID_RESPONSE")
+        content = message.get("content")
+        if not isinstance(content, str) or not content.strip():
+            raise FeatherlessUnavailable("EMPTY_RESPONSE")
+        return content.strip()
 
     def explain_market_observation(
         self,
@@ -109,14 +125,14 @@ class FeatherlessReasoner:
         decision_action: str | None = None,
         rationale: str | None = None,
     ) -> str:
-        """Generate a natural-language spoken/written explanation of current market state."""
+        """Explain backend-supplied market evidence; never invent the evidence itself."""
         prompt = (
             f"Market Symbol: {symbol}\n"
             f"Latest Price: {price or 'N/A'}\n"
             f"Market State: {market_state}\n"
             f"Proposed Action: {decision_action or 'OBSERVE'}\n"
-            f"Governance Rationale: {rationale or 'Awaiting live trade proposal.'}\n\n"
-            "Explain what this means for the user's governed financial companion in 2 clear sentences."
+            f"Governance Rationale: {rationale or 'No governed proposal is available.'}\n\n"
+            "Explain what this means for the user in 2 clear sentences. Do not invent missing facts."
         )
 
         messages = [
@@ -126,7 +142,7 @@ class FeatherlessReasoner:
         return self.complete(messages, max_tokens=120, temperature=0.1)
 
     def explain_dual_axis_governance(self) -> str:
-        """Explain the core LEFA AI dual-axis architecture."""
+        """Explain the core LEFA dual-axis architecture."""
         messages = [
             {"role": "system", "content": LEFA_SYSTEM_PROMPT},
             {
@@ -135,15 +151,3 @@ class FeatherlessReasoner:
             },
         ]
         return self.complete(messages, max_tokens=100, temperature=0.1)
-
-    def _fallback_explanation(
-        self, messages: list[dict[str, str]], reason: str
-    ) -> str:
-        """Deterministic fallback when external AI reasoning cannot be reached."""
-        last_user_msg = next(
-            (m["content"] for m in reversed(messages) if m.get("role") == "user"),
-            "Market observation active.",
-        )
-        return (
-            f"Observation recorded under governed deterministic policy."
-        )

@@ -1,18 +1,21 @@
 import json
+import os
 import urllib.request
 
-api_key = "rc_895ea88f311a6126b5384f28bfc84b329ded642650ac69edbcca38cf2c95c871"
-url = "https://api.featherless.ai/v1/models"
+api_key = os.environ.get("FEATHERLESS_API_KEY", "").strip()
+if not api_key:
+    raise SystemExit("FEATHERLESS_API_KEY is required")
 
+url = "https://api.featherless.ai/v1/models"
 req = urllib.request.Request(
     url,
     headers={
         "Authorization": f"Bearer {api_key}",
-        "Accept": "application/json"
-    }
+        "Accept": "application/json",
+    },
 )
 
-with urllib.request.urlopen(req) as resp:
+with urllib.request.urlopen(req, timeout=15) as resp:
     res = json.loads(resp.read().decode("utf-8"))
     models = [m["id"] for m in res.get("data", [])]
 

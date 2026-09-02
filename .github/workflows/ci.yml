@@ -18,8 +18,20 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -e '.[dev]'
-      - name: Lint bounded bridge change
-        run: ruff check api/index.py src/lefa/bridge_api.py tests/test_bridge_api.py
+      - name: Lint governed backend surfaces
+        run: >-
+          ruff check
+          api/index.py
+          src/lefa/bridge_api.py
+          src/lefa/featherless.py
+          src/lefa/web_api.py
+          tests/test_bridge_api.py
+          tests/test_featherless.py
+          scripts/search_featherless_models.py
+          scripts/test_featherless.py
+          scripts/test_featherless_chat.py
+          scripts/test_featherless_models.py
+          scripts/test_featherless_models_eval.py
       - name: Full backend regression suite
         run: pytest -q
 

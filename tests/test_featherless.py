@@ -1,58 +1,107 @@
-from unittest.mock import MagicMock, patch
+import os
 import urllib.error
+from unittest.mock import MagicMock, patch
 
-from lefa.featherless import FeatherlessReasoner
-from lefa.web_api import app
+import pytest
 from fastapi.testclient import TestClient
+
+from lefa.featherless import FeatherlessReasoner, FeatherlessUnavailable
+from lefa.web_api import app
 
 client = TestClient(app)
 
 
-def test_featherless_reasoner_init():
-    reasoner = FeatherlessReasoner(api_key="rc_test_key_123", model="Qwen/Qwen2.5-7B-Instruct")
+def _mock_completion(text: str = "Governed explanation") -> MagicMock:
+    response = MagicMock()
+    response.read.return_value = (
+        '{"choices": [{"message": {"content": ' + repr(text).replace("'", '"') + "}}]}"
+    ).encode("utf-8")
+    response.__enter__.return_value = response
+    return response
+
+
+def test_featherless_reasoner_requires_explicit_configuration():
+    with patch.dict(os.environ, {}, clear=True):
+        reasoner = FeatherlessReasoner()
+        assert reasoner.is_configured() is False
+        with pytest.raises(FeatherlessUnavailable, match="NOT_CONFIGURED"):
+            reasoner.complete([{"role": "user", "content": "Hello"}])
+
+
+def test_featherless_reasoner_explicit_key_is_configured():
+    reasoner = FeatherlessReasoner(api_key="test-only-key", model="Qwen/Qwen2.5-7B-Instruct")
     assert reasoner.is_configured() is True
     assert reasoner.model == "Qwen/Qwen2.5-7B-Instruct"
 
 
-def test_featherless_reasoner_fallback_on_error():
-    reasoner = FeatherlessReasoner(api_key="rc_invalid")
-    with patch("urllib.request.urlopen", side_effect=urllib.error.HTTPError("url", 403, "Forbidden", {}, None)):
-        result = reasoner.complete([{"role": "user", "content": "Hello"}])
-        assert "Observation recorded under governed deterministic policy." in result
-        assert "HTTP_403" not in result
+def test_featherless_reasoner_provider_error_is_not_fake_success():
+    reasoner = FeatherlessReasoner(api_key="test-only-key")
+    error = urllib.error.HTTPError("url", 403, "Forbidden", {}, None)
+    with patch("urllib.request.urlopen", side_effect=error):
+        with pytest.raises(FeatherlessUnavailable, match="HTTP_403"):
+            reasoner.complete([{"role": "user", "content": "Hello"}])
 
 
 def test_featherless_explain_market_observation_mocked():
-    reasoner = FeatherlessReasoner()
+    reasoner = FeatherlessReasoner(api_key="test-only-key")
     mock_response = MagicMock()
-    mock_response.read.return_value = b'{"choices": [{"message": {"content": "SPY is stable at 598.50 under governed observation."}}]}'
+    mock_response.read.return_value = b'{"choices": [{"message": {"content": "Market evidence remains under governed observation."}}]}'
     mock_response.__enter__.return_value = mock_response
 
     with patch("urllib.request.urlopen", return_value=mock_response):
-        explanation = reasoner.explain_market_observation("SPY", "598.50", "open", "OBSERVE", "Within 2% risk limit.")
-        assert "SPY is stable" in explanation
+        explanation = reasoner.explain_market_observation(
+            "SPY", None, "unknown", "OBSERVE", "No live market price admitted."
+        )
+        assert "governed observation" in explanation
 
 
-def test_web_api_explain_endpoint():
-    response = client.post(
-        "/api/ai/explain",
-        json={
-            "symbol": "SPY",
-            "price": "598.50",
-            "market_state": "open",
-            "decision_action": "OBSERVE",
-            "rationale": "Governed test rationale"
-        }
-    )
+def test_web_api_explain_endpoint_reports_unavailable_when_unconfigured():
+    with patch.dict(os.environ, {}, clear=True):
+        response = client.post(
+            "/api/ai/explain",
+            json={
+                "symbol": "SPY",
+                "price": None,
+                "market_state": "unknown",
+                "decision_action": "OBSERVE",
+                "rationale": "No live market observation admitted",
+            },
+        )
+
+    assert response.status_code == 503
+    data = response.json()
+    assert data["detail"]["state"] == "UNAVAILABLE"
+
+
+def test_web_api_explain_endpoint_success_with_server_configuration():
+    mock_response = MagicMock()
+    mock_response.read.return_value = b'{"choices": [{"message": {"content": "Live provider explanation."}}]}'
+    mock_response.__enter__.return_value = mock_response
+
+    with (
+        patch.dict(os.environ, {"FEATHERLESS_API_KEY": "test-only-key"}, clear=True),
+        patch("urllib.request.urlopen", return_value=mock_response),
+    ):
+        response = client.post(
+            "/api/ai/explain",
+            json={
+                "symbol": "SPY",
+                "price": None,
+                "market_state": "unknown",
+                "decision_action": "OBSERVE",
+                "rationale": "No invented facts",
+            },
+        )
+
     assert response.status_code == 200
     data = response.json()
-    assert "explanation" in data
+    assert data["explanation"] == "Live provider explanation."
     assert data["provider"] == "Featherless AI"
 
 
-def test_web_api_dual_axis_explainer_endpoint():
-    response = client.get("/api/ai/dual-axis-explainer")
-    assert response.status_code == 200
-    data = response.json()
-    assert "explanation" in data
-    assert data["provider"] == "Featherless AI"
+def test_web_api_dual_axis_explainer_reports_unavailable_when_unconfigured():
+    with patch.dict(os.environ, {}, clear=True):
+        response = client.get("/api/ai/dual-axis-explainer")
+
+    assert response.status_code == 503
+    assert response.json()["detail"]["state"] == "UNAVAILABLE"

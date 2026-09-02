@@ -1,26 +1,35 @@
 import json
-import urllib.request
+import os
 import urllib.error
+import urllib.request
 
-api_key = "rc_895ea88f311a6126b5384f28bfc84b329ded642650ac69edbcca38cf2c95c871"
+api_key = os.environ.get("FEATHERLESS_API_KEY", "").strip()
+if not api_key:
+    raise SystemExit("FEATHERLESS_API_KEY is required")
+
 url = "https://api.featherless.ai/v1/chat/completions"
-
 models_to_test = [
     "meta-llama/Llama-3.3-70B-Instruct",
     "meta-llama/Meta-Llama-3.1-8B-Instruct",
     "mistralai/Mistral-7B-Instruct-v0.2",
-    "Qwen/Qwen2.5-7B-Instruct"
+    "Qwen/Qwen2.5-7B-Instruct",
 ]
 
 for model in models_to_test:
     req_data = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You are LEFA AI, the Governed Financial Intelligence Companion for the Alpaca AI Trading Agents Hackathon."},
-            {"role": "user", "content": "Explain what dual-axis governance means in LEFA AI in 1 concise sentence."}
+            {
+                "role": "system",
+                "content": "You are LEFA AI, the Governed Financial Intelligence Companion.",
+            },
+            {
+                "role": "user",
+                "content": "Explain dual-axis governance in LEFA AI in one concise sentence.",
+            },
         ],
         "max_tokens": 100,
-        "temperature": 0.2
+        "temperature": 0.2,
     }
 
     req = urllib.request.Request(
@@ -30,17 +39,17 @@ for model in models_to_test:
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "LEFA-AI-Companion/1.0"
-        }
+            "User-Agent": "LEFA-AI-Companion/1.0",
+        },
     )
 
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:
             res = json.loads(resp.read().decode("utf-8"))
             print(f"SUCCESS [{model}]:")
             print(res["choices"][0]["message"]["content"])
             break
-    except urllib.error.HTTPError as e:
-        print(f"HTTP ERROR [{model}] {e.code}: {e.read().decode('utf-8', errors='ignore')}")
-    except Exception as e:
-        print(f"ERROR [{model}]: {e}")
+    except urllib.error.HTTPError as exc:
+        print(f"HTTP ERROR [{model}] {exc.code}")
+    except urllib.error.URLError:
+        print(f"NETWORK ERROR [{model}]")
