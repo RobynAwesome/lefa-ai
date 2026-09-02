@@ -4,9 +4,10 @@ LEFA AI — Web API
 FastAPI routes that bridge the governed Python backend to the React frontend.
 
 Boundaries:
-- /api/mcp/status  — backend-owned runtime proof status for the UI
+- /api/mcp/status  — legacy backend-owned MCP proof status for engineering continuity
 - /api/mcp/verify  — pure evaluator for sanitized evidence (tests/internal tooling)
 - /api/snapshot    — governed snapshot surface; fixture until live proof exists
+- /api/ai/*        — advisory explanation only; provider failure is explicit
 - No order, execution, or autonomous-trade routes exist here.
 - Credentials are never accepted or forwarded through this API surface.
 
@@ -17,7 +18,7 @@ from __future__ import annotations
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -109,12 +110,10 @@ def _proof_response(proof: ReadOnlyMCPProof) -> MCPVerifyResponse:
 
 
 def _current_runtime_evidence() -> MCPRuntimeEvidence:
-    """Return backend-owned runtime evidence.
+    """Return backend-owned legacy MCP runtime evidence.
 
-    Issue #2 is still HOLD: live Alpaca MCP discovery has not yet been witnessed in
-    this runtime. Returning an empty evidence object deliberately fails closed.
-    Replace this seam only when local credential-backed discovery produces a
-    sanitized receipt.
+    This seam remains fail-closed for engineering continuity. The production human
+    connection path is `/api/bridge/status`, which observes Sovereign Hub server-to-server.
     """
 
     return MCPRuntimeEvidence()
@@ -122,7 +121,7 @@ def _current_runtime_evidence() -> MCPRuntimeEvidence:
 
 @app.get("/api/mcp/status", response_model=MCPVerifyResponse)
 def get_mcp_status() -> MCPVerifyResponse:
-    """Expose backend-owned read-only Alpaca MCP proof state to the UI."""
+    """Expose backend-owned read-only Alpaca MCP proof state to engineering tooling."""
 
     proof = evaluate_read_only_mcp_evidence(_current_runtime_evidence())
     return _proof_response(proof)
@@ -130,11 +129,7 @@ def get_mcp_status() -> MCPVerifyResponse:
 
 @app.post("/api/mcp/verify", response_model=MCPVerifyResponse)
 def verify_mcp_evidence(req: MCPVerifyRequest) -> MCPVerifyResponse:
-    """Deterministically evaluate supplied sanitized evidence.
-
-    This endpoint is an evaluator, not a connection authority. The user-facing UI
-    reads /api/mcp/status, whose evidence is owned by the backend runtime.
-    """
+    """Deterministically evaluate supplied sanitized evidence."""
 
     evidence = MCPRuntimeEvidence(
         namespace=req.namespace,
@@ -157,9 +152,8 @@ def verify_mcp_evidence(req: MCPVerifyRequest) -> MCPVerifyResponse:
 def get_snapshot(connected: bool = False) -> SnapshotResponse:
     """Return a governed LEFASnapshot.
 
-    The connected flag is presentation state only. Until Issue #2 supplies real
-    backend-owned Alpaca observation evidence, every snapshot remains explicitly
-    fixture-sourced and therefore cannot masquerade as live account truth.
+    The connected flag is presentation state only. Until a real backend-owned Alpaca
+    market observation is admitted, every snapshot remains explicitly fixture-sourced.
     """
 
     now = datetime.now(UTC)
@@ -215,8 +209,8 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
                 ActivityEvent(
                     event_type="fixture_mode",
                     description=(
-                        "Fixture mode active. Live Alpaca MCP observation is not yet "
-                        "proven (Issue #2). No real account data is displayed."
+                        "Fixture mode active. Live Alpaca market observation is not yet proven. "
+                        "No real account or market values are displayed."
                     ),
                 ),
             ),
@@ -257,9 +251,7 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
             else None
         ),
         validation_status=(
-            snapshot.validation.status.value
-            if snapshot.validation is not None
-            else None
+            snapshot.validation.status.value if snapshot.validation is not None else None
         ),
         activity_count=len(snapshot.activity),
     )
@@ -267,18 +259,21 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
 
 @app.get("/api/health")
 def health() -> dict:
+    from lefa.featherless import FeatherlessReasoner
+
+    reasoner = FeatherlessReasoner()
     return {
         "status": "ok",
         "service": "lefa-ai-backend",
         "execution_authority": "none",
-        "ai_inference_provider": "Featherless AI (Lablab.ai Hackathon Partner)",
+        "ai_inference_configured": reasoner.is_configured(),
     }
 
 
 class AIExplainRequest(BaseModel):
     symbol: str = "SPY"
     price: str | None = None
-    market_state: str = "open"
+    market_state: str = "unknown"
     decision_action: str | None = None
     rationale: str | None = None
     custom_prompt: str | None = None
@@ -290,32 +285,45 @@ class AIExplainResponse(BaseModel):
     provider: str
 
 
+def _ai_unavailable() -> HTTPException:
+    return HTTPException(
+        status_code=503,
+        detail={
+            "state": "UNAVAILABLE",
+            "message": "LEFA's AI explanation is unavailable right now.",
+        },
+    )
+
+
 @app.post("/api/ai/explain", response_model=AIExplainResponse)
 def explain_market_state(req: AIExplainRequest) -> AIExplainResponse:
-    """Generate governed natural language explanation via Featherless AI open-source inference."""
-    from lefa.featherless import FeatherlessReasoner
+    """Generate advisory language from supplied evidence; never manufacture market truth."""
+    from lefa.featherless import FeatherlessReasoner, FeatherlessUnavailable
 
     reasoner = FeatherlessReasoner()
-    if req.custom_prompt:
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are LEFA AI, the Governed Financial Intelligence Companion. "
-                    "Provide clear, professional, risk-aware explanations."
-                ),
-            },
-            {"role": "user", "content": req.custom_prompt},
-        ]
-        explanation = reasoner.complete(messages, max_tokens=150)
-    else:
-        explanation = reasoner.explain_market_observation(
-            symbol=req.symbol,
-            price=req.price,
-            market_state=req.market_state,
-            decision_action=req.decision_action,
-            rationale=req.rationale,
-        )
+    try:
+        if req.custom_prompt:
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are LEFA AI, the Governed Financial Intelligence Companion. "
+                        "Provide clear, professional, risk-aware explanations and do not invent facts."
+                    ),
+                },
+                {"role": "user", "content": req.custom_prompt},
+            ]
+            explanation = reasoner.complete(messages, max_tokens=150)
+        else:
+            explanation = reasoner.explain_market_observation(
+                symbol=req.symbol,
+                price=req.price,
+                market_state=req.market_state,
+                decision_action=req.decision_action,
+                rationale=req.rationale,
+            )
+    except FeatherlessUnavailable as exc:
+        raise _ai_unavailable() from exc
 
     return AIExplainResponse(
         explanation=explanation,
@@ -327,13 +335,16 @@ def explain_market_state(req: AIExplainRequest) -> AIExplainResponse:
 @app.get("/api/ai/dual-axis-explainer", response_model=AIExplainResponse)
 def get_dual_axis_explanation() -> AIExplainResponse:
     """Return live Featherless AI explanation of LEFA's dual-axis governance architecture."""
-    from lefa.featherless import FeatherlessReasoner
+    from lefa.featherless import FeatherlessReasoner, FeatherlessUnavailable
 
     reasoner = FeatherlessReasoner()
-    explanation = reasoner.explain_dual_axis_governance()
+    try:
+        explanation = reasoner.explain_dual_axis_governance()
+    except FeatherlessUnavailable as exc:
+        raise _ai_unavailable() from exc
+
     return AIExplainResponse(
         explanation=explanation,
         model=reasoner.model,
         provider="Featherless AI",
     )
-
