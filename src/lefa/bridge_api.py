@@ -1,7 +1,7 @@
-"""LEFA server-to-server Sovereign bridge projection.
+"""LEFA server-to-server Sovereign bridge and runtime projections.
 
-The browser asks one simple question: is the governed Alpaca paper connection usable?
-Detailed MCP/provider/KPGS evidence remains behind this boundary.
+Heavy provider/KPGS evidence remains behind the backend boundary. The primary
+runtime endpoint exposes only the smallest truthful human state.
 
 REALITY_STATE > INDEX_STATE
 RECEIPT OR HOLD
@@ -20,6 +20,7 @@ from fastapi import APIRouter
 router = APIRouter()
 
 BRIDGE_SCHEMA = "kopano.lefa.sovereign-bridge-status.v1"
+RUNTIME_SCHEMA = "kopano.lefa.runtime-status.v1"
 DEFAULT_SOVEREIGN_STATUS_URL = (
     "https://kopano-sovereign-hub-o8zt.vercel.app/api/lefa/alpaca-status"
 )
@@ -156,9 +157,7 @@ def _read_upstream_status() -> Any:
         with urlopen(request, timeout=4) as response:
             body = response.read().decode("utf-8")
     except HTTPError as exc:
-        # Sovereign Hub intentionally uses HTTP 503 for a governed HOLD. The JSON
-        # body is still authoritative state and must not be collapsed into a
-        # generic network failure.
+        # Sovereign Hub intentionally uses HTTP 503 for governed HOLD state.
         body = exc.read().decode("utf-8")
     except (URLError, TimeoutError, OSError) as exc:
         raise RuntimeError("sovereign backend unavailable") from exc
@@ -166,10 +165,7 @@ def _read_upstream_status() -> Any:
     return json.loads(body)
 
 
-@router.get("/api/bridge/status")
-def get_bridge_status() -> dict[str, Any]:
-    """Return a small human-facing projection of governed Alpaca paper truth."""
-
+def _current_bridge_status() -> dict[str, Any]:
     try:
         upstream = _read_upstream_status()
     except (RuntimeError, json.JSONDecodeError, UnicodeDecodeError):
@@ -179,3 +175,73 @@ def get_bridge_status() -> dict[str, Any]:
         )
 
     return _sanitize_status(upstream)
+
+
+def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
+    """Project backend truth into the primary non-technical runtime contract.
+
+    No market/account number is emitted until a separate non-fixture observation
+    contract exists. A verified account bridge therefore becomes WAITING_FOR_MARKET,
+    not synthetic live telemetry.
+    """
+
+    experience = bridge.get("experience") if isinstance(bridge.get("experience"), dict) else {}
+    bridge_ready = bridge.get("bridge_state") == "VERIFIED"
+    experience_state = str(experience.get("state", "UNAVAILABLE"))
+
+    if bridge_ready:
+        state = "WAITING_FOR_MARKET"
+        headline = "Connected and ready to observe"
+        detail = "LEFA will show market facts when fresh backend evidence arrives."
+    elif experience_state == "SETUP_NEEDED":
+        state = "SETUP_NEEDED"
+        headline = str(experience.get("headline", "Trading connection needs setup"))
+        detail = str(experience.get("detail", "The secure trading service is still being configured."))
+    else:
+        state = "UNAVAILABLE"
+        headline = "Trading service unavailable"
+        detail = "LEFA can't reach the secure trading service right now."
+
+    ai_state = "AVAILABLE" if os.getenv("FEATHERLESS_API_KEY", "").strip() else "UNAVAILABLE"
+
+    return {
+        "schema": RUNTIME_SCHEMA,
+        "state": state,
+        "headline": headline,
+        "detail": detail,
+        "observed_at": bridge.get("observed_at")
+        if isinstance(bridge.get("observed_at"), str)
+        else _now_iso(),
+        "connection": {
+            "state": "READY" if bridge_ready else experience_state,
+            "label": "Alpaca paper trading",
+        },
+        "market": {
+            "state": "WAITING_FOR_EVIDENCE",
+            "symbol": None,
+            "latest_price": None,
+            "market_state": "unknown",
+            "observed_at": None,
+        },
+        "decision": {
+            "state": "NO_DECISION",
+        },
+        "ai": {
+            "state": ai_state,
+            "label": "AI explanation",
+        },
+    }
+
+
+@router.get("/api/bridge/status")
+def get_bridge_status() -> dict[str, Any]:
+    """Return advanced/sanitized governed Alpaca paper truth."""
+
+    return _current_bridge_status()
+
+
+@router.get("/api/runtime/status")
+def get_runtime_status() -> dict[str, Any]:
+    """Return the small human-facing runtime state used by the primary UI."""
+
+    return _runtime_projection(_current_bridge_status())
