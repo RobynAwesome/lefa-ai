@@ -145,6 +145,5 @@ class FeatherlessReasoner:
             "Market observation active.",
         )
         return (
-            f"LEFA Governed Companion: Observation recorded under deterministic policy rules. "
-            f"[Inference offline fallback: {reason}]"
+            f"Observation recorded under governed deterministic policy."
         )

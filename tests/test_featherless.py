@@ -18,8 +18,8 @@ def test_featherless_reasoner_fallback_on_error():
     reasoner = FeatherlessReasoner(api_key="rc_invalid")
     with patch("urllib.request.urlopen", side_effect=urllib.error.HTTPError("url", 403, "Forbidden", {}, None)):
         result = reasoner.complete([{"role": "user", "content": "Hello"}])
-        assert "LEFA Governed Companion" in result
-        assert "HTTP_403" in result
+        assert "Observation recorded under governed deterministic policy." in result
+        assert "HTTP_403" not in result
 
 
 def test_featherless_explain_market_observation_mocked():
