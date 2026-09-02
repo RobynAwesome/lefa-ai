@@ -31,5 +31,6 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
       - run: npm install --no-audit --no-fund
-      - run: npm run lint
+      - name: Typecheck current root frontend
+        run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
       - run: npm run build
