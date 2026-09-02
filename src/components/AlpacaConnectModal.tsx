@@ -1,6 +1,12 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Shield, CheckCircle2, Lock, ArrowRight, AlertTriangle } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  LoaderCircle,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
 import { verifySovereignBridge } from '../sovereignBridge';
 import type { SovereignBridgeStatus } from '../types';
 
@@ -17,12 +23,10 @@ export const AlpacaConnectModal: React.FC<AlpacaConnectModalProps> = ({
   onClose,
   isConnected,
   onConnectSuccess,
-  onDisconnect
+  onDisconnect,
 }) => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
-
-  if (!isOpen) return null;
 
   const handleVerify = async () => {
     setIsVerifying(true);
@@ -31,151 +35,115 @@ export const AlpacaConnectModal: React.FC<AlpacaConnectModalProps> = ({
     const result = await verifySovereignBridge();
     setIsVerifying(false);
 
-    if ('message' in result) {
+    if (!result.ok) {
       setVerificationMessage(result.message);
       return;
     }
 
     onConnectSuccess(result.status);
-    onClose();
   };
 
-  const handleDisconnect = () => {
-    onDisconnect();
-    onClose();
-  };
+  useEffect(() => {
+    if (!isOpen || isConnected) return;
+    void handleVerify();
+    // Connection truth is checked once when the experience opens.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, isConnected]);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-md bg-[#0e0e12] border border-[#d4af37]/40 rounded-3xl shadow-2xl overflow-hidden font-sans"
+        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        className="relative w-full max-w-sm overflow-hidden rounded-[28px] border border-[#d4af37]/30 bg-[#0d0d11] shadow-2xl"
       >
-        <div className="p-5 border-b border-[#27272a] flex items-center justify-between bg-[#121216]">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-full border border-[#d4af37] flex items-center justify-center bg-[#18181b]">
-              <Shield className="w-3.5 h-3.5 text-[#e5c158]" />
-            </div>
-            <div>
-              <h3 className="text-base font-serif text-zinc-100">Sovereign Alpaca Bridge</h3>
-              <p className="text-[10px] font-mono text-zinc-400">Receipt-bound • Paper-only • Backend-gated</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl bg-[#18181b] text-zinc-400 hover:text-white border border-[#27272a] cursor-pointer"
-            aria-label="Close bridge dialog"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className="absolute right-4 top-4 z-10 rounded-full border border-white/10 bg-white/5 p-2 text-zinc-400 transition hover:text-white"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
 
-        <div className="p-5 space-y-4 text-xs">
+        <div className="px-6 pb-7 pt-8 text-center">
           {isConnected ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/45 text-[#fef08a] space-y-2">
-                <div className="flex items-center gap-2 font-mono font-semibold">
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>Sovereign paper bridge verified</span>
-                </div>
-                <p className="text-[11px] text-zinc-300 leading-relaxed">
-                  LEFA has accepted a valid backend bridge-status contract. This does not mean a trade is approved and it does not grant browser execution authority.
-                </p>
+            <>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-400/10">
+                <CheckCircle2 className="h-7 w-7 text-emerald-300" />
               </div>
-
-              <div className="p-3 rounded-xl bg-[#121216] border border-[#27272a] font-mono text-[11px] space-y-1.5">
-                <div className="flex justify-between gap-4 text-zinc-400">
-                  <span>Provider:</span>
-                  <span className="text-zinc-200">Alpaca</span>
-                </div>
-                <div className="flex justify-between gap-4 text-zinc-400">
-                  <span>Environment:</span>
-                  <span className="text-[#e5c158]">PAPER ONLY</span>
-                </div>
-                <div className="flex justify-between gap-4 text-zinc-400">
-                  <span>Execution authority:</span>
-                  <span className="text-zinc-200">BACKEND ONLY</span>
-                </div>
-                <div className="flex justify-between gap-4 text-zinc-400">
-                  <span>Decision truth:</span>
-                  <span className="text-zinc-200">KC receipt</span>
-                </div>
-              </div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.24em] text-emerald-300/80">
+                Connected
+              </p>
+              <h3 className="font-serif text-2xl text-zinc-50">Alpaca is ready</h3>
+              <p className="mx-auto mt-3 max-w-[280px] text-sm leading-6 text-zinc-400">
+                Paper trading is connected. LEFA keeps the sensitive work protected in the background.
+              </p>
 
               <button
-                onClick={handleDisconnect}
-                className="w-full py-2.5 rounded-xl bg-[#18181b] border border-[#3f3f46] text-zinc-300 font-mono text-xs hover:border-[#d4af37]/60 transition-colors cursor-pointer"
+                onClick={onClose}
+                className="mt-7 w-full rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#c5a059] px-4 py-3.5 text-sm font-semibold text-black transition hover:brightness-110 active:scale-[0.99]"
               >
-                Disconnect LEFA View
+                Continue
               </button>
-            </div>
+              <button
+                onClick={() => {
+                  onDisconnect();
+                  onClose();
+                }}
+                className="mt-3 text-xs text-zinc-500 transition hover:text-zinc-300"
+              >
+                Disconnect
+              </button>
+            </>
+          ) : isVerifying ? (
+            <>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-[#d4af37]/25 bg-[#d4af37]/10">
+                <LoaderCircle className="h-7 w-7 animate-spin text-[#e5c158]" />
+              </div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.24em] text-[#e5c158]/80">
+                Connecting
+              </p>
+              <h3 className="font-serif text-2xl text-zinc-50">Checking Alpaca</h3>
+              <p className="mx-auto mt-3 max-w-[280px] text-sm leading-6 text-zinc-400">
+                LEFA is securely checking your paper-trading connection.
+              </p>
+            </>
           ) : (
-            <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-[#121216] border border-[#27272a] space-y-3">
-                <div className="flex items-start gap-2.5">
-                  <Lock className="w-4 h-4 mt-0.5 text-[#e5c158] shrink-0" />
-                  <div>
-                    <div className="font-mono text-[#fef08a] text-[11px]">No Alpaca credentials belong in this browser.</div>
-                    <p className="mt-1 text-[10px] leading-relaxed text-zinc-400">
-                      LEFA verifies a governed backend status receipt only. Alpaca credentials, account telemetry, risk evaluation and order routing remain behind the sovereign execution boundary.
-                    </p>
-                  </div>
-                </div>
+            <>
+              <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border border-amber-400/25 bg-amber-400/10">
+                <AlertCircle className="h-7 w-7 text-amber-300" />
               </div>
-
-              <div className="p-3 rounded-xl bg-[#121216] border border-[#27272a] font-mono text-[10px] space-y-1.5 text-zinc-400">
-                <div className="flex justify-between gap-4">
-                  <span>Required schema:</span>
-                  <span className="text-zinc-200 text-right">kopano.lefa.sovereign-bridge-status.v1</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Provider:</span>
-                  <span className="text-zinc-200">alpaca</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Environment:</span>
-                  <span className="text-[#e5c158]">paper</span>
-                </div>
-                <div className="flex justify-between gap-4">
-                  <span>Execution:</span>
-                  <span className="text-zinc-200">BACKEND_ONLY</span>
-                </div>
-              </div>
-
-              {verificationMessage && (
-                <div className="p-3 rounded-xl bg-[#d97706]/10 border border-[#d97706]/50 text-[10px] text-[#fbbf24] font-mono flex items-start gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                  <span>{verificationMessage}</span>
-                </div>
-              )}
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.24em] text-amber-300/80">
+                Not ready yet
+              </p>
+              <h3 className="font-serif text-2xl text-zinc-50">Connection needs setup</h3>
+              <p className="mx-auto mt-3 max-w-[280px] text-sm leading-6 text-zinc-400">
+                {verificationMessage ?? 'LEFA is keeping this connection safe until setup is complete.'}
+              </p>
 
               <button
                 type="button"
-                onClick={handleVerify}
-                disabled={isVerifying}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#c5a059] disabled:opacity-50 text-black font-semibold text-xs font-mono hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer flex items-center justify-center gap-2 shadow-lg shadow-[#d4af37]/20"
+                onClick={() => void handleVerify()}
+                className="mt-7 w-full rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#e5c158] to-[#c5a059] px-4 py-3.5 text-sm font-semibold text-black transition hover:brightness-110 active:scale-[0.99]"
               >
-                {isVerifying ? (
-                  <span>Verifying sovereign receipt boundary…</span>
-                ) : (
-                  <>
-                    <span>Verify Paper Bridge</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
+                Try again
               </button>
-
-              <p className="text-center text-[9px] font-mono text-zinc-500 leading-relaxed">
-                No configured endpoint or invalid receipt = disconnected. There is no simulated success path.
-              </p>
-            </div>
+              <button
+                onClick={onClose}
+                className="mt-3 text-xs text-zinc-500 transition hover:text-zinc-300"
+              >
+                Continue for now
+              </button>
+            </>
           )}
         </div>
 
-        <div className="p-3.5 border-t border-[#27272a] bg-[#121216] text-[10px] font-mono text-zinc-500 text-center">
-          Alpaca AI Trading Agents Hackathon • Built in South Africa • Receipt or HOLD
+        <div className="flex items-center justify-center gap-2 border-t border-white/5 bg-white/[0.02] px-4 py-3 text-[10px] text-zinc-600">
+          <ShieldCheck className="h-3.5 w-3.5" />
+          <span>Paper trading only • protected by LEFA</span>
         </div>
       </motion.div>
     </div>

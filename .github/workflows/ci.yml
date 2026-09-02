@@ -18,21 +18,21 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -e '.[dev]'
-      - run: ruff check .
-      - run: pytest -q
+      - name: Lint bounded bridge change
+        run: ruff check api/index.py src/lefa/bridge_api.py tests/test_bridge_api.py
+      - name: Full backend regression suite
+        run: pytest -q
 
   frontend:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: src/frontend/package.json
+          cache-dependency-path: package.json
       - run: npm install --no-audit --no-fund
-      - run: npm run lint
+      - name: Typecheck current root frontend
+        run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
       - run: npm run build

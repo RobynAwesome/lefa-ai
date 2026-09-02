@@ -1,10 +1,10 @@
 /**
- * LEFA AI — Sovereign Bridge
- * ==========================
- * Verifies the Alpaca paper runtime proof by calling the governed Python backend.
+ * LEFA AI — Human-facing Sovereign Bridge
+ * ========================================
  *
- * On lefa-core-live.vercel.app this calls /api/mcp/status (same origin).
- * Locally, Vite proxies /api → http://localhost:8000.
+ * The browser does not discover MCP namespaces, inspect credentials, or reason
+ * about provider transport. It asks LEFA's backend for one governed projection.
+ * Heavy proof stays behind the interface.
  *
  * I_AM_STATELESS_RENTER_NOT_LANDLORD
  */
@@ -24,7 +24,6 @@ export type SovereignBridgeVerification =
   | {
       ok: false;
       code:
-        | 'BRIDGE_UNCONFIGURED'
         | 'BRIDGE_UNREACHABLE'
         | 'BRIDGE_HTTP_ERROR'
         | 'BRIDGE_INVALID_RECEIPT'
@@ -34,6 +33,7 @@ export type SovereignBridgeVerification =
 
 const RECEIPT_SCHEMA = 'kopano.alpaca.decision-receipt.v1';
 const BRIDGE_SCHEMA = 'kopano.lefa.sovereign-bridge-status.v1';
+const STATUS_URL = '/api/bridge/status';
 const VALID_DECISIONS = new Set<SovereignDecision>(['APPROVE', 'HOLD', 'REJECT']);
 const VALID_PROOF_STATES = new Set<SovereignProofState>(['LOCAL_RECEIPT', 'EXTERNAL_RECEIPT']);
 
@@ -48,6 +48,7 @@ function isDecisionReceipt(value: unknown): value is SovereignDecisionReceipt {
   if (typeof value.kc_receipt_id !== 'string' || !value.kc_receipt_id.startsWith('kc:alpaca:')) return false;
   if (typeof value.evidence_sha256 !== 'string' || value.evidence_sha256.length !== 64) return false;
   if (!VALID_PROOF_STATES.has(value.proof_state as SovereignProofState)) return false;
+
   const evaluation = value.evaluation;
   if (!isRecord(evaluation) || !VALID_DECISIONS.has(evaluation.decision as SovereignDecision)) return false;
   if (!Array.isArray(evaluation.reasons)) return false;
@@ -66,47 +67,25 @@ export function isSovereignBridgeStatus(value: unknown): value is SovereignBridg
   return true;
 }
 
-/**
- * Adapter: converts the Python backend MCPVerifyResponse to the canonical
- * SovereignBridgeStatus contract expected by the UI.
- *
- * Python /api/mcp/status returns:
- *   { status: 'ready'|'blocked', failures: string[], namespace: string|null,
- *     server_identity: string|null, paper_trade: bool|null,
- *     readable_tool_names: string[], observed_at: string }
- */
-function adaptPythonMcpResponse(payload: Record<string, unknown>): SovereignBridgeStatus {
-  const isReady = payload.status === 'ready';
-  return {
-    schema: 'kopano.lefa.sovereign-bridge-status.v1',
-    provider: 'alpaca',
-    environment: 'paper',
-    bridge_state: isReady ? 'VERIFIED' : 'HOLD',
-    execution_authority: 'BACKEND_ONLY',
-    observed_at: typeof payload.observed_at === 'string' ? payload.observed_at : new Date().toISOString(),
-    latest_receipt: null,
-    truth_boundary: isReady
-      ? 'Alpaca paper runtime verified — OBSERVE only, no execution authority.'
-      : `Bridge hold: ${Array.isArray(payload.failures) ? (payload.failures as string[]).join(', ') : 'runtime evidence unavailable'}`,
-  };
-}
+function friendlyHoldMessage(status: SovereignBridgeStatus): string {
+  const code = status.provider_observation?.code;
 
-function configuredStatusUrl(): string {
-  const meta = import.meta as ImportMeta & {
-    env?: Record<string, string | undefined>;
-  };
-  const raw = meta.env?.VITE_LEFA_SOVEREIGN_STATUS_URL?.trim();
-  // Default to same-origin Python backend. Works on lefa-core-live.vercel.app
-  // and in local dev when the Vite proxy forwards /api → :8000.
-  return raw || '/api/mcp/status';
+  if (code === 'PAPER_CREDENTIALS_UNAVAILABLE') {
+    return 'The secure trading connection still needs setup.';
+  }
+
+  if (code === 'SOVEREIGN_BACKEND_UNAVAILABLE') {
+    return "LEFA can't reach the trading service right now.";
+  }
+
+  return 'The trading connection is not ready yet.';
 }
 
 export async function verifySovereignBridge(): Promise<SovereignBridgeVerification> {
-  const url = configuredStatusUrl();
-
   let response: Response;
+
   try {
-    response = await fetch(url, {
+    response = await fetch(STATUS_URL, {
       method: 'GET',
       headers: { Accept: 'application/json' },
       cache: 'no-store',
@@ -116,7 +95,7 @@ export async function verifySovereignBridge(): Promise<SovereignBridgeVerificati
     return {
       ok: false,
       code: 'BRIDGE_UNREACHABLE',
-      message: 'The sovereign status endpoint is unreachable. Receipt or HOLD.',
+      message: "LEFA can't reach the trading service right now.",
     };
   }
 
@@ -124,7 +103,7 @@ export async function verifySovereignBridge(): Promise<SovereignBridgeVerificati
     return {
       ok: false,
       code: 'BRIDGE_HTTP_ERROR',
-      message: `The sovereign status endpoint returned HTTP ${response.status}. LEFA remains disconnected.`,
+      message: "LEFA can't reach the trading service right now.",
     };
   }
 
@@ -135,46 +114,25 @@ export async function verifySovereignBridge(): Promise<SovereignBridgeVerificati
     return {
       ok: false,
       code: 'BRIDGE_INVALID_RECEIPT',
-      message: 'The sovereign status endpoint did not return valid JSON.',
+      message: 'LEFA could not verify the trading connection.',
     };
   }
 
-  if (!isRecord(payload)) {
+  if (!isSovereignBridgeStatus(payload)) {
     return {
       ok: false,
       code: 'BRIDGE_INVALID_RECEIPT',
-      message: 'The response was not a JSON object.',
+      message: 'LEFA could not verify the trading connection.',
     };
   }
 
-  // Accept the canonical BRIDGE_SCHEMA directly (future backend upgrade)
-  if (isSovereignBridgeStatus(payload)) {
-    if (payload.bridge_state !== 'VERIFIED') {
-      return {
-        ok: false,
-        code: 'BRIDGE_NOT_VERIFIED',
-        message: 'The sovereign bridge reported HOLD. LEFA will not promote the provider to connected.',
-      };
-    }
-    return { ok: true, status: payload };
+  if (payload.bridge_state !== 'VERIFIED') {
+    return {
+      ok: false,
+      code: 'BRIDGE_NOT_VERIFIED',
+      message: friendlyHoldMessage(payload),
+    };
   }
 
-  // Adapt Python MCPVerifyResponse → SovereignBridgeStatus
-  if (typeof payload.status === 'string') {
-    const adapted = adaptPythonMcpResponse(payload);
-    if (adapted.bridge_state !== 'VERIFIED') {
-      return {
-        ok: false,
-        code: 'BRIDGE_NOT_VERIFIED',
-        message: adapted.truth_boundary ?? 'Alpaca paper runtime proof is not ready.',
-      };
-    }
-    return { ok: true, status: adapted };
-  }
-
-  return {
-    ok: false,
-    code: 'BRIDGE_INVALID_RECEIPT',
-    message: 'The response failed the LEFA sovereign bridge contract. No connected state was granted.',
-  };
+  return { ok: true, status: payload };
 }
