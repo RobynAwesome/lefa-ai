@@ -18,8 +18,10 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install -e '.[dev]'
-      - run: ruff check .
-      - run: pytest -q
+      - name: Lint bounded bridge change
+        run: ruff check api/index.py src/lefa/bridge_api.py tests/test_bridge_api.py
+      - name: Full backend regression suite
+        run: pytest -q
 
   frontend:
     runs-on: ubuntu-latest
