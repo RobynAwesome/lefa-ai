@@ -109,3 +109,78 @@ def test_invalid_upstream_contract_fails_closed(monkeypatch) -> None:
     assert body["bridge_state"] == "HOLD"
     assert body["experience"]["state"] == "SETUP_NEEDED"
     assert body["provider_observation"]["code"] == "SOVEREIGN_CONTRACT_INVALID"
+
+
+def test_runtime_hold_is_small_human_state_without_provider_details(monkeypatch) -> None:
+    monkeypatch.setattr(bridge_api, "_read_upstream_status", lambda: _status())
+    client = TestClient(_app())
+
+    response = client.get("/api/runtime/status")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["schema"] == "kopano.lefa.runtime-status.v1"
+    assert body["state"] == "SETUP_NEEDED"
+    assert body["connection"]["state"] == "SETUP_NEEDED"
+    assert body["market"]["state"] == "WAITING_FOR_EVIDENCE"
+    assert body["market"]["symbol"] is None
+    assert body["market"]["latest_price"] is None
+    assert "provider_observation" not in body
+    assert "execution_authority" not in body
+
+
+def test_verified_account_does_not_promote_to_fake_market_truth(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "_read_upstream_status",
+        lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
+    )
+    client = TestClient(_app())
+
+    response = client.get("/api/runtime/status")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["state"] == "WAITING_FOR_MARKET"
+    assert body["connection"]["state"] == "READY"
+    assert body["market"] == {
+        "state": "WAITING_FOR_EVIDENCE",
+        "symbol": None,
+        "latest_price": None,
+        "market_state": "unknown",
+        "observed_at": None,
+    }
+    assert body["decision"]["state"] == "NO_DECISION"
+
+
+def test_runtime_backend_failure_is_human_unavailable(monkeypatch) -> None:
+    def fail():
+        raise RuntimeError("network down")
+
+    monkeypatch.setattr(bridge_api, "_read_upstream_status", fail)
+    client = TestClient(_app())
+
+    response = client.get("/api/runtime/status")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["state"] == "UNAVAILABLE"
+    assert body["connection"]["state"] == "UNAVAILABLE"
+    assert body["market"]["latest_price"] is None
+
+
+def test_runtime_ai_state_reflects_server_configuration(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "_read_upstream_status",
+        lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
+    )
+    client = TestClient(_app())
+
+    monkeypatch.delenv("FEATHERLESS_API_KEY", raising=False)
+    unavailable = client.get("/api/runtime/status").json()
+    assert unavailable["ai"]["state"] == "UNAVAILABLE"
+
+    monkeypatch.setenv("FEATHERLESS_API_KEY", "test-only-key")
+    available = client.get("/api/runtime/status").json()
+    assert available["ai"]["state"] == "AVAILABLE"
