@@ -18,14 +18,14 @@ export interface RuntimeStatusResponse {
     label: string;
   };
   market: {
-    state: 'WAITING_FOR_EVIDENCE';
+    state: 'WAITING_FOR_EVIDENCE' | 'OBSERVED';
     symbol: string | null;
     latest_price: string | null;
     market_state: 'open' | 'closed' | 'unknown';
     observed_at: string | null;
   };
   decision: {
-    state: 'NO_DECISION';
+    state: 'NO_DECISION' | 'AVAILABLE';
   };
   ai: {
     state: 'AVAILABLE' | 'UNAVAILABLE';
@@ -41,28 +41,6 @@ export interface MCPVerifyResponse {
   paper_trade: boolean | null;
   readable_tool_names: string[];
   observed_at: string;
-}
-
-export interface SnapshotResponse {
-  connection_state: 'disconnected' | 'fixture' | 'connected' | 'error';
-  account_status: string | null;
-  cash: string | null;
-  buying_power: string | null;
-  portfolio_equity: string | null;
-  provenance_source: string;
-  provenance_is_fixture: boolean;
-  market_symbol: string;
-  market_state: 'open' | 'closed' | 'unknown';
-  latest_price: string | null;
-  decision: {
-    decision_id: string;
-    proposed_action: string;
-    instrument: string;
-    rationale_summary: string;
-    state: string;
-  } | null;
-  validation_status: string | null;
-  activity_count: number;
 }
 
 const BASE = '/api';
@@ -91,18 +69,6 @@ export async function getMCPStatus(): Promise<MCPVerifyResponse> {
     throw new Error(`MCP status failed: ${res.status} ${res.statusText}`);
   }
   return res.json() as Promise<MCPVerifyResponse>;
-}
-
-/**
- * Legacy fixture-aware reference surface. Primary runtime must not use the browser
- * `connected` flag as evidence of a real account or market observation.
- */
-export async function getSnapshot(connected: boolean): Promise<SnapshotResponse> {
-  const res = await fetch(`${BASE}/snapshot?connected=${connected}`);
-  if (!res.ok) {
-    throw new Error(`Snapshot fetch failed: ${res.status} ${res.statusText}`);
-  }
-  return res.json() as Promise<SnapshotResponse>;
 }
 
 export async function healthCheck(): Promise<{
