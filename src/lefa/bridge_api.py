@@ -85,7 +85,7 @@ def _observe_alpaca_account() -> dict[str, Any]:
 
     try:
         account = AlpacaPaperBroker(settings).get_account()
-    except Exception:
+    except Exception:  # noqa: BLE001 - provider boundary must fail closed without leaking SDK details
         return _hold_payload(
             "ALPACA_ACCOUNT_UNAVAILABLE",
             detail="LEFA can't verify Alpaca right now.",
