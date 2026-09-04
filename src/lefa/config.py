@@ -7,12 +7,22 @@ class Settings(BaseSettings):
 
     alpaca_api_key: SecretStr = Field(
         default=SecretStr(""),
-        validation_alias=AliasChoices("ALPACA_API_KEY", "alpaca_api_key"),
+        validation_alias=AliasChoices(
+            "ALPACA_API_KEY",
+            "APCA_API_KEY_ID",
+            "alpaca_api_key",
+            "apca_api_key_id",
+        ),
     )
     alpaca_secret_key: SecretStr = Field(
         default=SecretStr(""),
         validation_alias=AliasChoices(
-            "ALPACA_SECRET_KEY", "ALPACA_API_SECRET", "alpaca_secret_key", "alpaca_api_secret"
+            "ALPACA_SECRET_KEY",
+            "ALPACA_API_SECRET",
+            "APCA_API_SECRET_KEY",
+            "alpaca_secret_key",
+            "alpaca_api_secret",
+            "apca_api_secret_key",
         ),
     )
     alpaca_paper: bool = Field(
@@ -26,4 +36,3 @@ class Settings(BaseSettings):
         if not self.alpaca_paper:
             raise ValueError("LEFA baseline prohibits live Alpaca connections; paper trading only")
         return self
-

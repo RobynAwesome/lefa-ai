@@ -1,6 +1,6 @@
 # LEFA AI Engine Map (Canonical)
 
-The backend responsibilities for LEFA are strictly bounded into 5 discrete engines. This document canonizes their explicit responsibilities, authorities, and limits to resolve Issue #5.
+The backend responsibilities for LEFA are strictly bounded into discrete engines. This document canonizes their explicit responsibilities, authorities, and limits for the direct Alpaca Paper path.
 
 ## 1. The Eye (Observation Engine)
 **Responsibility**: Sense Alpaca/account/market state and normalize evidence.
@@ -8,11 +8,11 @@ The backend responsibilities for LEFA are strictly bounded into 5 discrete engin
 **Limits**: 
 - Must never gain execution authority.
 - Must not evaluate risk or propose trades.
-- Must preserve MCP discovery metadata without assuming schemas statically.
+- Must preserve provider evidence and freshness metadata without inventing unavailable fields.
 
 ## 2. The Ark (Ledger & Temporal Engine)
 **Responsibility**: The core Reality-to-Cloud (RTC) component. Preserves observations (`T0`), reasoning/decisions (`T1`), validation (`T2`), and later outcomes (`T3+`).
-**Authority**: Append-Only Storage & Provenance.
+**Authority**: Append-Only Storage & Provenance when a persistence sink is configured.
 **Limits**:
 - **Future knowledge must not rewrite what the system knew in the past.**
 - Cannot invent state.
@@ -30,7 +30,8 @@ The backend responsibilities for LEFA are strictly bounded into 5 discrete engin
 **Authority**: Paper Execution (POC restricted).
 **Limits**:
 - No other engine receives implicit execution authority.
-- Can only act if provided a valid `GovernanceReceipt` containing an `APPROVE` decision from The Brain.
+- Can only act if provided a valid deterministic approval from The Brain and a validated provider order payload.
+- Executes paper-only Alpaca MLEG limit orders and reports success only with an Alpaca provider receipt.
 
 ## 5. The Face (Interface Projection Engine)
 **Responsibility**: Translate governed temporal state from The Ark into the character-first visual experience.
@@ -53,7 +54,7 @@ The backend responsibilities for LEFA are strictly bounded into 5 discrete engin
 ### 1. Dual-Axis Risk & Governance
 Trading proposals must pass two entirely independent axes before execution eligibility:
 1. **Financial Policy**: LEFA's deterministic `RiskPolicy.evaluate()` strictly governs financial risk (APPROVE/REJECT).
-2. **Governance Proof**: KPGS canonical orchestration establishes traceability and purity without overriding LEFA's risk.
+2. **Provider Truth**: Fresh Alpaca account, contract, quote, and order evidence establishes what can be claimed without overriding LEFA's risk.
 
 ### 2. Execution Jurisdiction
 The orchestration result binds the proposal to a strict execution jurisdiction:
@@ -63,12 +64,12 @@ The orchestration result binds the proposal to a strict execution jurisdiction:
 
 ### 3. Receipt Projections & Authority
 **Receipts may travel. Authority does not.**
-- `lefa-ai/receipts/`: Local projections (sanitized read-only observations).
-- `kopano-sovereign-hub/receipts/`: Authoritative execution ledger holding canonical decisions.
+- `lefa-ai/receipts/`: Local projections when enabled, containing sanitized observations and decisions.
+- Alpaca provider order receipts: authoritative evidence that an order was accepted by the paper broker.
 
 ### 4. Proof Depth
 The `purity_score` determines the stage maturity (Proof Depth) of the KPGS pipeline:
-- `SIMULATED`
+- `SIMULATED` (design or fixture context only)
 - `PROCEDURAL`
 - `EVIDENCED`
 - `INDEPENDENTLY_VALIDATED`

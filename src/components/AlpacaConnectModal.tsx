@@ -7,14 +7,14 @@ import {
   ShieldCheck,
   X,
 } from 'lucide-react';
-import { verifySovereignBridge } from '../sovereignBridge';
-import type { SovereignBridgeStatus } from '../types';
+import { verifyAlpacaBridge } from '../alpacaBridge';
+import type { AlpacaBridgeStatus } from '../types';
 
 interface AlpacaConnectModalProps {
   isOpen: boolean;
   onClose: () => void;
   isConnected: boolean;
-  onConnectSuccess: (status: SovereignBridgeStatus) => void;
+  onConnectSuccess: (status: AlpacaBridgeStatus) => void;
   onDisconnect: () => void;
 }
 
@@ -32,7 +32,7 @@ export const AlpacaConnectModal: React.FC<AlpacaConnectModalProps> = ({
     setIsVerifying(true);
     setVerificationMessage(null);
 
-    const result = await verifySovereignBridge();
+    const result = await verifyAlpacaBridge();
     setIsVerifying(false);
 
     if (!result.ok) {

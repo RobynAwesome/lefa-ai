@@ -1,11 +1,11 @@
-import json
-from io import BytesIO
-from urllib.error import HTTPError
+from datetime import UTC, datetime
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from lefa import bridge_api
+from lefa.config import Settings
 
 
 def _app() -> FastAPI:
@@ -29,96 +29,156 @@ def _status(*, bridge_state: str = "HOLD", code: str = "PAPER_CREDENTIALS_UNAVAI
             "account_blocked": None,
             "trading_blocked": None,
             "trade_suspended_by_user": None,
-            "api_key": "must-not-cross-boundary",
+        },
+        "experience": {
+            "state": "READY" if bridge_state == "VERIFIED" else "SETUP_NEEDED",
+            "headline": "Alpaca is ready"
+            if bridge_state == "VERIFIED"
+            else "Trading connection needs setup",
+            "detail": "test",
         },
     }
 
 
-def test_http_503_canonical_hold_body_is_still_read(monkeypatch) -> None:
-    body = json.dumps(_status()).encode("utf-8")
-
-    def raise_hold(*args, **kwargs):
-        raise HTTPError(
-            "https://example.invalid/status",
-            503,
-            "Service Unavailable",
-            hdrs=None,
-            fp=BytesIO(body),
-        )
-
-    monkeypatch.setattr(bridge_api, "urlopen", raise_hold)
-    payload = bridge_api._read_upstream_status()
-    assert payload["bridge_state"] == "HOLD"
-    assert payload["provider_observation"]["code"] == "PAPER_CREDENTIALS_UNAVAILABLE"
+def _patch_test_settings(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "Settings",
+        lambda: Settings(_env_file=None),
+    )
 
 
-def test_hold_projects_to_setup_needed_without_secret_fields(monkeypatch) -> None:
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", lambda: _status())
-    client = TestClient(_app())
+def test_missing_credentials_fail_closed(monkeypatch) -> None:
+    for name in (
+        "ALPACA_API_KEY",
+        "ALPACA_SECRET_KEY",
+        "ALPACA_API_SECRET",
+        "APCA_API_KEY_ID",
+        "APCA_API_SECRET_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    _patch_test_settings(monkeypatch)
 
-    response = client.get("/api/bridge/status")
-    assert response.status_code == 200
+    response = TestClient(_app()).get("/api/bridge/status")
     body = response.json()
 
+    assert response.status_code == 200
     assert body["bridge_state"] == "HOLD"
     assert body["experience"]["state"] == "SETUP_NEEDED"
-    assert body["experience"]["headline"] == "Trading connection needs setup"
+    assert body["provider_observation"]["code"] == "PAPER_CREDENTIALS_UNAVAILABLE"
     assert "api_key" not in body["provider_observation"]
 
 
-def test_verified_projects_to_ready(monkeypatch) -> None:
-    monkeypatch.setattr(
-        bridge_api,
-        "_read_upstream_status",
-        lambda: _status(bridge_state="VERIFIED", code="ACCOUNT_ACTIVE"),
-    )
-    client = TestClient(_app())
+def test_invalid_live_configuration_fails_closed(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_PAPER_TRADE", "false")
+    _patch_test_settings(monkeypatch)
 
-    response = client.get("/api/bridge/status")
-    body = response.json()
+    body = TestClient(_app()).get("/api/bridge/status").json()
+
+    assert body["bridge_state"] == "HOLD"
+    assert body["provider_observation"]["code"] == "PAPER_CONFIGURATION_INVALID"
+
+
+def test_direct_alpaca_account_verifies_without_upstream(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
+    _patch_test_settings(monkeypatch)
+
+    class FakeReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            assert settings.alpaca_paper is True
+
+        def get_account(self) -> dict:
+            return {
+                "status": "ACTIVE",
+                "account_blocked": False,
+                "trading_blocked": False,
+                "trade_suspended_by_user": False,
+            }
+
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", FakeReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/bridge/status").json()
 
     assert body["bridge_state"] == "VERIFIED"
     assert body["experience"]["state"] == "READY"
-    assert body["environment"] == "paper"
-    assert body["execution_authority"] == "BACKEND_ONLY"
+    assert body["experience"]["headline"] == "Alpaca is ready"
+    assert body["provider_observation"]["code"] == "PAPER_ACCOUNT_OBSERVED"
 
 
-def test_backend_failure_projects_to_unavailable(monkeypatch) -> None:
-    def fail():
-        raise RuntimeError("network down")
+def test_provider_failure_projects_to_unavailable(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
+    _patch_test_settings(monkeypatch)
 
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", fail)
-    client = TestClient(_app())
+    class FailingReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
 
-    response = client.get("/api/bridge/status")
-    body = response.json()
+        def get_account(self) -> dict:
+            raise ConnectionError("network down")
 
-    assert response.status_code == 200
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", FailingReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/bridge/status").json()
+
     assert body["bridge_state"] == "HOLD"
     assert body["experience"]["state"] == "UNAVAILABLE"
-    assert body["provider_observation"]["code"] == "SOVEREIGN_BACKEND_UNAVAILABLE"
+    assert body["provider_observation"]["code"] == "PAPER_PROVIDER_UNREACHABLE"
 
 
-def test_invalid_upstream_contract_fails_closed(monkeypatch) -> None:
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", lambda: {"bridge_state": "VERIFIED"})
-    client = TestClient(_app())
+def test_malformed_provider_response_fails_closed(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
+    _patch_test_settings(monkeypatch)
 
-    response = client.get("/api/bridge/status")
-    body = response.json()
+    class MalformedReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
+
+        def get_account(self) -> dict:
+            return {"status": "ACTIVE"}
+
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", MalformedReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/bridge/status").json()
 
     assert body["bridge_state"] == "HOLD"
     assert body["experience"]["state"] == "SETUP_NEEDED"
-    assert body["provider_observation"]["code"] == "SOVEREIGN_CONTRACT_INVALID"
+    assert body["provider_observation"]["code"] == "PAPER_PROVIDER_RESPONSE_INVALID"
+
+
+def test_inactive_account_cannot_be_verified(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
+    _patch_test_settings(monkeypatch)
+
+    class InactiveReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
+
+        def get_account(self) -> dict:
+            return {
+                "status": "INACTIVE",
+                "account_blocked": False,
+                "trading_blocked": True,
+                "trade_suspended_by_user": False,
+            }
+
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", InactiveReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/bridge/status").json()
+
+    assert body["bridge_state"] == "HOLD"
+    assert body["provider_observation"]["code"] == "ACCOUNT_INACTIVE"
+    assert body["experience"]["state"] == "SETUP_NEEDED"
 
 
 def test_runtime_hold_is_small_human_state_without_provider_details(monkeypatch) -> None:
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", lambda: _status())
-    client = TestClient(_app())
+    monkeypatch.setattr(bridge_api, "_check_direct_alpaca_status", lambda: _status())
 
-    response = client.get("/api/runtime/status")
-    body = response.json()
+    body = TestClient(_app()).get("/api/runtime/status").json()
 
-    assert response.status_code == 200
     assert body["schema"] == "kopano.lefa.runtime-status.v1"
     assert body["state"] == "SETUP_NEEDED"
     assert body["connection"]["state"] == "SETUP_NEEDED"
@@ -129,18 +189,16 @@ def test_runtime_hold_is_small_human_state_without_provider_details(monkeypatch)
     assert "execution_authority" not in body
 
 
-def test_verified_account_does_not_promote_to_fake_market_truth(monkeypatch) -> None:
+def test_verified_account_waits_for_real_market_evidence(monkeypatch) -> None:
     monkeypatch.setattr(
         bridge_api,
-        "_read_upstream_status",
+        "_check_direct_alpaca_status",
         lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
     )
-    client = TestClient(_app())
+    monkeypatch.setattr(bridge_api, "_read_market_observation", lambda: None)
 
-    response = client.get("/api/runtime/status")
-    body = response.json()
+    body = TestClient(_app()).get("/api/runtime/status").json()
 
-    assert response.status_code == 200
     assert body["state"] == "WAITING_FOR_MARKET"
     assert body["connection"]["state"] == "READY"
     assert body["market"] == {
@@ -153,71 +211,120 @@ def test_verified_account_does_not_promote_to_fake_market_truth(monkeypatch) -> 
     assert body["decision"]["state"] == "NO_DECISION"
 
 
-def test_runtime_backend_failure_is_human_unavailable(monkeypatch) -> None:
-    def fail():
-        raise RuntimeError("network down")
+def test_runtime_reports_fresh_alpaca_quote(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "_check_direct_alpaca_status",
+        lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
+    )
+    _patch_test_settings(monkeypatch)
 
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", fail)
-    client = TestClient(_app())
+    class FakeReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
 
-    response = client.get("/api/runtime/status")
-    body = response.json()
+        def get_latest_quote(self, symbol: str) -> dict[str, str]:
+            assert symbol == "SPY"
+            return {
+                "symbol": "SPY",
+                "bid_price": "100.00",
+                "ask_price": "101.00",
+                "timestamp": datetime.now(UTC).isoformat(),
+            }
 
-    assert response.status_code == 200
-    assert body["state"] == "UNAVAILABLE"
-    assert body["connection"]["state"] == "UNAVAILABLE"
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", FakeReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/runtime/status").json()
+
+    assert body["market"]["state"] == "OBSERVED"
+    assert body["market"]["symbol"] == "SPY"
+    assert body["market"]["latest_price"] == "100.50"
+    assert body["market"]["observed_at"]
+
+
+@pytest.mark.parametrize(
+    "quote",
+    [
+        None,
+        {},
+        {
+            "symbol": "SPY",
+            "bid_price": "10",
+            "ask_price": "9",
+            "timestamp": "2000-01-01T00:00:00Z",
+        },
+        {
+            "symbol": "SPY",
+            "bid_price": "0",
+            "ask_price": "9",
+            "timestamp": "2000-01-01T00:00:00Z",
+        },
+        {"symbol": "SPY", "bid_price": "10", "ask_price": "11"},
+        {
+            "symbol": "SPY",
+            "bid_price": "10",
+            "ask_price": "11",
+            "timestamp": "2099-01-01T00:00:00Z",
+        },
+    ],
+)
+def test_runtime_rejects_missing_malformed_invalid_or_stale_quote(monkeypatch, quote) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "_check_direct_alpaca_status",
+        lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
+    )
+    _patch_test_settings(monkeypatch)
+
+    class FakeReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
+
+        def get_latest_quote(self, symbol: str):
+            return quote
+
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", FakeReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/runtime/status").json()
+
+    assert body["market"]["state"] == "WAITING_FOR_EVIDENCE"
+    assert body["market"]["symbol"] is None
     assert body["market"]["latest_price"] is None
+
+
+def test_runtime_rejects_quote_provider_failure(monkeypatch) -> None:
+    monkeypatch.setattr(
+        bridge_api,
+        "_check_direct_alpaca_status",
+        lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
+    )
+    _patch_test_settings(monkeypatch)
+
+    class FailingReadOnlyAlpaca:
+        def __init__(self, settings) -> None:
+            pass
+
+        def get_latest_quote(self, symbol: str):
+            raise ConnectionError("market data unavailable")
+
+    monkeypatch.setattr(bridge_api, "ReadOnlyAlpaca", FailingReadOnlyAlpaca)
+
+    body = TestClient(_app()).get("/api/runtime/status").json()
+
+    assert body["market"]["state"] == "WAITING_FOR_EVIDENCE"
 
 
 def test_runtime_ai_state_reflects_server_configuration(monkeypatch) -> None:
     monkeypatch.setattr(
         bridge_api,
-        "_read_upstream_status",
+        "_check_direct_alpaca_status",
         lambda: _status(bridge_state="VERIFIED", code="PAPER_ACCOUNT_OBSERVED"),
     )
+    monkeypatch.setattr(bridge_api, "_read_market_observation", lambda: None)
     client = TestClient(_app())
 
     monkeypatch.delenv("FEATHERLESS_API_KEY", raising=False)
-    unavailable = client.get("/api/runtime/status").json()
-    assert unavailable["ai"]["state"] == "UNAVAILABLE"
+    assert client.get("/api/runtime/status").json()["ai"]["state"] == "UNAVAILABLE"
 
     monkeypatch.setenv("FEATHERLESS_API_KEY", "test-only-key")
-    available = client.get("/api/runtime/status").json()
-    assert available["ai"]["state"] == "AVAILABLE"
-
-
-def test_direct_alpaca_credentials_verifies_without_upstream(monkeypatch) -> None:
-    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
-    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
-
-    def mock_urlopen(req, *args, **kwargs):
-        class MockResponse:
-            def read(self):
-                return json.dumps({
-                    "status": "ACTIVE",
-                    "account_blocked": False,
-                    "trading_blocked": False,
-                    "trade_suspended_by_user": False,
-                    "equity": "100000.00",
-                }).encode("utf-8")
-            def __enter__(self):
-                return self
-            def __exit__(self, *args):
-                pass
-        return MockResponse()
-
-    monkeypatch.setattr(bridge_api, "urlopen", mock_urlopen)
-    # Ensure upstream is never called
-    def fail_if_upstream_called():
-        raise AssertionError("Upstream should not be called when direct credentials exist!")
-    monkeypatch.setattr(bridge_api, "_read_upstream_status", fail_if_upstream_called)
-
-    client = TestClient(_app())
-    response = client.get("/api/bridge/status")
-    assert response.status_code == 200
-    body = response.json()
-
-    assert body["bridge_state"] == "VERIFIED"
-    assert body["experience"]["state"] == "READY"
-    assert body["experience"]["headline"] == "Alpaca is ready"
-    assert body["provider_observation"]["code"] == "PAPER_ACCOUNT_OBSERVED"
+    assert client.get("/api/runtime/status").json()["ai"]["state"] == "AVAILABLE"

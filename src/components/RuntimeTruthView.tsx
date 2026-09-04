@@ -1,9 +1,9 @@
 import React from 'react';
 import { AlertTriangle, FileCheck2, Link2, LockKeyhole, ShieldCheck, Unplug } from 'lucide-react';
-import type { SovereignBridgeStatus, SovereignDecision } from '../types';
+import type { AlpacaBridgeStatus, SovereignDecision } from '../types';
 
 interface RuntimeTruthViewProps {
-  bridgeStatus: SovereignBridgeStatus | null;
+  bridgeStatus: AlpacaBridgeStatus | null;
   onOpenConnectModal: () => void;
 }
 
@@ -28,9 +28,9 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
               <ShieldCheck className="h-4 w-4" />
               Runtime Truth
             </div>
-            <h1 className="font-serif text-2xl text-[#f4f4f5] sm:text-3xl">LEFA Sovereign Ledger</h1>
+            <h1 className="font-serif text-2xl text-[#f4f4f5] sm:text-3xl">LEFA Decision Ledger</h1>
             <p className="max-w-2xl text-xs leading-relaxed text-zinc-400 sm:text-sm">
-              This surface renders only verified bridge status and canonical Sovereign decision receipts. Synthetic Stitch data is never admitted here.
+              This surface renders only verified Alpaca paper status and provider-backed decision receipts. Synthetic data is never admitted here.
             </p>
           </div>
 
@@ -46,7 +46,7 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
           <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-full border border-[#3f3f46] bg-[#18181b]">
             <Unplug className="h-5 w-5 text-zinc-400" />
           </div>
-          <h2 className="mt-4 font-serif text-lg text-zinc-100">Sovereign bridge not verified</h2>
+          <h2 className="mt-4 font-serif text-lg text-zinc-100">Alpaca paper connection not verified</h2>
           <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-zinc-400">
             No runtime provider claim is active. LEFA will not populate balances, P&amp;L, strategy decisions, receipts, or market narratives from design-preview data.
           </p>
@@ -56,7 +56,7 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
             className="mt-5 inline-flex items-center gap-2 rounded-xl border border-[#d4af37]/60 bg-[#d4af37]/10 px-4 py-2.5 text-xs font-mono font-semibold text-[#fef08a] transition-colors hover:bg-[#d4af37]/20"
           >
             <Link2 className="h-4 w-4" />
-            Verify sovereign paper bridge
+            Connect Alpaca
           </button>
         </div>
       ) : (
@@ -65,7 +65,7 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
             <div className="rounded-2xl border border-[#d4af37]/40 bg-[#121216] p-5">
               <div className="flex items-center gap-2 text-xs font-mono font-semibold text-[#fef08a]">
                 <ShieldCheck className="h-4 w-4" />
-                Provider boundary verified
+                Alpaca paper boundary verified
               </div>
               <div className="mt-4 space-y-2 text-[11px] font-mono">
                 <div className="flex justify-between gap-4 border-b border-[#27272a] pb-2 text-zinc-400">
@@ -111,7 +111,7 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
                 <div>
                   <h2 className="font-serif text-lg text-[#f4f4f5]">No canonical decision receipt published yet</h2>
                   <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">
-                    The Alpaca paper bridge is observable, but the Sovereign backend has not supplied a persisted `kopano.alpaca.decision-receipt.v1` to LEFA. Runtime remains evidence-light by design.
+                    The Alpaca paper connection is observable, but no persisted provider decision receipt has been supplied to LEFA. Runtime remains evidence-light by design.
                   </p>
                   <div className="mt-4 inline-flex rounded-lg border border-[#d97706]/40 bg-[#d97706]/10 px-3 py-1.5 text-[10px] font-mono text-[#fbbf24]">
                     RECEIPT MISSING → HOLD DISPLAY
@@ -169,7 +169,7 @@ export const RuntimeTruthView: React.FC<RuntimeTruthViewProps> = ({
               </div>
 
               <div className="mt-5 rounded-xl border border-[#27272a] bg-[#09090b] p-3 text-[10px] leading-relaxed text-zinc-500">
-                A receipt decision never grants browser execution authority. Orders remain a Sovereign backend concern and require their own provider receipt.
+                A receipt decision never grants browser execution authority. Orders remain a LEFA backend concern and require their own Alpaca provider receipt.
               </div>
             </article>
           )}

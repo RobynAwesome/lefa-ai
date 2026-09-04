@@ -15,20 +15,19 @@ LEFA may carry complex provider, KPGS, risk, receipt, reconciliation and AI stat
 
 | Surface | Current evidence | Governed state |
 |---|---|---|
-| `lefa-core-live.vercel.app` | Production deployment from merge `b18b741cf3d57609200541dbcc8c750f85231cf0` | READY |
-| LEFA → Sovereign Hub bridge | `/api/bridge/status` returns canonical Hub state server-to-server | WORKING |
-| Alpaca paper account readiness | Sovereign Hub currently reports paper credentials unavailable | HOLD / SETUP_NEEDED |
+| `lefa-core-live.vercel.app` | Public LEFA deployment target | DEPLOYMENT MUST BE VERIFIED |
+| LEFA → Alpaca Paper path | `/api/bridge/status` and `/api/runtime/status` use LEFA's native server-side Alpaca adapters | ENVIRONMENT-DEPENDENT |
+| Alpaca paper account readiness | Direct account verification succeeds only when rotated paper credentials are configured | HOLD / SETUP_NEEDED WITHOUT ENV |
 | Browser execution authority | None; credentials and execution remain backend-only | ENFORCED |
-| Runtime market telemetry | Current primary runtime UI still contains hard-coded/demo market values and simulator controls | FOC_FLAGGED — DO NOT TREAT AS LIVE |
-| Backend snapshot | Explicit fixture-only surface; not admissible as live market/account truth | HOLD FOR REAL OBSERVATION |
+| Runtime market telemetry | Runtime status exposes account truth and reports `WAITING_FOR_MARKET` until an admitted market observation is available | HOLD UNTIL OBSERVED |
 | Featherless AI | Must be environment-configured server-side; provider failure may not masquerade as live reasoning | SECURITY / TRUTH HARDENING IN PROGRESS |
 
 ## Validated specimen — connection UX
 
-Issue #12 / PR #13 removed the dead human-facing MCP verification seam and introduced the production bridge projection:
+The direct-Alpaca path keeps the human-facing connection projection small while the backend verifies provider truth:
 
 ```text
-Sovereign Hub technical truth
+LEFA native Alpaca adapter
         ↓
 LEFA backend projection
         ↓
@@ -37,16 +36,16 @@ READY | SETUP_NEEDED | UNAVAILABLE
 human-language next state
 ```
 
-Production evidence after merge:
+The projection is truthful only when the deployment has the required server-side paper credentials:
 
 ```text
 GET /api/bridge/status
 HTTP 200
-bridge_state = HOLD
-experience.state = SETUP_NEEDED
+bridge_state = VERIFIED | HOLD
+experience.state = READY | SETUP_NEEDED | UNAVAILABLE
 ```
 
-This is correct while the Hub lacks configured Alpaca paper credentials. No fake success is permitted.
+No fake success is permitted when credentials, account verification, or provider evidence are unavailable.
 
 ## Active failure seeds
 
@@ -94,8 +93,8 @@ Next correction must:
 | Repository | Authority |
 |---|---|
 | `RobynAwesome/lefa-ai` | User-facing LEFA runtime + Python contracts/orchestration/projection boundary |
-| `RobynAwesome/kopano-sovereign-hub` | Server-side Alpaca PAPER observation and execution jurisdiction |
-| `RobynAwesome/Introduction-to-MCP` | KPGS / PKA / governance transition authority |
+| Alpaca Paper API | Authoritative account, market-data, option-data, and order provider for this hackathon path |
+| `RobynAwesome/Introduction-to-MCP` | Historical KPGS / PKA governance reference; not a runtime dependency |
 
 Canonical transition law:
 
@@ -105,18 +104,17 @@ trigger → evidence → invariant → authority → transition → receipt
 
 ## Active GitHub lanes
 
-- **#15** — purge credential-like literals and restore repository-wide Python hygiene/security.
-- **#16** — apply Heavy Backend → Easy Immersive Interface across all LEFA workflows.
-- **#2** — Alpaca MCP/runtime proof admission remains separate from presentation success.
+- **Direct-Alpaca hardening** — keep paper credentials server-side and rotate them outside source control.
+- **Runtime truth** — show only provider-backed account and admitted market observations.
+- **Submission proof** — capture Featherless reasoning, deterministic risk decisions, and Alpaca order receipts.
 
 ## Next safe execution order
 
-1. Merge P0 Featherless current-tree purge only after CI proves env-only behavior and no secret literal remains.
-2. Rotate/revoke the previously committed Featherless credential at the provider; Git history means deletion from main is not sufficient.
-3. Seed a bounded runtime-truth branch from clean main.
-4. Replace hard-coded runtime telemetry with backend-derived presence/absence state.
-5. Add a real server-side market observation contract before displaying price/regime/ATR as current truth.
-6. Continue Issue #16 surface-by-surface: onboarding, risk HOLD, ledger/reveal, AI, voice, errors, settings and mobile.
+1. Rotate/revoke any previously exposed provider credentials; deleting a current-tree value is not sufficient.
+2. Configure fresh Alpaca Paper and Featherless credentials only in the deployment environment.
+3. Replace any remaining hard-coded runtime telemetry with backend-derived presence/absence state.
+4. Capture a provider-backed demo run showing account verification, market observation, risk decision, and Alpaca receipt.
+5. Keep the submission narrative aligned with the implemented bull put vertical path.
 
 ## Invariants
 

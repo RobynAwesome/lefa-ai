@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import Any, Protocol
 
 from lefa.governance import (
@@ -61,9 +62,10 @@ class CanonicalTradingOrchestrator:
     """
     Translation boundary between LEFA-native deterministic risk semantics and KPGS.
 
-    This adapter may evaluate and ledger a proposal. It intentionally exposes no broker
-    execution method. A canonical APPROVE therefore means execution-eligible only for a
-    downstream authority that separately owns the requested jurisdiction.
+    This legacy adapter may evaluate and ledger a proposal. The hackathon options runner
+    does not depend on it or on an external execution service. Any caller that uses the
+    compatibility execution method still submits only through the provided direct paper
+    broker and the narrow defined-risk MLEG order shape.
     """
 
     def __init__(
@@ -210,17 +212,31 @@ class CanonicalTradingOrchestrator:
         Requires:
         - receipt.decision == Decision.APPROVE
         - receipt.execution_jurisdiction == ExecutionJurisdiction.PAPER
+        - at least two option legs and a positive limit price
         """
         if receipt.decision != Decision.APPROVE:
             raise ValueError(f"Cannot execute order with non-approved receipt decision: {receipt.decision}")
         if receipt.execution_jurisdiction != ExecutionJurisdiction.PAPER:
             raise ValueError(f"Execution prohibited outside PAPER jurisdiction: {receipt.execution_jurisdiction}")
+        if not legs or len(legs) < 2:
+            raise ValueError("DEFINED_RISK_MLEG_REQUIRED")
+        if qty < 1:
+            raise ValueError("ORDER_QUANTITY_INVALID")
+        if limit_price is None:
+            raise ValueError("ORDER_LIMIT_PRICE_REQUIRED")
+        try:
+            normalized_limit_price = Decimal(str(limit_price))
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise ValueError("ORDER_LIMIT_PRICE_INVALID") from exc
+        if normalized_limit_price <= 0:
+            raise ValueError("ORDER_LIMIT_PRICE_INVALID")
 
         order_result = broker.place_option_order(
-            symbol=receipt.proposal.symbol,
-            order_class="mleg" if legs else "simple",
+            order_class="mleg",
+            order_type="limit",
+            time_in_force="day",
             legs=legs,
-            limit_price=limit_price,
+            limit_price=normalized_limit_price,
             qty=qty,
             client_order_id=f"lefa-{str(receipt.receipt_id)[:12]}",
         )
@@ -238,4 +254,3 @@ class CanonicalTradingOrchestrator:
         if self._canonical_orchestrator is not None:
             return self._canonical_orchestrator, self._operating_mode
         return _load_kpgs()
-

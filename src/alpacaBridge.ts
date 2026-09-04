@@ -1,5 +1,5 @@
 /**
- * LEFA AI — Human-facing Sovereign Bridge
+ * LEFA AI - Human-facing Alpaca paper bridge
  * ========================================
  *
  * The browser does not discover MCP namespaces, inspect credentials, or reason
@@ -10,16 +10,16 @@
  */
 
 import type {
-  SovereignBridgeStatus,
+  AlpacaBridgeStatus,
   SovereignDecision,
   SovereignDecisionReceipt,
   SovereignProofState,
 } from './types';
 
-export type SovereignBridgeVerification =
+export type AlpacaBridgeVerification =
   | {
       ok: true;
-      status: SovereignBridgeStatus;
+      status: AlpacaBridgeStatus;
     }
   | {
       ok: false;
@@ -55,7 +55,7 @@ function isDecisionReceipt(value: unknown): value is SovereignDecisionReceipt {
   return true;
 }
 
-export function isSovereignBridgeStatus(value: unknown): value is SovereignBridgeStatus {
+export function isAlpacaBridgeStatus(value: unknown): value is AlpacaBridgeStatus {
   if (!isRecord(value)) return false;
   if (value.schema !== BRIDGE_SCHEMA) return false;
   if (value.provider !== 'alpaca') return false;
@@ -67,21 +67,21 @@ export function isSovereignBridgeStatus(value: unknown): value is SovereignBridg
   return true;
 }
 
-function friendlyHoldMessage(status: SovereignBridgeStatus): string {
+function friendlyHoldMessage(status: AlpacaBridgeStatus): string {
   const code = status.provider_observation?.code;
 
   if (code === 'PAPER_CREDENTIALS_UNAVAILABLE') {
     return 'The secure trading connection still needs setup.';
   }
 
-  if (code === 'SOVEREIGN_BACKEND_UNAVAILABLE') {
+  if (code === 'PAPER_PROVIDER_UNREACHABLE' || code === 'PAPER_PROVIDER_ERROR') {
     return "LEFA can't reach the trading service right now.";
   }
 
   return 'The trading connection is not ready yet.';
 }
 
-export async function verifySovereignBridge(): Promise<SovereignBridgeVerification> {
+export async function verifyAlpacaBridge(): Promise<AlpacaBridgeVerification> {
   let response: Response;
 
   try {
@@ -118,7 +118,7 @@ export async function verifySovereignBridge(): Promise<SovereignBridgeVerificati
     };
   }
 
-  if (!isSovereignBridgeStatus(payload)) {
+  if (!isAlpacaBridgeStatus(payload)) {
     return {
       ok: false,
       code: 'BRIDGE_INVALID_RECEIPT',

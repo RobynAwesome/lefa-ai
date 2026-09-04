@@ -28,8 +28,8 @@ def test_approves_proposal_at_policy_boundary() -> None:
     assert receipt.decision is Decision.APPROVE
 
 
-def test_rejects_trade_above_half_percent_equity() -> None:
-    receipt = RiskPolicy().evaluate(account(), proposal(maximum_loss=Decimal("500.01")))
+def test_rejects_trade_above_three_percent_equity() -> None:
+    receipt = RiskPolicy().evaluate(account(), proposal(maximum_loss=Decimal("3000.01")))
     assert receipt.decision is Decision.REJECT
     assert "trade_risk_limit_exceeded" in receipt.reasons
 
@@ -42,11 +42,11 @@ def test_rejects_disallowed_symbol_and_structure() -> None:
 
 def test_rejects_when_aggregate_open_risk_would_exceed_limit() -> None:
     receipt = RiskPolicy().evaluate(
-        account(open_risk=Decimal(1750)), proposal(maximum_loss=Decimal(500))
+        account(open_risk=Decimal(11501)), proposal(maximum_loss=Decimal(500))
     )
     assert "portfolio_risk_limit_exceeded" in receipt.reasons
 
 
 def test_daily_loss_stop_fails_closed_at_boundary() -> None:
-    receipt = RiskPolicy().evaluate(account(daily_pnl=Decimal(-1000)), proposal())
+    receipt = RiskPolicy().evaluate(account(daily_pnl=Decimal(-5000)), proposal())
     assert "daily_loss_stop_active" in receipt.reasons

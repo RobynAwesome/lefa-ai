@@ -3,7 +3,7 @@
 </p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/STATUS-POC_VALIDATED-111111?style=for-the-badge" alt="POC status" />
+  <img src="https://img.shields.io/badge/STATUS-DIRECT_PAPER_PATH-111111?style=for-the-badge" alt="Direct Alpaca paper path" />
   <img src="https://img.shields.io/badge/ALPACA-OPTIONS_ALPHA_AGENTS-F2D16B?style=for-the-badge&logoColor=111111" alt="Alpaca AI Trading Agents Hackathon" />
   <img src="https://img.shields.io/badge/PARTNER-FEATHERLESS_AI-7C3AED?style=for-the-badge&logoColor=white" alt="Featherless AI Partner" />
   <img src="https://img.shields.io/badge/PYTHON-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
@@ -55,12 +55,10 @@ You speak to **LEFA**. LEFA is the user-facing base intelligence. The complicate
 
 Built specifically for the **Alpaca AI Trading Agents Hackathon** (Track: *Options Alpha Agents*):
 
-- **AI Logic**: Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) performs serverless, real-time market regime analysis and structure generation.
-- **Options Strategy**: Automated defined-risk credit spreads (Bull Put & Bear Call spreads) and Iron Condors on liquid underlyings (`SPY`, `QQQ`, `AAPL`, `NVDA`).
-- **Delta Targeting**: Short legs targeted at `0.15–0.20 delta` (~80–85% probability of OTM expiration).
-- **Volatility Premium Gate**: Only trades when $\frac{\text{ATM IV}}{\text{20-Day RV}} \ge 1.15$.
-- **Hard Risk Gates**: Zero naked short options, max $3\%$ loss per structure, $12\%$ aggregate portfolio risk cap, mandatory $5\text{ DTE}$ time stop, $50\%$ profit target, and $5\%$ drawdown circuit breaker.
-- **Alpaca Developer Stack**: Alpaca MCP V2 server, Trading API, Alpaca CLI, and paper trading mode.
+- **AI Logic**: Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) provides advisory reasoning from current provider-backed market facts. It never receives broker credentials or execution authority.
+- **Options Strategy**: The current runner selects one quoted, same-expiration bull put vertical from active put contracts below the underlying midpoint on supported liquid underlyings (`SPY`, `QQQ`, `AAPL`, `NVDA`).
+- **Hard Risk Gates**: No naked short options, maximum 3% loss per proposed structure, maximum 12% aggregate open risk, and a 5% daily-loss stop. Missing or invalid evidence produces `HOLD`.
+- **Alpaca Developer Stack**: LEFA's server-side Python `alpaca-py` adapters call the Alpaca Paper Trading and market-data APIs directly. Sovereign Hub and Alpaca MCP are not required by the hackathon execution path.
 
 📄 **Full Architecture & Risk Specifications**: [Read the One-Page Hackathon Write-Up](./submission/one-page-writeup.md)
 
@@ -177,26 +175,26 @@ So LEFA keeps receipts.
 <br/>
 
 ```text
-CONNECT TO ALPACA PAPER ENVIRONMENT (Trading API / MCP V2)
+CONNECT TO ALPACA PAPER ENVIRONMENT (native `alpaca-py`)
                  ↓
 OBSERVE REAL ACCOUNT / MARKET CONTEXT (SPY, QQQ, AAPL, NVDA)
                  ↓
 FEATHERLESS AI SERVERLESS REASONING (Qwen/Qwen2.5-7B-Instruct)
                  ↓
-FORMULATE DEFINED-RISK OPTIONS STRUCTURE (Delta 0.15-0.20, IV/RV >= 1.15)
+FORMULATE ONE QUOTED, DEFINED-RISK BULL PUT VERTICAL
                  ↓
-DETERMINISTIC KPGS RISK FIREWALL (3% loss limit, 12% portfolio risk, 5% drawdown stop)
+DETERMINISTIC LEFA RISK FIREWALL (3% trade risk, 12% open risk, 5% daily-loss stop)
                  ↓
-AUTONOMOUS EXECUTION (Alpaca place_option_order / TradingClient)
+AUTONOMOUS PAPER EXECUTION (validated Alpaca MLEG limit order)
                  ↓
-BROKERAGE RECEIPT + P&L TELEMETRY
+ALPACA PROVIDER RECEIPT
                  ↓
 TIME & REVEAL
 ```
 
 **Autonomous ≠ Ungoverned.**
 
-LEFA proves that an autonomous AI agent can place options trades with institutional-grade risk governance:
+When server-side credentials and live provider evidence are configured, LEFA demonstrates that an autonomous AI agent can place a constrained paper options trade with deterministic risk governance:
 
 > **LEFA observes market reality, synthesizes options alpha with Featherless AI, enforces unbreakable risk boundaries, and autonomously executes paper options orders directly on Alpaca.**
 

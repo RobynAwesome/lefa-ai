@@ -8,7 +8,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import type {
   DesignDirection,
   ExperienceMode,
-  SovereignBridgeStatus,
+  AlpacaBridgeStatus,
   SystemState,
   ViewportMode,
 } from './types';
@@ -31,7 +31,7 @@ export default function App() {
   const [viewportMode, setViewportMode] = useState<ViewportMode>('desktop');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [bridgeStatus, setBridgeStatus] = useState<SovereignBridgeStatus | null>(null);
+  const [bridgeStatus, setBridgeStatus] = useState<AlpacaBridgeStatus | null>(null);
 
   const [isCritiqueOpen, setIsCritiqueOpen] = useState(false);
   const [isCodexOpen, setIsCodexOpen] = useState(false);
@@ -82,7 +82,7 @@ export default function App() {
     playStateChime(newState);
   };
 
-  const handleConnectSuccess = (status: SovereignBridgeStatus) => {
+  const handleConnectSuccess = (status: AlpacaBridgeStatus) => {
     setBridgeStatus(status);
     setExperienceMode('runtime');
     setToastMessage('Trading connection is ready.');

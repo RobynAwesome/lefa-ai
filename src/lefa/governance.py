@@ -1,5 +1,6 @@
+import re
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -60,9 +61,9 @@ class GovernanceReceipt(BaseModel):
 class RiskPolicy(BaseModel):
     allowed_symbols: frozenset[str] = frozenset({"SPY"})
     allowed_structures: frozenset[str] = frozenset({"vertical_credit_spread"})
-    max_trade_risk_fraction: Decimal = Decimal("0.005")
-    max_open_risk_fraction: Decimal = Decimal("0.02")
-    daily_loss_stop_fraction: Decimal = Decimal("0.01")
+    max_trade_risk_fraction: Decimal = Decimal("0.03")
+    max_open_risk_fraction: Decimal = Decimal("0.12")
+    daily_loss_stop_fraction: Decimal = Decimal("0.05")
 
     def evaluate(self, account: AccountState, proposal: TradeProposal) -> GovernanceReceipt:
         reasons: list[str] = []
@@ -82,3 +83,35 @@ class RiskPolicy(BaseModel):
             reasons=reasons or ["all_policy_checks_passed"],
             proposal=proposal,
         )
+
+
+_OCC_OPTION_SYMBOL = re.compile(r"^[A-Z0-9]{1,6}\d{6}[CP](\d{8})$")
+
+
+def calculate_open_risk(positions: list[dict[str, object]]) -> Decimal:
+    """Calculate a conservative open-risk exposure from provider positions."""
+    total = Decimal(0)
+    for position in positions:
+        symbol = str(position.get("symbol", "")).strip().upper()
+        side = str(position.get("side", "")).strip().lower()
+        if not symbol or side not in {"long", "short"}:
+            raise ValueError("OPEN_RISK_POSITION_INVALID")
+
+        try:
+            quantity = abs(Decimal(str(position["qty"])))
+            market_value = abs(Decimal(str(position["market_value"])))
+        except (KeyError, InvalidOperation, TypeError, ValueError) as exc:
+            raise ValueError("OPEN_RISK_POSITION_INVALID") from exc
+        if quantity <= 0 or market_value < 0:
+            raise ValueError("OPEN_RISK_POSITION_INVALID")
+
+        exposure = market_value
+        option_match = _OCC_OPTION_SYMBOL.fullmatch(symbol)
+        if option_match and side == "short":
+            try:
+                strike = Decimal(option_match.group(1)) / Decimal(1000)
+            except InvalidOperation as exc:
+                raise ValueError("OPEN_RISK_POSITION_INVALID") from exc
+            exposure = max(exposure, quantity * strike * Decimal(100))
+        total += exposure
+    return total

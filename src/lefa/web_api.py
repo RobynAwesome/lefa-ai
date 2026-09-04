@@ -113,7 +113,8 @@ def _current_runtime_evidence() -> MCPRuntimeEvidence:
     """Return backend-owned legacy MCP runtime evidence.
 
     This seam remains fail-closed for engineering continuity. The production human
-    connection path is `/api/bridge/status`, which observes Sovereign Hub server-to-server.
+    connection path is `/api/bridge/status`, which reads Alpaca paper truth
+    directly from LEFA's server-side adapter.
     """
 
     return MCPRuntimeEvidence()

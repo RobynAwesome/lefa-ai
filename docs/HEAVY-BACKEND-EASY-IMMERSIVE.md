@@ -10,7 +10,7 @@ The information was correct, but the responsibility was placed on the wrong side
 
 > **Heavy Backend → Small Human State → Immersive Action**
 
-KPGS, KC, Alpaca adapters and LEFA backend may carry large proof surfaces. The human-facing interface should project only the minimum state required to understand what is happening and what to do next.
+LEFA's risk engine, Alpaca adapters, provider receipts and backend may carry large proof surfaces. The human-facing interface should project only the minimum state required to understand what is happening and what to do next.
 
 ## Separation
 
@@ -19,12 +19,12 @@ KPGS, KC, Alpaca adapters and LEFA backend may carry large proof surfaces. The h
 May know and preserve:
 
 - credentials and provider reachability;
-- MCP namespace/schema/tool discovery;
-- canonical receipts and hashes;
+- provider evidence and freshness;
+- canonical receipts and hashes when persistence is enabled;
 - Alpaca account restrictions and entitlements;
 - paper/live jurisdiction;
 - deterministic risk decisions;
-- execution transport and provider order IDs;
+- execution transport and Alpaca provider order IDs;
 - detailed HOLD reasons;
 - retry/recovery/reconciliation state.
 
@@ -52,7 +52,7 @@ Prefer:
 
 Avoid as primary UI:
 
-- `Verify Paper Bridge`
+- `Connect Alpaca`
 - schema identifiers;
 - namespace names;
 - raw provider error codes;
@@ -68,7 +68,7 @@ SIMPLE LEFA ACTION
     ↓
 LEFA BACKEND ORCHESTRATION
     ↓
-KC / KPGS / PROVIDER EVIDENCE
+ALPACA / FEATHERLESS PROVIDER EVIDENCE
     ↓
 DETERMINISTIC GOVERNANCE
     ↓
@@ -91,11 +91,11 @@ A backend HOLD remains HOLD. LEFA changes only its projection, not its meaning.
 
 ## First application
 
-Issue #12 applies this law to the Alpaca connection experience:
+The direct-Alpaca connection experience applies this law:
 
-- the browser stops consuming the dead POC MCP evidence seam;
-- LEFA backend checks Sovereign Hub server-to-server;
-- canonical provider HOLD remains inspectable behind the boundary;
+- the browser consumes one small LEFA backend projection;
+- LEFA backend checks Alpaca Paper server-to-server;
+- provider HOLD remains inspectable behind the boundary;
 - the modal automatically resolves to Connecting / Ready / Setup needed / Unavailable;
 - no browser execution authority is introduced.
 

@@ -1,22 +1,22 @@
-import asyncio
-import json
-import logging
-import os
-from typing import Any, Dict
-from uuid import UUID
+"""Direct Alpaca paper observations persisted to LEFA's Ark ledger.
 
+This module retains the historical observer class name for callers, but it no
+longer starts or delegates to an MCP server. All provider observations are made
+by LEFA's native Python Alpaca adapters and fail closed when unavailable.
+"""
+from __future__ import annotations
+
+from typing import Any
+
+from alpaca.data.historical.stock import StockHistoricalDataClient
+from alpaca.data.requests import StockLatestQuoteRequest
+
+from lefa.alpaca import ReadOnlyAlpaca
 from lefa.config import Settings
-
-logger = logging.getLogger(__name__)
 
 
 class AlpacaPaperObserver:
-    """The Eye: Alpaca MCP & Trading API Observer.
-
-    Connects to the official Alpaca Trading & Market Data APIs / MCP Server,
-    strictly validating paper trading mode.
-    Discovers market facts and persists raw observations directly into The Ark.
-    """
+    """Read-only Alpaca paper observer that writes admitted facts to The Ark."""
 
     def __init__(
         self,
@@ -27,126 +27,85 @@ class AlpacaPaperObserver:
     ) -> None:
         self.ark = ark_ledger
         self.server_command = server_command
-        self.server_args = server_args or ["alpaca-mcp-server/index.js"]
-        self.settings = settings or Settings()
+        self.server_args = server_args or []
+        self.settings = settings
 
-    def _get_trading_client(self) -> Any:
-        api_key = self.settings.alpaca_api_key.get_secret_value()
-        secret_key = self.settings.alpaca_secret_key.get_secret_value()
-        if not api_key or not secret_key or "your_" in api_key:
-            return None
-
+    def _settings(self) -> Settings:
         try:
-            from alpaca.trading.client import TradingClient
-
-            return TradingClient(api_key, secret_key, paper=True)
-        except Exception as exc:
-            logger.debug("Could not instantiate TradingClient: %s", exc)
-            return None
-
-    async def _execute_mcp_call(self, tool_name: str, args: Dict[str, Any] | None = None) -> Dict[str, Any]:
-        """Execute an actual MCP or Trading API observation call.
-
-        Enforces paper mode invariant. Uses live Alpaca REST SDK when credentials exist,
-        falling back to clean simulated responses for offline test isolation.
-        """
-        # Ensure paper trading invariant is strictly enforced
-        paper_env = os.getenv("ALPACA_PAPER_TRADE", "true").lower()
-        if paper_env not in {"true", "1", "yes"}:
+            settings = self.settings or Settings()
+        except ValueError as exc:
+            raise RuntimeError("CRITICAL GOVERNANCE FAILURE: Alpaca is not in Paper Trading mode.") from exc
+        if not settings.alpaca_paper:
             raise RuntimeError("CRITICAL GOVERNANCE FAILURE: Alpaca is not in Paper Trading mode.")
 
-        client = self._get_trading_client()
+        api_key = settings.alpaca_api_key.get_secret_value().strip()
+        secret_key = settings.alpaca_secret_key.get_secret_value().strip()
+        if (
+            not api_key
+            or not secret_key
+            or "your_" in api_key.lower()
+            or "your_" in secret_key.lower()
+        ):
+            raise RuntimeError("ALPACA_CREDENTIALS_UNAVAILABLE")
+        return settings
+
+    async def _execute_mcp_call(
+        self,
+        tool_name: str,
+        args: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Execute one direct Alpaca observation; provider errors are propagated."""
+        settings = self._settings()
+        api_key = settings.alpaca_api_key.get_secret_value()
+        secret_key = settings.alpaca_secret_key.get_secret_value()
 
         if tool_name in {"get_account", "get_account_info"}:
-            if client is not None:
-                try:
-                    acc = client.get_account()
-                    return {
-                        "id": str(acc.id),
-                        "status": str(acc.status),
-                        "equity": str(acc.equity),
-                        "cash": str(acc.cash),
-                        "buying_power": str(acc.buying_power),
-                        "currency": str(getattr(acc, "currency", "USD")),
-                        "options_level": getattr(acc, "options_approved_level", 3),
-                        "_simulated": False,
-                    }
-                except Exception as exc:
-                    logger.warning("Alpaca get_account API error, falling back: %s", exc)
+            response = ReadOnlyAlpaca(settings).get_account()
+            response["provenance"] = {"source": "alpaca", "is_fixture": False}
+            return response
 
-            return {"status": "ACTIVE", "equity": "100000.00", "currency": "USD", "_simulated": True}
+        if tool_name in {"get_quote", "get_stock_bars"}:
+            symbol = (args or {}).get("symbol", "SPY")
+            if not isinstance(symbol, str) or not symbol.strip():
+                raise ValueError("ALPACA_SYMBOL_INVALID")
+            symbol = symbol.strip().upper()
+            data_client = StockHistoricalDataClient(api_key, secret_key)
+            quotes = data_client.get_stock_latest_quote(
+                StockLatestQuoteRequest(symbol_or_symbols=symbol)
+            )
+            quote = quotes.get(symbol)
+            if quote is None or quote.bid_price is None or quote.ask_price is None:
+                raise ValueError("ALPACA_QUOTE_INVALID")
+            return {
+                "symbol": symbol,
+                "bid_price": str(quote.bid_price),
+                "ask_price": str(quote.ask_price),
+                "timestamp": str(quote.timestamp),
+                "provenance": {"source": "alpaca", "is_fixture": False},
+            }
 
-        elif tool_name in {"get_quote", "get_stock_bars"}:
-            symbol = args.get("symbol", "SPY") if args else "SPY"
-            if client is not None:
-                try:
-                    from alpaca.data.historical.stock import StockHistoricalDataClient
-                    from alpaca.data.requests import StockLatestQuoteRequest
+        if tool_name == "get_all_positions":
+            return {
+                "positions": ReadOnlyAlpaca(settings).get_positions(),
+                "provenance": {"source": "alpaca", "is_fixture": False},
+            }
 
-                    api_key = self.settings.alpaca_api_key.get_secret_value()
-                    secret_key = self.settings.alpaca_secret_key.get_secret_value()
-                    data_client = StockHistoricalDataClient(api_key, secret_key)
-                    req = StockLatestQuoteRequest(symbol_or_symbols=symbol)
-                    quote = data_client.get_stock_latest_quote(req)
-                    q = quote[symbol]
-                    return {
-                        "symbol": symbol,
-                        "bid_price": str(q.bid_price),
-                        "ask_price": str(q.ask_price),
-                        "timestamp": str(q.timestamp),
-                        "_simulated": False,
-                    }
-                except Exception as exc:
-                    logger.warning("Alpaca market quote error, falling back: %s", exc)
-
-            return {"symbol": symbol, "bid_price": "595.10", "ask_price": "595.15", "_simulated": True}
-
-        elif tool_name == "get_all_positions":
-            if client is not None:
-                try:
-                    positions = client.get_all_positions()
-                    return {
-                        "positions": [
-                            {"symbol": p.symbol, "qty": str(p.qty), "market_value": str(p.market_value)}
-                            for p in positions
-                        ],
-                        "_simulated": False,
-                    }
-                except Exception as exc:
-                    logger.warning("Alpaca positions error, falling back: %s", exc)
-            return {"positions": [], "_simulated": True}
-
-        elif tool_name == "place_option_order":
-            if client is not None:
-                try:
-                    res = client.post("/orders", data=args or {})
-                    return {"status": "submitted", "order": res, "_simulated": False}
-                except Exception as exc:
-                    logger.error("Alpaca order placement failed: %s", exc)
-                    raise
-            return {"status": "submitted", "order_id": "sim-order-101", "_simulated": True}
-
-        else:
-            raise RuntimeError(f"Unknown MCP tool: {tool_name}")
+        raise RuntimeError(f"Unknown read-only Alpaca observation: {tool_name}")
 
     async def observe_account(self) -> str:
-        """Retrieve account telemetry from MCP / API and persist it to The Ark."""
+        """Retrieve account telemetry from Alpaca and persist it to The Ark."""
         response = await self._execute_mcp_call("get_account")
-
         obs_id = self.ark.record_observation(
-            source="AlpacaMCP",
+            source="Alpaca",
             observation_data={"tool": "get_account", "response": response},
         )
-        logger.info(f"Observed Account State. Ark T0 Receipt: {obs_id}")
         return str(obs_id)
 
     async def observe_quote(self, symbol: str) -> str:
-        """Retrieve market data from MCP / API and persist to The Ark."""
+        """Retrieve a live market quote from Alpaca and persist it to The Ark."""
         response = await self._execute_mcp_call("get_quote", {"symbol": symbol})
-
         obs_id = self.ark.record_observation(
-            source="AlpacaMCP",
+            source="Alpaca",
             observation_data={"tool": "get_quote", "response": response},
         )
         return str(obs_id)
-

@@ -11,13 +11,13 @@ import {
   Sparkles,
   WifiOff,
 } from 'lucide-react';
-import type { SovereignBridgeStatus, SystemState } from '../types';
+import type { AlpacaBridgeStatus, SystemState } from '../types';
 import { getDualAxisExplanation, getRuntimeStatus } from '../api/lefa';
 import type { RuntimeStatusResponse } from '../api/lefa';
 import { Aether3DScene } from './Aether3DScene';
 
 interface RuntimeCompanionViewProps {
-  bridgeStatus: SovereignBridgeStatus | null;
+  bridgeStatus: AlpacaBridgeStatus | null;
   onOpenConnectModal: () => void;
   onOpenLab: () => void;
   reducedMotion?: boolean;

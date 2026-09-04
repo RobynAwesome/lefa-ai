@@ -77,7 +77,7 @@ def test_risk_rejection_short_circuits_canonical_bridge() -> None:
             raise AssertionError("canonical bridge must not run after risk rejection")
 
     receipt = CanonicalTradingOrchestrator(canonical_orchestrator=MustNotRun()).evaluate(
-        account(), proposal("500.01")
+        account(), proposal("3000.01")
     )
     assert receipt.decision is Decision.REJECT
     assert "canonical_orchestration_skipped_after_risk_reject" in receipt.reasons

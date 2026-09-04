@@ -42,7 +42,7 @@ export interface SovereignProviderObservation {
   trade_suspended_by_user: boolean | null;
 }
 
-export interface SovereignBridgeStatus {
+export interface AlpacaBridgeStatus {
   schema: 'kopano.lefa.sovereign-bridge-status.v1';
   provider: 'alpaca';
   environment: 'paper';

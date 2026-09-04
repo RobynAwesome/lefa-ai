@@ -41,11 +41,13 @@ def test_featherless_explain_market_observation_mocked():
     mock_response.read.return_value = b'{"choices": [{"message": {"content": "Market evidence remains under governed observation."}}]}'
     mock_response.__enter__.return_value = mock_response
 
-    with patch("urllib.request.urlopen", return_value=mock_response):
+    with patch("urllib.request.urlopen", return_value=mock_response) as urlopen:
         explanation = reasoner.explain_market_observation(
             "SPY", None, "unknown", "OBSERVE", "No live market price admitted."
         )
         assert "governed observation" in explanation
+        request = urlopen.call_args.args[0]
+        assert request.get_header("Authorization") == "Bearer test-only-key"
 
 
 def test_web_api_explain_endpoint_reports_unavailable_when_unconfigured():

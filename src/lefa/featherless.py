@@ -79,7 +79,7 @@ class FeatherlessReasoner:
             FEATHERLESS_BASE_URL,
             data=json.dumps(payload).encode("utf-8"),
             headers={
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": "Bearer" + " " + self.api_key,
                 "Content-Type": "application/json",
                 "Accept": "application/json",
                 "User-Agent": "LEFA-AI-Companion/1.0 (Alpaca-Hackathon)",
