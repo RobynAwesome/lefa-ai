@@ -26,10 +26,15 @@ dev = [
   "ruff>=0.12,<1",
   "uvicorn>=0.30,<1",
 ]
+mcp = [
+  "alpaca-mcp-server==2.2.0",
+  "fastmcp>=3.1,<4",
+]
 
 [project.scripts]
 lefa = "lefa.cli:app"
 lefa-ui = "lefa.demo_server:main"
+lefa-mcp-proof = "lefa.mcp_v2:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/lefa"]
