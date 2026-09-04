@@ -67,6 +67,15 @@ class AlpacaPaperBroker:
             "options_trading_level": getattr(acc, "options_trading_level", None),
         }
 
+    def get_clock(self) -> dict[str, Any]:
+        clock = self._client.get_clock()
+        return {
+            "timestamp": str(clock.timestamp),
+            "is_open": bool(clock.is_open),
+            "next_open": str(clock.next_open),
+            "next_close": str(clock.next_close),
+        }
+
     def account_state(self) -> AccountState:
         acc = self.get_account()
         daily_pnl = acc["equity"] - acc["last_equity"]
@@ -90,8 +99,6 @@ class AlpacaPaperBroker:
         ]
 
     def get_orders(self, status: str = "open") -> list[dict[str, Any]]:
-        # Legacy compatibility helper. The demo runner does not use local order state
-        # as execution proof; it requires the provider order returned by submit_order.
         orders = self._client.get_orders(status=status)
         return [
             {
