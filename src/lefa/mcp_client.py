@@ -7,7 +7,7 @@ compliance. Real MCP usage lives in :mod:`lefa.mcp_v2`.
 """
 import logging
 import os
-from typing import Any, Dict
+from typing import Any
 
 from lefa.config import Settings
 
@@ -46,8 +46,8 @@ class AlpacaPaperObserver:
             return None
 
     async def _execute_mcp_call(
-        self, tool_name: str, args: Dict[str, Any] | None = None
-    ) -> Dict[str, Any]:
+        self, tool_name: str, args: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """Legacy method name: execute an Alpaca REST/SDK or simulated call.
 
         Kept for backward compatibility only. This method does not open an MCP
