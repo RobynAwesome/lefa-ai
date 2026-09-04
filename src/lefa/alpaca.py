@@ -3,6 +3,8 @@ from typing import Any
 from uuid import uuid4
 
 from alpaca.trading.client import TradingClient
+from alpaca.trading.enums import OrderClass, OrderSide, TimeInForce
+from alpaca.trading.requests import LimitOrderRequest, OptionLegRequest
 
 from lefa.config import Settings
 from lefa.governance import AccountState
@@ -32,9 +34,8 @@ class ReadOnlyAlpaca:
 class AlpacaPaperBroker:
     """Governed Alpaca Paper Trading Broker.
 
-    Graduates LEFA from read-only observation to autonomous paper execution.
-    Executes multi-leg options strategies, defined-risk credit spreads,
-    and portfolio rehydration strictly in Alpaca's paper trading environment.
+    Paper mode is mandatory. Multi-leg option orders use Alpaca-py's public
+    ``submit_order`` API and request models; no private transport methods are used.
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
@@ -44,6 +45,8 @@ class AlpacaPaperBroker:
 
         api_key = self.settings.alpaca_api_key.get_secret_value()
         secret_key = self.settings.alpaca_secret_key.get_secret_value()
+        if not api_key or not secret_key:
+            raise ValueError("Alpaca paper credentials are required")
 
         self._client = TradingClient(api_key, secret_key, paper=True)
 
@@ -87,6 +90,8 @@ class AlpacaPaperBroker:
         ]
 
     def get_orders(self, status: str = "open") -> list[dict[str, Any]]:
+        # Legacy compatibility helper. The demo runner does not use local order state
+        # as execution proof; it requires the provider order returned by submit_order.
         orders = self._client.get_orders(status=status)
         return [
             {
@@ -95,22 +100,10 @@ class AlpacaPaperBroker:
                 "symbol": str(order.symbol),
                 "status": str(order.status),
                 "submitted_at": str(order.submitted_at),
-                "order_class": getattr(order, "order_class", "simple"),
+                "order_class": str(getattr(order, "order_class", "simple")),
             }
             for order in orders
         ]
-
-    def get_option_contracts(
-        self,
-        underlying_symbol: str,
-        contract_type: str = "put",
-        limit: int = 10,
-    ) -> list[dict[str, Any]]:
-        """Fetch active option contracts for an underlying symbol from Alpaca."""
-        resp = self._client.get(
-            f"/options/contracts?underlying_symbols={underlying_symbol}&type={contract_type}&status=active&limit={limit}"
-        )
-        return resp.get("option_contracts", [])
 
     def place_option_order(
         self,
@@ -124,49 +117,76 @@ class AlpacaPaperBroker:
         qty: int = 1,
         client_order_id: str | None = None,
     ) -> dict[str, Any]:
-        """Submit a multi-leg or single-leg options order directly to Alpaca Paper API.
+        """Submit a governed multi-leg credit order to Alpaca Paper.
 
-        Payload matches Alpaca MCP V2 / REST `place_option_order` specification.
-        For mleg orders, top-level symbol must not be sent per Alpaca API spec.
+        Alpaca defines an mleg limit price as **negative for a credit** and positive
+        for a debit. LEFA's premium-selling lane therefore rejects non-negative
+        prices instead of silently reversing the economic meaning of the order.
         """
+
+        if order_class != "mleg" or order_type != "limit" or time_in_force != "day":
+            raise ValueError("LEFA options execution supports only DAY limit mleg paper orders")
+        if not legs or not 2 <= len(legs) <= 4:
+            raise ValueError("Multi-leg option execution requires 2 to 4 legs")
+        if qty < 1:
+            raise ValueError("Order quantity must be at least 1")
+        if limit_price is None:
+            raise ValueError("A signed Alpaca mleg limit price is required")
+
+        signed_limit = Decimal(str(limit_price))
+        if signed_limit >= 0:
+            raise ValueError("LEFA credit spreads require a negative Alpaca mleg limit price")
+
+        option_legs: list[OptionLegRequest] = []
+        for leg in legs:
+            leg_symbol = str(leg.get("symbol", "")).strip()
+            if not leg_symbol:
+                raise ValueError("Every option leg requires a provider contract symbol")
+            side_raw = str(leg.get("side", "")).lower()
+            if side_raw not in {"buy", "sell"}:
+                raise ValueError("Every option leg requires side='buy' or side='sell'")
+            ratio_qty = float(leg.get("ratio_qty", 1))
+            if ratio_qty <= 0:
+                raise ValueError("Option leg ratio_qty must be positive")
+            option_legs.append(
+                OptionLegRequest(
+                    symbol=leg_symbol,
+                    ratio_qty=ratio_qty,
+                    side=OrderSide.BUY if side_raw == "buy" else OrderSide.SELL,
+                )
+            )
+
         cid = client_order_id or f"lefa-opt-{uuid4().hex[:12]}"
-        payload: dict[str, Any] = {
-            "order_class": order_class,
-            "type": order_type,
-            "time_in_force": time_in_force,
-            "qty": str(qty),
-            "client_order_id": cid,
-        }
-        if order_class != "mleg" and symbol:
-            payload["symbol"] = symbol
+        request = LimitOrderRequest(
+            qty=float(qty),
+            time_in_force=TimeInForce.DAY,
+            order_class=OrderClass.MLEG,
+            limit_price=float(signed_limit),
+            legs=option_legs,
+            client_order_id=cid,
+        )
+        order = self._client.submit_order(order_data=request)
 
-        if limit_price is not None:
-            payload["limit_price"] = str(limit_price)
+        order_id = getattr(order, "id", None)
+        if order_id is None and isinstance(order, dict):
+            order_id = order.get("id") or order.get("order_id")
+        if not order_id:
+            raise RuntimeError("Alpaca returned no provider order ID")
 
-        if legs:
-            formatted_legs = []
-            for leg in legs:
-                f_leg = dict(leg)
-                if "ratio_qty" not in f_leg:
-                    f_leg["ratio_qty"] = "1"
-                if "side" not in f_leg:
-                    act = str(f_leg.get("action", "")).lower()
-                    f_leg["side"] = "sell" if "sell" in act else "buy"
-                if "symbol" in f_leg:
-                    for key in ["action", "strike", "type", "delta"]:
-                        f_leg.pop(key, None)
-                formatted_legs.append(f_leg)
-            payload["legs"] = formatted_legs
+        status = getattr(order, "status", None)
+        submitted_at = getattr(order, "submitted_at", None)
+        if isinstance(order, dict):
+            status = status or order.get("status")
+            submitted_at = submitted_at or order.get("submitted_at") or order.get("created_at")
 
-        raw_response = self._client.post("/orders", data=payload)
         return {
-            "order_id": str(raw_response.get("id") or raw_response.get("order_id")),
+            "order_id": str(order_id),
             "client_order_id": cid,
-            "status": str(raw_response.get("status", "submitted")),
+            "status": str(status or "UNKNOWN"),
             "symbol": symbol,
-            "order_class": order_class,
-            "submitted_at": str(raw_response.get("submitted_at") or raw_response.get("created_at")),
-            "raw_response": raw_response,
+            "order_class": "mleg",
+            "signed_limit_price": str(signed_limit),
+            "submitted_at": str(submitted_at) if submitted_at is not None else None,
         }
 
     def cancel_order(self, order_id: str) -> None:
