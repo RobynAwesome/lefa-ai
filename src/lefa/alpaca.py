@@ -97,10 +97,22 @@ class AlpacaPaperBroker:
             for order in orders
         ]
 
+    def get_option_contracts(
+        self,
+        underlying_symbol: str,
+        contract_type: str = "put",
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        """Fetch active option contracts for an underlying symbol from Alpaca."""
+        resp = self._client.get(
+            f"/options/contracts?underlying_symbols={underlying_symbol}&type={contract_type}&status=active&limit={limit}"
+        )
+        return resp.get("option_contracts", [])
+
     def place_option_order(
         self,
         *,
-        symbol: str,
+        symbol: str | None = None,
         order_class: str = "mleg",
         order_type: str = "limit",
         time_in_force: str = "day",
@@ -112,22 +124,36 @@ class AlpacaPaperBroker:
         """Submit a multi-leg or single-leg options order directly to Alpaca Paper API.
 
         Payload matches Alpaca MCP V2 / REST `place_option_order` specification.
+        For mleg orders, top-level symbol must not be sent per Alpaca API spec.
         """
         cid = client_order_id or f"lefa-opt-{uuid4().hex[:12]}"
         payload: dict[str, Any] = {
-            "symbol": symbol,
             "order_class": order_class,
             "type": order_type,
             "time_in_force": time_in_force,
             "qty": str(qty),
             "client_order_id": cid,
         }
+        if order_class != "mleg" and symbol:
+            payload["symbol"] = symbol
 
         if limit_price is not None:
             payload["limit_price"] = str(limit_price)
 
         if legs:
-            payload["legs"] = legs
+            formatted_legs = []
+            for leg in legs:
+                f_leg = dict(leg)
+                if "ratio_qty" not in f_leg:
+                    f_leg["ratio_qty"] = "1"
+                if "side" not in f_leg:
+                    act = str(f_leg.get("action", "")).lower()
+                    f_leg["side"] = "sell" if "sell" in act else "buy"
+                if "symbol" in f_leg:
+                    for key in ["action", "strike", "type", "delta"]:
+                        f_leg.pop(key, None)
+                formatted_legs.append(f_leg)
+            payload["legs"] = formatted_legs
 
         # Dispatch via underlying REST endpoint
         raw_response = self._client.post("/orders", data=payload)
@@ -143,4 +169,5 @@ class AlpacaPaperBroker:
 
     def cancel_order(self, order_id: str) -> None:
         self._client.cancel_order_by_id(order_id)
+
 

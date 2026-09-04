@@ -199,23 +199,38 @@ def run_agent_cycle(symbol="SPY"):
         try:
             from lefa.alpaca import AlpacaPaperBroker
             broker = AlpacaPaperBroker()
+            contracts = broker.get_option_contracts(proposal.symbol, "put", limit=20)
+            if len(contracts) >= 2:
+                sorted_contracts = sorted(contracts, key=lambda c: float(c.get("strike_price", 0)), reverse=True)
+                short_contract = sorted_contracts[0]["symbol"]
+                long_contract = sorted_contracts[1]["symbol"]
+                legs_payload = [
+                    {"symbol": short_contract, "ratio_qty": "1", "side": "sell"},
+                    {"symbol": long_contract, "ratio_qty": "1", "side": "buy"}
+                ]
+            else:
+                legs_payload = [
+                    {"symbol": f"{proposal.symbol}260904P00505000", "ratio_qty": "1", "side": "sell"},
+                    {"symbol": f"{proposal.symbol}260904P00500000", "ratio_qty": "1", "side": "buy"}
+                ]
+
             order_res = broker.place_option_order(
                 symbol=proposal.symbol,
                 order_class="mleg",
                 time_in_force="day",
                 limit_price=Decimal("1.50"),
-                legs=[
-                    {"action": "sell_to_open", "strike": "585.00", "type": "put", "delta": "0.16"},
-                    {"action": "buy_to_open", "strike": "580.00", "type": "put", "delta": "0.10"}
-                ],
+                legs=legs_payload,
                 qty=1,
                 client_order_id=f"lefa-{str(receipt.receipt_id)[:12]}"
             )
             print(f"  [ALPACA CONFIRMED] Order ID:      {order_res.get('order_id')}")
             print(f"  [ALPACA CONFIRMED] Order Status:  {order_res.get('status')}")
             print(f"  [ALPACA CONFIRMED] Submitted At:  {order_res.get('submitted_at')}")
+            print(f"  [ALPACA CONFIRMED] Leg 1 (Short): {legs_payload[0]['symbol']}")
+            print(f"  [ALPACA CONFIRMED] Leg 2 (Long):  {legs_payload[1]['symbol']}")
             receipt_data["alpaca_order_id"] = order_res.get("order_id")
             receipt_data["alpaca_order_status"] = order_res.get("status")
+            receipt_data["alpaca_legs"] = legs_payload
             print(f"  Execution State:       EXECUTED ON ALPACA PAPER BROKER")
         except Exception as exc:
             print(f"  [*] Multi-leg order submission notice: {exc}")
