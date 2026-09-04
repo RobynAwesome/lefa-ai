@@ -196,7 +196,46 @@ class CanonicalTradingOrchestrator:
             "proof_depth": [stage.model_dump(mode="json") for stage in receipt.proof_depth],
         }
 
+    def execute_approved_order(
+        self,
+        receipt: GovernanceReceipt,
+        broker: Any,
+        *,
+        legs: list[dict[str, Any]] | None = None,
+        limit_price: Decimal | None = None,
+        qty: int = 1,
+    ) -> dict[str, Any]:
+        """Execute an approved trade proposal on the provided paper broker.
+
+        Requires:
+        - receipt.decision == Decision.APPROVE
+        - receipt.execution_jurisdiction == ExecutionJurisdiction.PAPER
+        """
+        if receipt.decision != Decision.APPROVE:
+            raise ValueError(f"Cannot execute order with non-approved receipt decision: {receipt.decision}")
+        if receipt.execution_jurisdiction != ExecutionJurisdiction.PAPER:
+            raise ValueError(f"Execution prohibited outside PAPER jurisdiction: {receipt.execution_jurisdiction}")
+
+        order_result = broker.place_option_order(
+            symbol=receipt.proposal.symbol,
+            order_class="mleg" if legs else "simple",
+            legs=legs,
+            limit_price=limit_price,
+            qty=qty,
+            client_order_id=f"lefa-{str(receipt.receipt_id)[:12]}",
+        )
+        return {
+            "receipt_id": str(receipt.receipt_id),
+            "canonical_receipt_hash": receipt.canonical_receipt_hash,
+            "order_id": order_result.get("order_id"),
+            "status": order_result.get("status"),
+            "submitted_at": order_result.get("submitted_at"),
+            "symbol": receipt.proposal.symbol,
+            "structure": receipt.proposal.structure,
+        }
+
     def _resolve_bridge(self) -> tuple[CanonicalOrchestratorProtocol, Any]:
         if self._canonical_orchestrator is not None:
             return self._canonical_orchestrator, self._operating_mode
         return _load_kpgs()
+

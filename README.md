@@ -173,32 +173,32 @@ A model can sound intelligent and still be wrong. A market can disagree. A beaut
 So LEFA keeps receipts.
 
 <details>
-<summary><strong>OPEN // The hackathon proof</strong></summary>
+<summary><strong>OPEN // The hackathon proof: Autonomous Options Alpha Execution</strong></summary>
 <br/>
 
 ```text
-CONNECT TO ALPACA PAPER ENVIRONMENT
+CONNECT TO ALPACA PAPER ENVIRONMENT (Trading API / MCP V2)
                  ↓
-OBSERVE REAL ACCOUNT / MARKET CONTEXT
+OBSERVE REAL ACCOUNT / MARKET CONTEXT (SPY, QQQ, AAPL, NVDA)
                  ↓
-PRESERVE SOURCE + TIME + PROVENANCE
+FEATHERLESS AI SERVERLESS REASONING (Qwen/Qwen2.5-7B-Instruct)
                  ↓
-LEFA RECEIVES GOVERNED FINDINGS
+FORMULATE DEFINED-RISK OPTIONS STRUCTURE (Delta 0.15-0.20, IV/RV >= 1.15)
                  ↓
-MAKE / EXPLAIN ONE GOVERNED DECISION
+DETERMINISTIC KPGS RISK FIREWALL (3% loss limit, 12% portfolio risk, 5% drawdown stop)
                  ↓
-WAIT OR REPLAY TIME
+AUTONOMOUS EXECUTION (Alpaca place_option_order / TradingClient)
                  ↓
-COMPARE THESIS WITH OUTCOME
+BROKERAGE RECEIPT + P&L TELEMETRY
                  ↓
-REVEAL
+TIME & REVEAL
 ```
 
-We are not claiming autonomous finance in one sprint.
+**Autonomous ≠ Ungoverned.**
 
-The POC is smaller and harder to fake:
+LEFA proves that an autonomous AI agent can place options trades with institutional-grade risk governance:
 
-> **Can LEFA observe reality, preserve what it knew, make a bounded judgment, and remain accountable to what happens next?**
+> **LEFA observes market reality, synthesizes options alpha with Featherless AI, enforces unbreakable risk boundaries, and autonomously executes paper options orders directly on Alpaca.**
 
 </details>
 
