@@ -17,13 +17,14 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -e '.[dev]'
+      - run: pip install -e '.[dev,mcp]'
       - name: Lint governed backend surfaces
         run: >-
           ruff check
           api/index.py
           src/lefa/bridge_api.py
           src/lefa/featherless.py
+          src/lefa/mcp_v2.py
           src/lefa/web_api.py
           tests/test_bridge_api.py
           tests/test_featherless.py
@@ -32,6 +33,10 @@ jobs:
           scripts/test_featherless_chat.py
           scripts/test_featherless_models.py
           scripts/test_featherless_models_eval.py
+      - name: Validate Alpaca MCP V2 client construction
+        run: >-
+          python -c "from lefa.mcp_v2 import REQUIRED_TOOLS;
+          assert {'get_account_info','get_clock','get_option_chain','place_option_order'} <= REQUIRED_TOOLS"
       - name: Full backend regression suite
         run: pytest -q
 
