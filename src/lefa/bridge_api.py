@@ -1,48 +1,41 @@
-"""LEFA server-to-server Sovereign bridge and runtime projections.
+"""LEFA-owned Alpaca paper connection and human-facing runtime projections.
 
-Heavy provider/KPGS evidence remains behind the backend boundary. The primary
-runtime endpoint exposes only the smallest truthful human state.
+The hackathon runtime is self-contained inside ``lefa-ai``. Provider credentials,
+account observation and paper execution remain server-side; the browser receives
+only a small truthful state.
 
 REALITY_STATE > INDEX_STATE
 RECEIPT OR HOLD
 """
 from __future__ import annotations
 
-import json
 import os
 from datetime import UTC, datetime
 from typing import Any
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from fastapi import APIRouter
 
+from lefa.alpaca import AlpacaPaperBroker
+from lefa.config import Settings
+
 router = APIRouter()
 
+# Retained for frontend compatibility during the submission window. This schema
+# is produced locally by LEFA and no longer implies a Sovereign Hub runtime hop.
 BRIDGE_SCHEMA = "kopano.lefa.sovereign-bridge-status.v1"
 RUNTIME_SCHEMA = "kopano.lefa.runtime-status.v1"
-DEFAULT_SOVEREIGN_STATUS_URL = (
-    "https://kopano-sovereign-hub-o8zt.vercel.app/api/lefa/alpaca-status"
-)
-
-_ALLOWED_PROVIDER_FIELDS = {
-    "code",
-    "account_status",
-    "account_blocked",
-    "trading_blocked",
-    "trade_suspended_by_user",
-}
 
 
 def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def _upstream_url() -> str:
-    return os.getenv("LEFA_SOVEREIGN_STATUS_URL", DEFAULT_SOVEREIGN_STATUS_URL).strip()
-
-
-def _hold_payload(code: str, *, detail: str) -> dict[str, Any]:
+def _hold_payload(
+    code: str,
+    *,
+    detail: str,
+    unavailable: bool = False,
+) -> dict[str, Any]:
     return {
         "schema": BRIDGE_SCHEMA,
         "provider": "alpaca",
@@ -59,207 +52,102 @@ def _hold_payload(code: str, *, detail: str) -> dict[str, Any]:
             "trade_suspended_by_user": None,
         },
         "experience": {
-            "state": "UNAVAILABLE" if code == "SOVEREIGN_BACKEND_UNAVAILABLE" else "SETUP_NEEDED",
+            "state": "UNAVAILABLE" if unavailable else "SETUP_NEEDED",
             "headline": "Trading connection unavailable"
-            if code == "SOVEREIGN_BACKEND_UNAVAILABLE"
+            if unavailable
             else "Trading connection needs setup",
             "detail": detail,
         },
-        "truth_boundary": "LEFA projects governed provider state; browser execution authority remains zero.",
+        "truth_boundary": (
+            "LEFA directly observes its configured Alpaca paper account server-side; "
+            "browser execution authority remains zero."
+        ),
     }
 
 
-def _sanitize_status(payload: Any) -> dict[str, Any]:
-    if not isinstance(payload, dict):
+def _observe_alpaca_account() -> dict[str, Any]:
+    """Observe the configured Alpaca paper account directly from LEFA."""
+
+    settings = Settings()
+    api_key = settings.alpaca_api_key.get_secret_value().strip()
+    secret_key = settings.alpaca_secret_key.get_secret_value().strip()
+
+    if not api_key:
         return _hold_payload(
-            "SOVEREIGN_CONTRACT_INVALID",
-            detail="LEFA could not verify the trading service response.",
+            "PAPER_API_KEY_UNAVAILABLE",
+            detail="LEFA's Alpaca paper connection still needs setup.",
+        )
+    if not secret_key:
+        return _hold_payload(
+            "PAPER_SECRET_KEY_UNAVAILABLE",
+            detail="LEFA's Alpaca paper connection still needs setup.",
         )
 
-    if (
-        payload.get("schema") != BRIDGE_SCHEMA
-        or payload.get("provider") != "alpaca"
-        or payload.get("environment") != "paper"
-        or payload.get("execution_authority") != "BACKEND_ONLY"
-        or payload.get("bridge_state") not in {"VERIFIED", "HOLD"}
-    ):
+    try:
+        account = AlpacaPaperBroker(settings).get_account()
+    except Exception:
         return _hold_payload(
-            "SOVEREIGN_CONTRACT_INVALID",
-            detail="LEFA could not verify the trading service response.",
+            "ALPACA_ACCOUNT_UNAVAILABLE",
+            detail="LEFA can't verify Alpaca right now.",
+            unavailable=True,
         )
 
-    provider_raw = payload.get("provider_observation")
-    provider_observation: dict[str, Any] | None = None
-    if isinstance(provider_raw, dict):
-        provider_observation = {
-            key: provider_raw.get(key)
-            for key in _ALLOWED_PROVIDER_FIELDS
-            if key in provider_raw
-        }
+    status = str(account.get("status", "UNKNOWN"))
+    account_blocked = bool(account.get("account_blocked", False))
+    trading_blocked = bool(account.get("trading_blocked", False))
+    trade_suspended = bool(account.get("trade_suspended_by_user", False))
+    active = "ACTIVE" in status.upper()
+    verified = active and not account_blocked and not trading_blocked and not trade_suspended
+    observed_at = _now_iso()
 
-    bridge_state = str(payload["bridge_state"])
-    provider_code = (
-        str(provider_observation.get("code"))
-        if provider_observation and provider_observation.get("code") is not None
-        else "UNKNOWN"
-    )
-
-    if bridge_state == "VERIFIED":
+    if verified:
         experience = {
             "state": "READY",
             "headline": "Alpaca is ready",
-            "detail": "Paper trading is connected through LEFA's governed backend.",
+            "detail": "Your paper-trading connection is ready.",
         }
-    elif provider_code == "PAPER_CREDENTIALS_UNAVAILABLE":
-        experience = {
-            "state": "SETUP_NEEDED",
-            "headline": "Trading connection needs setup",
-            "detail": "The secure trading service is still being configured.",
-        }
+        code = "PAPER_ACCOUNT_OBSERVED"
     else:
         experience = {
             "state": "SETUP_NEEDED",
             "headline": "Trading connection isn't ready yet",
-            "detail": "LEFA is keeping this connection on hold until the backend is ready.",
+            "detail": "LEFA is keeping trading on hold until the paper account is ready.",
         }
-
-    latest_receipt = payload.get("latest_receipt")
-    if latest_receipt is not None and not isinstance(latest_receipt, dict):
-        latest_receipt = None
+        code = "PAPER_ACCOUNT_RESTRICTED"
 
     return {
         "schema": BRIDGE_SCHEMA,
         "provider": "alpaca",
         "environment": "paper",
-        "bridge_state": bridge_state,
+        "bridge_state": "VERIFIED" if verified else "HOLD",
         "execution_authority": "BACKEND_ONLY",
-        "observed_at": payload.get("observed_at")
-        if isinstance(payload.get("observed_at"), str)
-        else _now_iso(),
-        "latest_receipt": latest_receipt,
-        "provider_observation": provider_observation,
+        "observed_at": observed_at,
+        "latest_receipt": {
+            "kind": "alpaca.paper.account-observation",
+            "observed_at": observed_at,
+            "account_id": str(account.get("id", "")),
+        },
+        "provider_observation": {
+            "code": code,
+            "account_status": status,
+            "account_blocked": account_blocked,
+            "trading_blocked": trading_blocked,
+            "trade_suspended_by_user": trade_suspended,
+        },
         "experience": experience,
-        "truth_boundary": "LEFA projects governed provider state; browser execution authority remains zero.",
+        "truth_boundary": (
+            "LEFA directly observes its configured Alpaca paper account server-side; "
+            "this status does not itself prove an options order or P&L result."
+        ),
     }
 
 
-def _check_direct_alpaca_status() -> dict[str, Any] | None:
-    """Check Alpaca paper trading directly if credentials exist in LEFA's own environment."""
-    api_key = os.getenv("ALPACA_API_KEY", "").strip()
-    secret_key = (
-        os.getenv("ALPACA_SECRET_KEY", "") or os.getenv("ALPACA_API_SECRET", "")
-    ).strip()
-
-    if not api_key or not secret_key:
-        return None
-
-    request = Request(
-        "https://paper-api.alpaca.markets/v2/account",
-        headers={
-            "Accept": "application/json",
-            "APCA-API-KEY-ID": api_key,
-            "APCA-API-SECRET-KEY": secret_key,
-        },
-        method="GET",
-    )
-
-    try:
-        with urlopen(request, timeout=5) as response:
-            acc_data = json.loads(response.read().decode("utf-8"))
-            account_status = str(acc_data.get("status", "ACTIVE"))
-            account_blocked = bool(acc_data.get("account_blocked", False))
-            trading_blocked = bool(acc_data.get("trading_blocked", False))
-            trade_suspended = bool(acc_data.get("trade_suspended_by_user", False))
-
-            is_verified = (
-                account_status.upper() == "ACTIVE"
-                and not account_blocked
-                and not trading_blocked
-            )
-
-            return {
-                "schema": BRIDGE_SCHEMA,
-                "provider": "alpaca",
-                "environment": "paper",
-                "bridge_state": "VERIFIED" if is_verified else "HOLD",
-                "execution_authority": "BACKEND_ONLY",
-                "observed_at": _now_iso(),
-                "latest_receipt": None,
-                "provider_observation": {
-                    "code": "PAPER_ACCOUNT_OBSERVED" if is_verified else f"ACCOUNT_{account_status}",
-                    "account_status": account_status,
-                    "account_blocked": account_blocked,
-                    "trading_blocked": trading_blocked,
-                    "trade_suspended_by_user": trade_suspended,
-                },
-                "experience": {
-                    "state": "READY" if is_verified else "HOLD",
-                    "headline": "Alpaca is ready" if is_verified else "Trading connection on hold",
-                    "detail": "Paper trading is connected directly through LEFA's governed backend."
-                    if is_verified
-                    else f"Alpaca reported account status: {account_status}",
-                },
-                "truth_boundary": "LEFA projects governed provider state; browser execution authority remains zero.",
-            }
-    except HTTPError as exc:
-        return _hold_payload(
-            f"PAPER_PROVIDER_HTTP_{exc.code}",
-            detail="Alpaca paper trading service returned an error.",
-        )
-    except Exception:
-        return _hold_payload(
-            "PAPER_PROVIDER_UNREACHABLE",
-            detail="Could not connect to Alpaca paper endpoint.",
-        )
-
-
-def _read_upstream_status() -> Any:
-    request = Request(
-        _upstream_url(),
-        headers={
-            "Accept": "application/json",
-            "User-Agent": "LEFA-AI/sovereign-bridge",
-        },
-        method="GET",
-    )
-
-    try:
-        with urlopen(request, timeout=4) as response:
-            body = response.read().decode("utf-8")
-    except HTTPError as exc:
-        # Sovereign Hub intentionally uses HTTP 503 for governed HOLD state.
-        body = exc.read().decode("utf-8")
-    except (URLError, TimeoutError, OSError) as exc:
-        raise RuntimeError("sovereign backend unavailable") from exc
-
-    return json.loads(body)
-
-
 def _current_bridge_status() -> dict[str, Any]:
-    # 1. Direct local Alpaca credential check (First-Class Citizen in lefa-ai)
-    direct_status = _check_direct_alpaca_status()
-    if direct_status is not None:
-        return direct_status
-
-    # 2. Upstream bridge fallback
-    try:
-        upstream = _read_upstream_status()
-    except (RuntimeError, json.JSONDecodeError, UnicodeDecodeError):
-        return _hold_payload(
-            "SOVEREIGN_BACKEND_UNAVAILABLE",
-            detail="LEFA can't reach the secure trading service right now.",
-        )
-
-    return _sanitize_status(upstream)
+    return _observe_alpaca_account()
 
 
 def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
-    """Project backend truth into the primary non-technical runtime contract.
-
-    No market/account number is emitted until a separate non-fixture observation
-    contract exists. A verified account bridge therefore becomes WAITING_FOR_MARKET,
-    not synthetic live telemetry.
-    """
+    """Project backend truth into the primary non-technical runtime contract."""
 
     experience = bridge.get("experience") if isinstance(bridge.get("experience"), dict) else {}
     bridge_ready = bridge.get("bridge_state") == "VERIFIED"
@@ -276,7 +164,7 @@ def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
     else:
         state = "UNAVAILABLE"
         headline = "Trading service unavailable"
-        detail = "LEFA can't reach the secure trading service right now."
+        detail = "LEFA can't verify Alpaca right now."
 
     ai_state = "AVAILABLE" if os.getenv("FEATHERLESS_API_KEY", "").strip() else "UNAVAILABLE"
 
@@ -299,9 +187,7 @@ def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
             "market_state": "unknown",
             "observed_at": None,
         },
-        "decision": {
-            "state": "NO_DECISION",
-        },
+        "decision": {"state": "NO_DECISION"},
         "ai": {
             "state": ai_state,
             "label": "AI explanation",
@@ -311,7 +197,7 @@ def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
 
 @router.get("/api/bridge/status")
 def get_bridge_status() -> dict[str, Any]:
-    """Return advanced/sanitized governed Alpaca paper truth."""
+    """Return LEFA-owned, sanitized Alpaca paper-account truth."""
 
     return _current_bridge_status()
 
