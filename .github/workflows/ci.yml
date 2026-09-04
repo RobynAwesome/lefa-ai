@@ -24,6 +24,7 @@ jobs:
           api/index.py
           src/lefa/bridge_api.py
           src/lefa/featherless.py
+          src/lefa/mcp_client.py
           src/lefa/mcp_v2.py
           src/lefa/web_api.py
           tests/test_bridge_api.py
