@@ -143,6 +143,76 @@ def _sanitize_status(payload: Any) -> dict[str, Any]:
     }
 
 
+def _check_direct_alpaca_status() -> dict[str, Any] | None:
+    """Check Alpaca paper trading directly if credentials exist in LEFA's own environment."""
+    api_key = os.getenv("ALPACA_API_KEY", "").strip()
+    secret_key = (
+        os.getenv("ALPACA_SECRET_KEY", "") or os.getenv("ALPACA_API_SECRET", "")
+    ).strip()
+
+    if not api_key or not secret_key:
+        return None
+
+    request = Request(
+        "https://paper-api.alpaca.markets/v2/account",
+        headers={
+            "Accept": "application/json",
+            "APCA-API-KEY-ID": api_key,
+            "APCA-API-SECRET-KEY": secret_key,
+        },
+        method="GET",
+    )
+
+    try:
+        with urlopen(request, timeout=5) as response:
+            acc_data = json.loads(response.read().decode("utf-8"))
+            account_status = str(acc_data.get("status", "ACTIVE"))
+            account_blocked = bool(acc_data.get("account_blocked", False))
+            trading_blocked = bool(acc_data.get("trading_blocked", False))
+            trade_suspended = bool(acc_data.get("trade_suspended_by_user", False))
+
+            is_verified = (
+                account_status.upper() == "ACTIVE"
+                and not account_blocked
+                and not trading_blocked
+            )
+
+            return {
+                "schema": BRIDGE_SCHEMA,
+                "provider": "alpaca",
+                "environment": "paper",
+                "bridge_state": "VERIFIED" if is_verified else "HOLD",
+                "execution_authority": "BACKEND_ONLY",
+                "observed_at": _now_iso(),
+                "latest_receipt": None,
+                "provider_observation": {
+                    "code": "PAPER_ACCOUNT_OBSERVED" if is_verified else f"ACCOUNT_{account_status}",
+                    "account_status": account_status,
+                    "account_blocked": account_blocked,
+                    "trading_blocked": trading_blocked,
+                    "trade_suspended_by_user": trade_suspended,
+                },
+                "experience": {
+                    "state": "READY" if is_verified else "HOLD",
+                    "headline": "Alpaca is ready" if is_verified else "Trading connection on hold",
+                    "detail": "Paper trading is connected directly through LEFA's governed backend."
+                    if is_verified
+                    else f"Alpaca reported account status: {account_status}",
+                },
+                "truth_boundary": "LEFA projects governed provider state; browser execution authority remains zero.",
+            }
+    except HTTPError as exc:
+        return _hold_payload(
+            f"PAPER_PROVIDER_HTTP_{exc.code}",
+            detail="Alpaca paper trading service returned an error.",
+        )
+    except Exception:
+        return _hold_payload(
+            "PAPER_PROVIDER_UNREACHABLE",
+            detail="Could not connect to Alpaca paper endpoint.",
+        )
+
+
 def _read_upstream_status() -> Any:
     request = Request(
         _upstream_url(),
@@ -166,6 +236,12 @@ def _read_upstream_status() -> Any:
 
 
 def _current_bridge_status() -> dict[str, Any]:
+    # 1. Direct local Alpaca credential check (First-Class Citizen in lefa-ai)
+    direct_status = _check_direct_alpaca_status()
+    if direct_status is not None:
+        return direct_status
+
+    # 2. Upstream bridge fallback
     try:
         upstream = _read_upstream_status()
     except (RuntimeError, json.JSONDecodeError, UnicodeDecodeError):

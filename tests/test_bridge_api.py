@@ -184,3 +184,40 @@ def test_runtime_ai_state_reflects_server_configuration(monkeypatch) -> None:
     monkeypatch.setenv("FEATHERLESS_API_KEY", "test-only-key")
     available = client.get("/api/runtime/status").json()
     assert available["ai"]["state"] == "AVAILABLE"
+
+
+def test_direct_alpaca_credentials_verifies_without_upstream(monkeypatch) -> None:
+    monkeypatch.setenv("ALPACA_API_KEY", "test-paper-key")
+    monkeypatch.setenv("ALPACA_SECRET_KEY", "test-paper-secret")
+
+    def mock_urlopen(req, *args, **kwargs):
+        class MockResponse:
+            def read(self):
+                return json.dumps({
+                    "status": "ACTIVE",
+                    "account_blocked": False,
+                    "trading_blocked": False,
+                    "trade_suspended_by_user": False,
+                    "equity": "100000.00",
+                }).encode("utf-8")
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                pass
+        return MockResponse()
+
+    monkeypatch.setattr(bridge_api, "urlopen", mock_urlopen)
+    # Ensure upstream is never called
+    def fail_if_upstream_called():
+        raise AssertionError("Upstream should not be called when direct credentials exist!")
+    monkeypatch.setattr(bridge_api, "_read_upstream_status", fail_if_upstream_called)
+
+    client = TestClient(_app())
+    response = client.get("/api/bridge/status")
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["bridge_state"] == "VERIFIED"
+    assert body["experience"]["state"] == "READY"
+    assert body["experience"]["headline"] == "Alpaca is ready"
+    assert body["provider_observation"]["code"] == "PAPER_ACCOUNT_OBSERVED"
