@@ -3,8 +3,9 @@
 </p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/STATUS-POC-111111?style=for-the-badge" alt="POC status" />
-  <img src="https://img.shields.io/badge/ALPACA-AI_TRADING_AGENTS-F2D16B?style=for-the-badge&logoColor=111111" alt="Alpaca AI Trading Agents Hackathon" />
+  <img src="https://img.shields.io/badge/STATUS-POC_VALIDATED-111111?style=for-the-badge" alt="POC status" />
+  <img src="https://img.shields.io/badge/ALPACA-OPTIONS_ALPHA_AGENTS-F2D16B?style=for-the-badge&logoColor=111111" alt="Alpaca AI Trading Agents Hackathon" />
+  <img src="https://img.shields.io/badge/PARTNER-FEATHERLESS_AI-7C3AED?style=for-the-badge&logoColor=white" alt="Featherless AI Partner" />
   <img src="https://img.shields.io/badge/PYTHON-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
 </div>
 
@@ -16,6 +17,14 @@
 <p align="center">
   🇿🇦 <strong>Built in South Africa.</strong> · POC before narrative · receipts before claims · time reveals
 </p>
+
+---
+
+<div align="center">
+  <a href="https://lefa-core-live.vercel.app/"><img src="https://img.shields.io/badge/🚀_LAUNCH_LIVE_DEMO-lefa--core--live.vercel.app-22C55E?style=for-the-badge" alt="Launch Live Demo" /></a>
+  <a href="./submission/one-page-writeup.md"><img src="https://img.shields.io/badge/📄_ONE--PAGE_WRITEUP-READ_PDF%2FMD-F2D16B?style=for-the-badge&logoColor=111111" alt="Read One-Page Writeup" /></a>
+  <a href="#-options-alpha-strategy--risk-governance"><img src="https://img.shields.io/badge/⚡_OPTIONS_STRATEGY-DEFINED--RISK-3B82F6?style=for-the-badge" alt="Options Strategy" /></a>
+</div>
 
 ---
 
@@ -40,15 +49,22 @@ You speak to **LEFA**. LEFA is the user-facing base intelligence. The complicate
 
 > **You bring the human question. LEFA brings governed financial intelligence.**
 
-<div align="center">
-  <a href="#-what-moves-under-lefa"><img src="https://img.shields.io/badge/SEE_THE_ENGINE_ROOM-111111?style=for-the-badge&logoColor=F2D16B" alt="See the engine room" /></a>
-  <a href="./assets/INDEX.md"><img src="https://img.shields.io/badge/INSPECT_ASSETS-17140B?style=for-the-badge&logoColor=F2D16B" alt="Inspect assets" /></a>
-  <a href="./docs/MVP-POC-0-STITCH-DATA-ASSET-GOVERNANCE.md"><img src="https://img.shields.io/badge/READ_POC_0-241F10?style=for-the-badge&logoColor=F2D16B" alt="Read POC 0" /></a>
-</div>
-
 ---
 
-## 👁️ Observe → 📖 Ledger → ✨ Reveal
+## ⚡ Options Alpha Strategy & Risk Governance
+
+Built specifically for the **Alpaca AI Trading Agents Hackathon** (Track: *Options Alpha Agents*):
+
+- **AI Logic**: Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) performs serverless, real-time market regime analysis and structure generation.
+- **Options Strategy**: Automated defined-risk credit spreads (Bull Put & Bear Call spreads) and Iron Condors on liquid underlyings (`SPY`, `QQQ`, `AAPL`, `NVDA`).
+- **Delta Targeting**: Short legs targeted at `0.15–0.20 delta` (~80–85% probability of OTM expiration).
+- **Volatility Premium Gate**: Only trades when $\frac{\text{ATM IV}}{\text{20-Day RV}} \ge 1.15$.
+- **Hard Risk Gates**: Zero naked short options, max $3\%$ loss per structure, $12\%$ aggregate portfolio risk cap, mandatory $5\text{ DTE}$ time stop, $50\%$ profit target, and $5\%$ drawdown circuit breaker.
+- **Alpaca Developer Stack**: Alpaca MCP V2 server, Trading API, Alpaca CLI, and paper trading mode.
+
+📄 **Full Architecture & Risk Specifications**: [Read the One-Page Hackathon Write-Up](./submission/one-page-writeup.md)
+
+---
 
 <p align="center">
   <img src="./assets/readme/lefa-observe-ledger-reveal.svg" alt="Animated LEFA Observe Ledger Time Reveal timeline" width="100%" />
