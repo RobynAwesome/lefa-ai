@@ -57,6 +57,9 @@ class AlpacaPaperBroker:
             "last_equity": Decimal(str(acc.last_equity)),
             "cash": Decimal(str(acc.cash)),
             "buying_power": Decimal(str(acc.buying_power)),
+            "account_blocked": bool(getattr(acc, "account_blocked", False)),
+            "trading_blocked": bool(getattr(acc, "trading_blocked", False)),
+            "trade_suspended_by_user": bool(getattr(acc, "trade_suspended_by_user", False)),
             "options_approved_level": getattr(acc, "options_approved_level", None),
             "options_trading_level": getattr(acc, "options_trading_level", None),
         }
@@ -155,7 +158,6 @@ class AlpacaPaperBroker:
                 formatted_legs.append(f_leg)
             payload["legs"] = formatted_legs
 
-        # Dispatch via underlying REST endpoint
         raw_response = self._client.post("/orders", data=payload)
         return {
             "order_id": str(raw_response.get("id") or raw_response.get("order_id")),
@@ -169,5 +171,3 @@ class AlpacaPaperBroker:
 
     def cancel_order(self, order_id: str) -> None:
         self._client.cancel_order_by_id(order_id)
-
-
