@@ -34,13 +34,13 @@ class OptionLegEvidence:
 
     @property
     def midpoint(self) -> Decimal:
-        return (self.bid + self.ask) / Decimal("2")
+        return (self.bid + self.ask) / Decimal(2)
 
     @property
     def relative_spread(self) -> Decimal:
         midpoint = self.midpoint
         if midpoint <= 0:
-            return Decimal("999")
+            return Decimal(999)
         return (self.ask - self.bid) / midpoint
 
 
@@ -85,8 +85,12 @@ def parse_occ_contract(symbol: str) -> tuple[date, str, Decimal]:
     strike_token = symbol[-8:]
     if option_type not in {"C", "P"} or not expiry_token.isdigit() or not strike_token.isdigit():
         raise ValueError(f"Invalid OCC option symbol: {symbol}")
-    expiry = datetime.strptime(expiry_token, "%y%m%d").date()
-    strike = Decimal(strike_token) / Decimal("1000")
+    expiry = date(
+        2000 + int(expiry_token[:2]),
+        int(expiry_token[2:4]),
+        int(expiry_token[4:6]),
+    )
+    strike = Decimal(strike_token) / Decimal(1000)
     return expiry, option_type, strike
 
 
@@ -189,7 +193,7 @@ def select_credit_spread(
             net_credit = (short_leg.bid - long_leg.ask).quantize(Decimal("0.01"))
             if net_credit <= Decimal("0.00") or net_credit >= width:
                 continue
-            maximum_loss = ((width - net_credit) * Decimal("100") * quantity).quantize(
+            maximum_loss = ((width - net_credit) * Decimal(100) * quantity).quantize(
                 Decimal("0.01")
             )
             return CreditSpreadCandidate(
