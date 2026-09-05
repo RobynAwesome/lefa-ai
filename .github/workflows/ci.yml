@@ -22,13 +22,18 @@ jobs:
         run: >-
           ruff check
           api/index.py
+          src/lefa/alpaca.py
           src/lefa/bridge_api.py
           src/lefa/featherless.py
           src/lefa/mcp_client.py
           src/lefa/mcp_v2.py
+          src/lefa/options_market.py
           src/lefa/web_api.py
+          tests/test_alpaca_order_boundary.py
           tests/test_bridge_api.py
           tests/test_featherless.py
+          tests/test_options_market.py
+          scripts/run_options_agent.py
           scripts/search_featherless_models.py
           scripts/test_featherless.py
           scripts/test_featherless_chat.py
