@@ -76,10 +76,11 @@ def _safe_result_shape(result: Any) -> dict[str, Any]:
 async def run_mcp_proof(symbol: str = "SPY") -> dict[str, Any]:
     """Discover Alpaca MCP V2 and execute two real observation tools."""
 
+    env = {**os.environ, **_secret_env()}
     transport = StdioTransport(
         command="alpaca-mcp-server",
         args=[],
-        env=_secret_env(),
+        env=env,
         keep_alive=False,
     )
 

@@ -96,7 +96,10 @@ def _observe_alpaca_account() -> dict[str, Any]:
     account_blocked = bool(account.get("account_blocked", False))
     trading_blocked = bool(account.get("trading_blocked", False))
     trade_suspended = bool(account.get("trade_suspended_by_user", False))
-    active = "ACTIVE" in status.upper()
+    clean_status = status.strip().upper()
+    if clean_status.startswith("ACCOUNTSTATUS."):
+        clean_status = clean_status.split(".", 1)[1]
+    active = clean_status == "ACTIVE"
     verified = active and not account_blocked and not trading_blocked and not trade_suspended
     observed_at = _now_iso()
 
