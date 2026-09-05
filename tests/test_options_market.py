@@ -17,7 +17,7 @@ def test_parse_occ_contract() -> None:
     expiry, option_type, strike = parse_occ_contract("SPY260918P00100000")
     assert expiry == date(2026, 9, 18)
     assert option_type == "P"
-    assert strike == Decimal("100")
+    assert strike == Decimal(100)
 
 
 def test_select_credit_spread_uses_provider_quotes_and_negative_credit_limit() -> None:
@@ -29,7 +29,7 @@ def test_select_credit_spread_uses_provider_quotes_and_negative_credit_limit() -
 
     candidate = select_credit_spread(
         underlying="SPY",
-        spot=Decimal("100"),
+        spot=Decimal(100),
         realized_vol=0.20,
         chain=chain,
         today=date(2026, 9, 5),
@@ -39,7 +39,7 @@ def test_select_credit_spread_uses_provider_quotes_and_negative_credit_limit() -
     assert candidate.short_leg.symbol == "SPY260918P00095000"
     assert candidate.long_leg.symbol == "SPY260918P00090000"
     assert candidate.net_credit == Decimal("0.90")
-    assert candidate.width == Decimal("5")
+    assert candidate.width == Decimal(5)
     assert candidate.maximum_loss == Decimal("410.00")
     assert candidate.signed_alpaca_limit_price == Decimal("-0.90")
     assert candidate.iv_rv_ratio == 1.5
@@ -54,7 +54,7 @@ def test_select_credit_spread_holds_when_iv_rv_gate_fails() -> None:
 
     candidate = select_credit_spread(
         underlying="SPY",
-        spot=Decimal("100"),
+        spot=Decimal(100),
         realized_vol=0.20,
         chain=chain,
         today=date(2026, 9, 5),
