@@ -22,11 +22,11 @@ from dotenv import load_dotenv
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 load_dotenv()
 
-from lefa.alpaca import AlpacaPaperBroker  # noqa: E402
-from lefa.config import Settings  # noqa: E402
-from lefa.featherless import FeatherlessReasoner, FeatherlessUnavailable  # noqa: E402
-from lefa.governance import AccountState, Decision, RiskPolicy, TradeProposal  # noqa: E402
-from lefa.options_market import AlpacaOptionsMarket, CreditSpreadCandidate  # noqa: E402
+from lefa.alpaca import AlpacaPaperBroker
+from lefa.config import Settings
+from lefa.featherless import FeatherlessReasoner, FeatherlessUnavailable
+from lefa.governance import AccountState, Decision, RiskPolicy, TradeProposal
+from lefa.options_market import AlpacaOptionsMarket, CreditSpreadCandidate
 
 ALLOWED_SYMBOLS = ("SPY", "QQQ", "AAPL", "NVDA")
 COMPETITION_BASELINE_EQUITY = Decimal("100000.00")
@@ -168,7 +168,7 @@ def run_agent_cycle(symbol: str = "AUTO", *, execute: bool = False) -> dict[str,
         )
 
     baseline = Decimal(os.getenv("LEFA_COMPETITION_BASELINE_EQUITY", str(COMPETITION_BASELINE_EQUITY)))
-    drawdown = max(Decimal("0"), baseline - account["equity"])
+    drawdown = max(Decimal(0), baseline - account["equity"])
     drawdown_fraction = drawdown / baseline
     print(f"  Competition baseline: {_money(baseline)}")
     print(f"  Baseline drawdown:    {drawdown_fraction * 100:.2f}%")
