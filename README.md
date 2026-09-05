@@ -55,12 +55,13 @@ You speak to **LEFA**. LEFA is the user-facing base intelligence. The complicate
 
 Built specifically for the **Alpaca AI Trading Agents Hackathon** (Track: *Options Alpha Agents*):
 
-- **AI Logic**: Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) performs serverless, real-time market regime analysis and structure generation.
-- **Options Strategy**: Automated defined-risk credit spreads (Bull Put & Bear Call spreads) and Iron Condors on liquid underlyings (`SPY`, `QQQ`, `AAPL`, `NVDA`).
-- **Delta Targeting**: Short legs targeted at `0.15–0.20 delta` (~80–85% probability of OTM expiration).
-- **Volatility Premium Gate**: Only trades when $\frac{\text{ATM IV}}{\text{20-Day RV}} \ge 1.15$.
-- **Hard Risk Gates**: Zero naked short options, max $3\%$ loss per structure, $12\%$ aggregate portfolio risk cap, mandatory $5\text{ DTE}$ time stop, $50\%$ profit target, and $5\%$ drawdown circuit breaker.
-- **Alpaca Developer Stack**: Alpaca MCP V2 server, Trading API, Alpaca CLI, and paper trading mode.
+- **AI Logic**: when `FEATHERLESS_API_KEY` is configured, Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) explains the real provider evidence supplied to it. If inference is unavailable, the camera-safe lane returns `HOLD`; it does not substitute canned reasoning.
+- **Current execution POC**: live-evidence selection of a defined-risk **bull put vertical credit spread** on the governed universe (`SPY`, `QQQ`, `AAPL`, `NVDA`). Bear-call spreads and iron condors remain broader strategy designs; they are not claimed as provider-execution proof by the current demo runner.
+- **Delta Targeting**: the current candidate selector requires the short put to fall within `0.15–0.20` absolute delta.
+- **Volatility Premium Gate**: a candidate is admitted only when $\frac{\text{ATM IV}}{\text{20-session RV}} \ge 1.15$.
+- **Current hard gates**: paper jurisdiction, protective long, live provider quotes/Greeks, max $3\%$ loss per structure, $12\%$ aggregate-risk policy, and a $5\%$ competition-baseline drawdown circuit breaker. Existing positions or open orders cause the camera-safe runner to `HOLD` rather than assume their risk is zero.
+- **Lifecycle design**: 50% profit-taking and a 5 DTE time stop are strategy-management targets; the current camera-safe runner does not claim those exits as broker-receipted automation until TIME/REVEAL evidence exists.
+- **Alpaca Developer Stack**: official Alpaca MCP V2 server for protocol/tool observation plus `alpaca-py` / Alpaca Trading API for the separately governed paper-order boundary.
 
 📄 **Full Architecture & Risk Specifications**: [Read the One-Page Hackathon Write-Up](./submission/one-page-writeup.md)
 
@@ -173,32 +174,36 @@ A model can sound intelligent and still be wrong. A market can disagree. A beaut
 So LEFA keeps receipts.
 
 <details>
-<summary><strong>OPEN // The hackathon proof: Autonomous Options Alpha Execution</strong></summary>
+<summary><strong>OPEN // The hackathon proof lane: Governed Options Alpha</strong></summary>
 <br/>
 
 ```text
-CONNECT TO ALPACA PAPER ENVIRONMENT (Trading API / MCP V2)
+ALPACA MCP V2 OBSERVATION + TOOL DISCOVERY
                  ↓
-OBSERVE REAL ACCOUNT / MARKET CONTEXT (SPY, QQQ, AAPL, NVDA)
+REAL ALPACA MARKET / OPTIONS EVIDENCE
                  ↓
-FEATHERLESS AI SERVERLESS REASONING (Qwen/Qwen2.5-7B-Instruct)
+FEATHERLESS AI REASONING — OR HOLD
                  ↓
-FORMULATE DEFINED-RISK OPTIONS STRUCTURE (Delta 0.15-0.20, IV/RV >= 1.15)
+BULL-PUT VERTICAL CANDIDATE (7–21 DTE, |delta| 0.15–0.20, IV/RV >= 1.15)
                  ↓
-DETERMINISTIC KPGS RISK FIREWALL (3% loss limit, 12% portfolio risk, 5% drawdown stop)
+DETERMINISTIC RISK FIREWALL (3% trade loss, 12% policy cap, 5% baseline drawdown stop)
                  ↓
-AUTONOMOUS EXECUTION (Alpaca place_option_order / TradingClient)
+CONTENT-HASHED EXECUTION INTENT
                  ↓
-BROKERAGE RECEIPT + P&L TELEMETRY
+OPTIONAL `--execute` ALPACA PAPER ORDER
+                 ↓
+INDEPENDENT PROVIDER ORDER RE-READ
+                 ↓
+PROVIDER RECEIPT CONFIRMED — OR HOLD
                  ↓
 TIME & REVEAL
 ```
 
-**Autonomous ≠ Ungoverned.**
+**Autonomous ≠ Ungoverned. Execution-capable ≠ executed.**
 
-LEFA proves that an autonomous AI agent can place options trades with institutional-grade risk governance:
+The code can request a governed paper multi-leg order only after the preceding gates clear. LEFA calls execution proven for a run only when Alpaca returns a provider order ID and a separate provider read confirms the same order. It does not claim a fill unless Alpaca itself reports one.
 
-> **LEFA observes market reality, synthesizes options alpha with Featherless AI, enforces unbreakable risk boundaries, and autonomously executes paper options orders directly on Alpaca.**
+> **Real provider evidence or HOLD. Receipt before claim.**
 
 </details>
 
@@ -252,18 +257,38 @@ The code remains deliberately small while the architecture is being validated.
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e '.[dev]'
+pip install -e '.[dev,mcp]'
 cp .env.example .env
 pytest
 ```
 
-CLI:
+Base CLI:
 
 ```bash
 lefa
 ```
 
-Keep credentials in your local `.env`. Never commit them.
+Real Alpaca MCP V2 protocol proof:
+
+```bash
+lefa-mcp-proof --symbol SPY
+```
+
+Camera-safe options cycle — no broker write:
+
+```bash
+python scripts/run_options_agent.py --symbol AUTO
+```
+
+Explicit Alpaca **paper** execution request after all gates clear:
+
+```bash
+python scripts/run_options_agent.py --symbol AUTO --execute
+```
+
+The last command is not a promise of a trade or fill. Provider rejection, missing evidence, unavailable AI, existing risk, or an inadmissible market candidate produces `HOLD`.
+
+Keep credentials in your local `.env` or the appropriate secret manager. Never commit or print them.
 
 ---
 
