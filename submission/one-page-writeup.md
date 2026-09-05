@@ -8,65 +8,85 @@
 
 ## AI logic
 
-LEFA separates **reasoning authority** from **execution authority**. AI may analyze observations and propose an options structure, but it cannot bypass deterministic risk policy. A proposal becomes executable only after the KPGS risk engine returns `APPROVE`.
+LEFA separates **reasoning authority** from **execution authority**. Featherless AI may explain provider evidence and a defined-risk candidate, but it cannot place an order or override deterministic policy. Missing AI, missing market evidence, provider errors, existing unrehydrated risk, or a failed policy gate produce `HOLD` rather than a synthetic success.
 
 ```text
 ALPACA MCP V2 OBSERVATION + TOOL DISCOVERY
               ↓
-FEATHERLESS AI REASONING
+REAL ALPACA MARKET / OPTIONS EVIDENCE
               ↓
-DEFINED-RISK OPTIONS PROPOSAL
+FEATHERLESS AI REASONING — OR HOLD
               ↓
-DETERMINISTIC KPGS RISK GATES
+DEFINED-RISK BULL-PUT VERTICAL CANDIDATE
+              ↓
+DETERMINISTIC RISK GATES
        APPROVE | HOLD | REJECT
               ↓
-ALPACA PAPER TRADING API EXECUTION
+CONTENT-HASHED EXECUTION INTENT
               ↓
-BROKER ORDER RECEIPT → TIME → P&L / REVEAL
+OPTIONAL ALPACA PAPER TRADING API WRITE
+              ↓
+INDEPENDENT PROVIDER ORDER RE-READ
+              ↓
+PROVIDER RECEIPT — OR HOLD → TIME / REVEAL
 ```
 
-The LLM is treated as a **stateless renter**: it may propose and explain, but brokerage authority remains in deterministic code. LEFA rehydrates account state from Alpaca rather than trusting browser state or cached UI values.
+The LLM is treated as a **stateless renter**. Brokerage authority remains in deterministic code, and browser state is never accepted as brokerage truth.
 
-## Options strategy
+## Options strategy and current proof boundary
 
-LEFA targets defined-risk premium structures on liquid underlyings such as `SPY`, `QQQ`, `AAPL`, and `NVDA`.
+The broader strategy design is defined-risk premium harvesting on liquid underlyings. The **current camera-safe execution POC** proves one bounded structure: a bull put vertical credit spread selected from real Alpaca evidence on `SPY`, `QQQ`, `AAPL`, or `NVDA`.
 
-- **Structures**: bull put spreads, bear call spreads, and iron condors; naked short options are rejected.
-- **Delta target**: short legs around `0.15–0.20` delta when market evidence supports the structure.
-- **Volatility premium gate**: ATM implied volatility must be rich relative to realized volatility (`IV / 20-day RV >= 1.15`).
-- **Entry window**: 7–21 DTE.
-- **Profit target**: 50% of maximum credit.
-- **Time stop**: exit by 5 DTE to reduce gamma/assignment risk.
+- **Entry evidence**: 7–21 DTE puts from the provider option chain.
+- **Delta gate**: short put absolute delta must be `0.15–0.20`.
+- **Volatility premium gate**: `ATM IV / 20-session RV >= 1.15`.
+- **Protective leg**: same-expiry lower-strike long put is mandatory.
+- **Credit calculation**: conservative credit uses short bid minus long ask.
+- **Maximum loss**: `(spread width - net credit) × 100 × quantity`.
+- **Liquidity check implemented today**: bid/ask sanity plus a bounded relative-spread threshold. The POC does not claim open-interest screening unless that evidence is added and receipted.
+
+Bear-call spreads, iron condors, 50% profit-taking, and the 5 DTE lifecycle exit remain strategy design targets; this write-up does not present them as broker-receipted automation in the current demo lane.
 
 ## Deterministic risk gates
 
-| Gate | Constraint |
+| Gate | Current implementation |
 |---|---|
-| Paper jurisdiction | `ALPACA_PAPER_TRADE=true`; live mode rejected |
-| Competition baseline | fresh paper account; starting equity must be `$100,000.00` |
-| Max loss per structure | `<= 3%` of equity |
-| Aggregate defined risk | `<= 12%` of equity |
-| Drawdown circuit breaker | halt at `>= 5%` drawdown from baseline |
-| Structure | protective long required; no naked shorts; max 4 legs |
-| Liquidity | hold/reject when spread/open-interest evidence is insufficient |
+| Paper jurisdiction | `ALPACA_PAPER_TRADE=true`; `AlpacaPaperBroker` rejects non-paper configuration |
+| Account truth | account must be active, unblocked, and options permission must be verified |
+| Existing exposure | open positions or open orders cause the camera-safe runner to `HOLD` rather than assume zero risk |
+| Max loss per structure | `<= 3%` of current verified equity |
+| Aggregate-risk policy | `<= 12%` policy ceiling; no current-position risk is silently invented |
+| Drawdown circuit breaker | halt at `>= 5%` drawdown from `LEFA_COMPETITION_BASELINE_EQUITY` (default `$100,000`) |
+| Structure | defined-risk vertical with a real protective long |
+| Provider success | no execution claim without Alpaca order ID plus a separate provider re-read of that order |
 
 ## Alpaca infrastructure
 
-**Real MCP V2 usage is a separate proof lane, not a renamed REST call.** `lefa-mcp-proof` launches Alpaca's official `alpaca-mcp-server==2.2.0` over MCP STDIO using FastMCP, performs live protocol discovery, verifies required tools including `get_account_info`, `get_clock`, `get_option_chain`, and `place_option_order`, then calls `get_clock` and `get_option_chain` against the configured paper environment. Credentials are passed only to the MCP subprocess and never printed.
-
-Install and run the proof lane:
+**MCP V2 observation is a real protocol lane, not a renamed REST call.** `lefa-mcp-proof` launches the official `alpaca-mcp-server==2.2.0` over STDIO using FastMCP, dynamically discovers tools, verifies required capabilities including `get_account_info`, `get_clock`, `get_option_chain`, and `place_option_order`, and executes observation calls such as `get_clock` and `get_option_chain` in the configured paper environment. Credentials are passed to the subprocess and are never intentionally printed by LEFA.
 
 ```bash
 pip install -e ".[mcp]"
 lefa-mcp-proof --symbol SPY
 ```
 
-Order execution is intentionally separate: LEFA's `AlpacaPaperBroker` uses `alpaca-py` / Alpaca Trading API to rehydrate the paper account, positions and orders, resolve active option contracts, and submit governed multi-leg paper orders. This separation lets MCP satisfy AI/tool observation while deterministic LEFA code owns the final brokerage boundary and provider receipt.
+Execution is deliberately separate. `AlpacaPaperBroker` uses Alpaca-py's public `LimitOrderRequest`, `OptionLegRequest`, and `TradingClient.submit_order()` APIs. For the premium-selling lane, LEFA enforces Alpaca's multi-leg price sign: **negative limit price = credit**. A submitted order is then independently fetched from Alpaca before the demo can say `PROVIDER_RECEIPT_CONFIRMED`; a fill is never claimed unless the provider reports one.
+
+Camera-safe evidence cycle, with no brokerage write:
+
+```bash
+python scripts/run_options_agent.py --symbol AUTO
+```
+
+Explicit governed **paper** execution request:
+
+```bash
+python scripts/run_options_agent.py --symbol AUTO --execute
+```
 
 ## Human experience
 
-The backend carries credentials, tool discovery, risk mathematics, receipts and provider failure states. The browser does not. The live Three.js interface projects only small human states such as **Connecting**, **Ready**, **Waiting for evidence**, or **On hold**.
+The backend carries credentials, provider semantics, tool discovery, market evidence, risk mathematics and receipts. The browser receives a small truthful projection such as **Ready**, **Waiting for evidence**, **Needs setup**, or **On hold**. Provider failure does not become UI success.
 
 **Heavy Backend → Small Human State → Immersive Action.**
 
-LEFA's thesis is simple: **autonomous does not have to mean ungoverned.**
+LEFA's thesis is simple: **autonomous does not have to mean ungoverned — and execution-capable does not mean executed. Receipt before claim.**
