@@ -2,6 +2,8 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 
+import pytest
+
 from lefa.options_market import parse_occ_contract, select_credit_spread
 
 
@@ -42,7 +44,7 @@ def test_select_credit_spread_uses_provider_quotes_and_negative_credit_limit() -
     assert candidate.width == Decimal(5)
     assert candidate.maximum_loss == Decimal("410.00")
     assert candidate.signed_alpaca_limit_price == Decimal("-0.90")
-    assert candidate.iv_rv_ratio == 1.5
+    assert candidate.iv_rv_ratio == pytest.approx(1.5)
 
 
 def test_select_credit_spread_holds_when_iv_rv_gate_fails() -> None:
