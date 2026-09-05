@@ -3,11 +3,16 @@ from typing import Any
 from uuid import uuid4
 
 from alpaca.trading.client import TradingClient
-from alpaca.trading.enums import OrderClass, OrderSide, TimeInForce
-from alpaca.trading.requests import LimitOrderRequest, OptionLegRequest
+from alpaca.trading.enums import OrderClass, OrderSide, QueryOrderStatus, TimeInForce
+from alpaca.trading.requests import GetOrdersRequest, LimitOrderRequest, OptionLegRequest
 
 from lefa.config import Settings
 from lefa.governance import AccountState
+
+
+def _value(value: Any) -> str:
+    raw = getattr(value, "value", value)
+    return str(raw)
 
 
 class ReadOnlyAlpaca:
@@ -35,7 +40,7 @@ class AlpacaPaperBroker:
     """Governed Alpaca Paper Trading Broker.
 
     Paper mode is mandatory. Multi-leg option orders use Alpaca-py's public
-    ``submit_order`` API and request models; no private transport methods are used.
+    request models and ``submit_order`` API; no private transport methods are used.
     """
 
     def __init__(self, settings: Settings | None = None) -> None:
@@ -55,7 +60,7 @@ class AlpacaPaperBroker:
         return {
             "id": str(acc.id),
             "account_number": str(acc.account_number),
-            "status": str(acc.status),
+            "status": _value(acc.status),
             "equity": Decimal(str(acc.equity)),
             "last_equity": Decimal(str(acc.last_equity)),
             "cash": Decimal(str(acc.cash)),
@@ -84,24 +89,28 @@ class AlpacaPaperBroker:
                 "qty": str(pos.qty),
                 "market_value": str(pos.market_value),
                 "unrealized_pl": str(pos.unrealized_pl),
-                "side": str(pos.side),
+                "side": _value(pos.side),
             }
             for pos in positions
         ]
 
     def get_orders(self, status: str = "open") -> list[dict[str, Any]]:
-        orders = self._client.get_orders(status=status)
-        return [
-            {
-                "id": str(order.id),
-                "client_order_id": str(order.client_order_id),
-                "symbol": str(order.symbol),
-                "status": str(order.status),
-                "submitted_at": str(order.submitted_at),
-                "order_class": str(getattr(order, "order_class", "simple")),
-            }
-            for order in orders
-        ]
+        status_map = {
+            "open": QueryOrderStatus.OPEN,
+            "closed": QueryOrderStatus.CLOSED,
+            "all": QueryOrderStatus.ALL,
+        }
+        query_status = status_map.get(status.lower())
+        if query_status is None:
+            raise ValueError("Order status must be open, closed, or all")
+        orders = self._client.get_orders(
+            filter=GetOrdersRequest(status=query_status, nested=True)
+        )
+        return [self._project_order(order) for order in orders]
+
+    def get_order(self, order_id: str) -> dict[str, Any]:
+        """Re-read one order from Alpaca so a write receipt is independently confirmed."""
+        return self._project_order(self._client.get_order_by_id(order_id))
 
     def place_option_order(
         self,
@@ -164,28 +173,38 @@ class AlpacaPaperBroker:
             client_order_id=cid,
         )
         order = self._client.submit_order(order_data=request)
-
-        order_id = getattr(order, "id", None)
-        if order_id is None and isinstance(order, dict):
-            order_id = order.get("id") or order.get("order_id")
-        if not order_id:
+        projected = self._project_order(order)
+        if not projected["order_id"]:
             raise RuntimeError("Alpaca returned no provider order ID")
-
-        status = getattr(order, "status", None)
-        submitted_at = getattr(order, "submitted_at", None)
-        if isinstance(order, dict):
-            status = status or order.get("status")
-            submitted_at = submitted_at or order.get("submitted_at") or order.get("created_at")
-
-        return {
-            "order_id": str(order_id),
-            "client_order_id": cid,
-            "status": str(status or "UNKNOWN"),
-            "symbol": symbol,
-            "order_class": "mleg",
-            "signed_limit_price": str(signed_limit),
-            "submitted_at": str(submitted_at) if submitted_at is not None else None,
-        }
+        projected.update(
+            {
+                "client_order_id": cid,
+                "symbol": symbol,
+                "order_class": "mleg",
+                "signed_limit_price": str(signed_limit),
+            }
+        )
+        return projected
 
     def cancel_order(self, order_id: str) -> None:
         self._client.cancel_order_by_id(order_id)
+
+    @staticmethod
+    def _project_order(order: Any) -> dict[str, Any]:
+        if isinstance(order, dict):
+            return {
+                "order_id": str(order.get("id") or order.get("order_id") or ""),
+                "client_order_id": str(order.get("client_order_id") or ""),
+                "symbol": order.get("symbol"),
+                "status": str(order.get("status") or "UNKNOWN"),
+                "submitted_at": str(order.get("submitted_at") or order.get("created_at") or ""),
+                "order_class": str(order.get("order_class") or "simple"),
+            }
+        return {
+            "order_id": str(getattr(order, "id", "") or ""),
+            "client_order_id": str(getattr(order, "client_order_id", "") or ""),
+            "symbol": getattr(order, "symbol", None),
+            "status": _value(getattr(order, "status", "UNKNOWN")),
+            "submitted_at": str(getattr(order, "submitted_at", "") or ""),
+            "order_class": _value(getattr(order, "order_class", "simple")),
+        }
