@@ -49,7 +49,12 @@ def _proof_depth(result: Any) -> tuple[ProofStage, ...]:
     if upstream:
         return tuple(ProofStage.model_validate(item) for item in upstream)
 
-    # The current KPGS orchestrator returns pipeline outputs but not per-stage maturity.
+    bundle = _read(result, "evidence_bundle")
+    if bundle is not None:
+        from lefa.kpgs_evidence import KPGSEvidenceEngine
+
+        return KPGSEvidenceEngine.build_proof_depth(bundle)
+
     # Treat pipeline completion as procedural unless an upstream result explicitly
     # supplies evidence-backed maturity states.
     return tuple(
