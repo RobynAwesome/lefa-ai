@@ -129,10 +129,9 @@ jobs:
       - run: npm install --no-audit --no-fund
 
       # ── TypeScript semantic check ──
-      # Issue #14: noUnusedLocals/noUnusedParameters still overridden
-      # until frontend debt is reconciled. Remove overrides when #14 closes.
-      - name: Typecheck current root frontend
-        run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
+      # Issue #14 reconciled: strict unused locals and parameters active
+      - name: Typecheck current root frontend (strict)
+        run: npx tsc --noEmit
 
       # ── Production build ──
       - name: Vite production build

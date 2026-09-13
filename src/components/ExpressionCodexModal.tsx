@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Sparkles, AlertCircle, CheckCircle2, ShieldCheck, Heart } from 'lucide-react';
+import { X, Sparkles, ShieldCheck } from 'lucide-react';
 import { LEFA_KAOMOJI_EXPRESSIONS } from '../data/expressionGrammar';
 import { CompanionAvatar } from './CompanionAvatar';
 import { SystemState } from '../types';

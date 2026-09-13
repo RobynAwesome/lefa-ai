@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import type React from 'react';
 import { motion } from 'motion/react';
-import { X, CheckCircle, AlertTriangle, Sparkles, ArrowRight, ShieldCheck, Scale, Award } from 'lucide-react';
+import { X, CheckCircle, Scale, Award } from 'lucide-react';
 import { DIRECTION_CRITIQUES } from '../data/expressionGrammar';
-import { DesignDirection } from '../types';
+import type { DesignDirection } from '../types';
 
 interface CritiqueModalProps {
   isOpen: boolean;
@@ -15,7 +15,6 @@ export const CritiqueModal: React.FC<CritiqueModalProps> = ({
   onClose,
   onSelectDirection
 }) => {
-  const [selectedDirectionForConvergence, setSelectedDirectionForConvergence] = useState<DesignDirection>('direction-a');
 
   if (!isOpen) return null;
 

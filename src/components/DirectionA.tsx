@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import type React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Shield, Lock, Eye, Compass, ArrowRight, CheckCircle2, AlertTriangle, Clock, RefreshCw, Key, ExternalLink } from 'lucide-react';
-import { SystemState, ViewportMode } from '../types';
+import { Shield, Lock, Eye, ArrowRight, Clock, RefreshCw, Key } from 'lucide-react';
+import type { SystemState, ViewportMode } from '../types';
 import { CompanionAvatar } from './CompanionAvatar';
 import { MOCK_OBSERVATION, MOCK_LEDGER_RECEIPT, MOCK_HOLD_RATIONALE, MOCK_REVEAL_DATA } from '../data/expressionGrammar';
 
@@ -22,7 +22,6 @@ export const DirectionA: React.FC<DirectionAProps> = ({
   isAlpacaConnected,
   reducedMotion
 }) => {
-  const [activeContextSurface, setActiveContextSurface] = useState<'evidence' | 'receipt' | 'thesis' | null>(null);
 
   return (
     <div 

@@ -24,11 +24,8 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
       - run: npm install --no-audit --no-fund
-      - name: Typecheck with bounded unused symbol policy
-        run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
-        # After Issue #14 is resolved, this runs WITHOUT
-        # --noUnusedLocals false --noUnusedParameters false overrides.
-        # Until then, the existing ci.yml continues to use the override.
+      - name: Typecheck current root frontend (strict)
+        run: npx tsc --noEmit
 
   # ─── Vite Production Build ──────────────────────────────────────────
   # Validates the complete production build pipeline.

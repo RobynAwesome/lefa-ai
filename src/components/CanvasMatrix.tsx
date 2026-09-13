@@ -1,7 +1,6 @@
-import React from 'react';
-import { motion } from 'motion/react';
-import { Sparkles, ArrowRight, Smartphone, Monitor, CheckCircle, AlertTriangle } from 'lucide-react';
-import { SystemState, ViewportMode, DesignDirection } from '../types';
+import type React from 'react';
+import { ArrowRight } from 'lucide-react';
+import type { SystemState, DesignDirection } from '../types';
 import { DirectionA } from './DirectionA';
 import { DirectionB } from './DirectionB';
 import { DirectionC } from './DirectionC';

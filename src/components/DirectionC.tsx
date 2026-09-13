@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { MessageSquare, Send, Sparkles, Mic, ShieldAlert, FileCode2, ArrowRight, CornerDownLeft, Lock, Key } from 'lucide-react';
-import { SystemState, ViewportMode } from '../types';
+import type React from 'react';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { MessageSquare, Send, Mic, Lock, Key } from 'lucide-react';
+import type { SystemState, ViewportMode } from '../types';
 import { CompanionAvatar } from './CompanionAvatar';
 import { MOCK_OBSERVATION, MOCK_LEDGER_RECEIPT, MOCK_HOLD_RATIONALE, MOCK_REVEAL_DATA } from '../data/expressionGrammar';
 
@@ -23,7 +24,6 @@ export const DirectionC: React.FC<DirectionCProps> = ({
   reducedMotion
 }) => {
   const [inputQuery, setInputQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'dialogue' | 'evidence'>('dialogue');
 
   const samplePrompts = [
     { label: 'Sense current market regime', targetState: 'observing' as SystemState, query: 'What signals are you observing across our universe right now?' },

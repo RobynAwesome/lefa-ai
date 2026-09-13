@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Copy, Check, FileText, Palette, Type, Layers, Activity, Eye, ShieldAlert } from 'lucide-react';
+import { X, Copy, Check, FileText } from 'lucide-react';
 
 interface DesignSystemSpecProps {
   isOpen: boolean;

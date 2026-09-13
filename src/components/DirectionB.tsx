@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import type React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, ShieldCheck, History, GitCommit, FileText, Check, ChevronRight, Lock, Key, ArrowUpRight } from 'lucide-react';
-import { SystemState, ViewportMode } from '../types';
+import { History, ChevronRight, Lock, Key } from 'lucide-react';
+import type { SystemState, ViewportMode } from '../types';
 import { CompanionAvatar } from './CompanionAvatar';
 import { MOCK_OBSERVATION, MOCK_LEDGER_RECEIPT, MOCK_HOLD_RATIONALE, MOCK_REVEAL_DATA } from '../data/expressionGrammar';
 
@@ -22,7 +22,6 @@ export const DirectionB: React.FC<DirectionBProps> = ({
   isAlpacaConnected,
   reducedMotion
 }) => {
-  const [selectedTimelineNode, setSelectedTimelineNode] = useState<'observe' | 'ledger' | 'hold' | 'reveal'>('ledger');
 
   const timelineSteps = [
     { id: 'observe', label: 'T₀ Observe', time: '14:30:00', state: 'observing' as SystemState },
