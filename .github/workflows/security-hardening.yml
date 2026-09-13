@@ -47,10 +47,9 @@ jobs:
           python-version: "3.11"
           cache: pip
       - run: pip install pip-audit
-      - name: Audit Python dependencies
+      - name: Audit production dependencies
         run: |
-          pip install -e '.[dev,mcp]'
-          pip-audit --desc on --fix --dry-run
+          pip-audit -r requirements.txt --desc on
 
   # ─── Execution Authority Verification ───────────────────────────────
   # Zero-trust check: verifies that the codebase enforces

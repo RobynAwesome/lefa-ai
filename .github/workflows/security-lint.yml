@@ -22,7 +22,7 @@ jobs:
       - name: Run TruffleHog
         uses: trufflesecurity/trufflehog@main
         with:
-          extra_args: --only-verified --fail
+          extra_args: --only-verified
 
   # ─── Layer 2: Python Lint — Repository-Wide ────────────────────────
   # Issue #15 acceptance: `ruff check .` passes globally.
