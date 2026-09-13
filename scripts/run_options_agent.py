@@ -4,6 +4,7 @@ The camera-safe invariant is simple: real provider evidence or HOLD.
 No simulated account, hard-coded market price, fabricated AI rationale, contract
 fallback, or local claim of broker success is permitted in this runner.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -150,8 +151,14 @@ def run_agent_cycle(symbol: str = "AUTO", *, execute: bool = False) -> dict[str,
 
     if "ACTIVE" not in account_status:
         return _hold("ACCOUNT_NOT_ACTIVE", "Alpaca paper account is not ACTIVE.")
-    if account["account_blocked"] or account["trading_blocked"] or account["trade_suspended_by_user"]:
-        return _hold("ACCOUNT_RESTRICTED", "Alpaca reports a trading restriction on the paper account.")
+    if (
+        account["account_blocked"]
+        or account["trading_blocked"]
+        or account["trade_suspended_by_user"]
+    ):
+        return _hold(
+            "ACCOUNT_RESTRICTED", "Alpaca reports a trading restriction on the paper account."
+        )
     if options_level is None or options_level < 3:
         return _hold("OPTIONS_LEVEL_INSUFFICIENT", "Level 3 options permission is not verified.")
     if positions:
@@ -167,7 +174,9 @@ def run_agent_cycle(symbol: str = "AUTO", *, execute: bool = False) -> dict[str,
             evidence={"open_order_count": len(open_orders)},
         )
 
-    baseline = Decimal(os.getenv("LEFA_COMPETITION_BASELINE_EQUITY", str(COMPETITION_BASELINE_EQUITY)))
+    baseline = Decimal(
+        os.getenv("LEFA_COMPETITION_BASELINE_EQUITY", str(COMPETITION_BASELINE_EQUITY))
+    )
     drawdown = max(Decimal(0), baseline - account["equity"])
     drawdown_fraction = drawdown / baseline
     print(f"  Competition baseline: {_money(baseline)}")
@@ -322,7 +331,9 @@ def run_agent_cycle(symbol: str = "AUTO", *, execute: bool = False) -> dict[str,
             "detail": "Run again with --execute to request the governed paper order.",
         }
         print("  Execution state:      NOT_REQUESTED")
-        print("  No broker write occurred. Use --execute only when you want the paper order submitted.")
+        print(
+            "  No broker write occurred. Use --execute only when you want the paper order submitted."
+        )
     else:
         try:
             submitted = broker.place_option_order(
@@ -369,7 +380,9 @@ def run_agent_cycle(symbol: str = "AUTO", *, execute: bool = False) -> dict[str,
                 print("  Execution truth:      PROVIDER_RECEIPT_CONFIRMED")
                 print(f"  Alpaca order ID:      {order_id}")
                 print(f"  Provider status:      {status}")
-                print("  Fill state:           not claimed unless Alpaca status itself reports a fill")
+                print(
+                    "  Fill state:           not claimed unless Alpaca status itself reports a fill"
+                )
 
     final_json = json.dumps(receipt_data, sort_keys=True, separators=(",", ":"))
     final_hash = hashlib.sha256(final_json.encode()).hexdigest()

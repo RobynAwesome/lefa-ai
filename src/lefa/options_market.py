@@ -4,6 +4,7 @@ No fixture, cached browser value, or hard-coded contract is admissible here. A
 candidate exists only when current Alpaca stock data, option-chain greeks/quotes,
 and completed daily bars support the declared strategy gates.
 """
+
 from __future__ import annotations
 
 import math

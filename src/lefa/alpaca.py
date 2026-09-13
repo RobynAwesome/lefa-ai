@@ -103,9 +103,7 @@ class AlpacaPaperBroker:
         query_status = status_map.get(status.lower())
         if query_status is None:
             raise ValueError("Order status must be open, closed, or all")
-        orders = self._client.get_orders(
-            filter=GetOrdersRequest(status=query_status, nested=True)
-        )
+        orders = self._client.get_orders(filter=GetOrdersRequest(status=query_status, nested=True))
         return [self._project_order(order) for order in orders]
 
     def get_order(self, order_id: str) -> dict[str, Any]:
