@@ -98,11 +98,15 @@ class MCPObservationReceipt(BaseModel):
             raise ValueError(MCPReceiptFailure.TOOL_NOT_DISCOVERED.value)
         if _has_forbidden_tool((self.source_tool,)):
             raise ValueError(MCPReceiptFailure.EXECUTION_TOOL.value)
-        if self.kind in (
-            MCPObservationKind.ASSET,
-            MCPObservationKind.MARKET_QUOTE,
-            MCPObservationKind.OPTION_CHAIN,
-        ) and not self.symbol:
+        if (
+            self.kind
+            in (
+                MCPObservationKind.ASSET,
+                MCPObservationKind.MARKET_QUOTE,
+                MCPObservationKind.OPTION_CHAIN,
+            )
+            and not self.symbol
+        ):
             raise ValueError(MCPReceiptFailure.SYMBOL_REQUIRED.value)
         if _has_sensitive_summary_key(self.summary):
             raise ValueError(MCPReceiptFailure.SENSITIVE_FIELD.value)

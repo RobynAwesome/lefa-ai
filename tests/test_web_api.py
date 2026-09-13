@@ -8,6 +8,7 @@ Governance boundaries:
 - /api/mcp/verify blocks non-paper mode and execution-tool reachability.
 - Execution authority is always zero.
 """
+
 from fastapi.testclient import TestClient
 
 from lefa.web_api import app
@@ -163,3 +164,49 @@ def test_snapshot_has_no_execution_authority() -> None:
             assert decision["state"] not in ("completed",), (
                 "Snapshot must not expose a completed execution decision"
             )
+
+
+def test_zero_trust_security_headers_present() -> None:
+    res = client.get("/api/health")
+    assert res.status_code == 200
+    assert res.headers["x-content-type-options"] == "nosniff"
+    assert res.headers["x-frame-options"] == "DENY"
+    assert res.headers["cache-control"] == "no-store"
+    assert res.headers["x-lefa-execution-authority"] == "zero"
+    assert "x-lefa-request-id" in res.headers
+    assert "content-security-policy" in res.headers
+    assert "strict-transport-security" in res.headers
+
+
+def test_unauthorized_cors_origin_rejected() -> None:
+    res = client.get("/api/health", headers={"origin": "https://malicious-site.com"})
+    assert res.status_code == 403
+
+
+def test_authorized_cors_origin_accepted() -> None:
+    res = client.get("/api/health", headers={"origin": "https://lefa-core-live.vercel.app"})
+    assert res.status_code == 200
+    assert res.headers.get("access-control-allow-origin") == "https://lefa-core-live.vercel.app"
+
+
+def test_response_sanitization_removes_forbidden_keys() -> None:
+    from lefa.security_middleware import sanitize_response_dict
+
+    dirty = {
+        "status": "READY",
+        "api_key": "secret123",
+        "token": "tok456",
+        "password": "pw",
+        "account_number": "12345",
+        "nested": {
+            "secret": "hidden",
+            "symbol": "SPY",
+        },
+    }
+    clean = sanitize_response_dict(dirty)
+    assert "status" in clean
+    assert "api_key" not in clean
+    assert "token" not in clean
+    assert "password" not in clean
+    assert "account_number" not in clean
+    assert clean["nested"] == {"symbol": "SPY"}

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import Any, Protocol
 
 from lefa.governance import (
@@ -144,10 +145,9 @@ class CanonicalTradingOrchestrator:
 
         canonical_state = str(proof_state or "").upper()
         recycled_state = str(recycled_status or "").upper()
-        if (
-            any(marker in canonical_state for marker in ("HOLD", "FAIL", "REJECT"))
-            or recycled_state.startswith("RECYCLED")
-        ):
+        if any(
+            marker in canonical_state for marker in ("HOLD", "FAIL", "REJECT")
+        ) or recycled_state.startswith("RECYCLED"):
             return risk_receipt.model_copy(
                 update={
                     "decision": Decision.HOLD,
@@ -212,9 +212,13 @@ class CanonicalTradingOrchestrator:
         - receipt.execution_jurisdiction == ExecutionJurisdiction.PAPER
         """
         if receipt.decision != Decision.APPROVE:
-            raise ValueError(f"Cannot execute order with non-approved receipt decision: {receipt.decision}")
+            raise ValueError(
+                f"Cannot execute order with non-approved receipt decision: {receipt.decision}"
+            )
         if receipt.execution_jurisdiction != ExecutionJurisdiction.PAPER:
-            raise ValueError(f"Execution prohibited outside PAPER jurisdiction: {receipt.execution_jurisdiction}")
+            raise ValueError(
+                f"Execution prohibited outside PAPER jurisdiction: {receipt.execution_jurisdiction}"
+            )
 
         order_result = broker.place_option_order(
             symbol=receipt.proposal.symbol,
@@ -238,4 +242,3 @@ class CanonicalTradingOrchestrator:
         if self._canonical_orchestrator is not None:
             return self._canonical_orchestrator, self._operating_mode
         return _load_kpgs()
-

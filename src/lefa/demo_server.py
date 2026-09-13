@@ -49,7 +49,11 @@ class LEFADemoHandler(BaseHTTPRequestHandler):
 
     def _serve_snapshot(self, query: str) -> None:
         symbol = parse_qs(query).get("symbol", ["SPY"])[0].strip().upper()
-        if not symbol or len(symbol) > 16 or not all(char.isalnum() or char in ".-" for char in symbol):
+        if (
+            not symbol
+            or len(symbol) > 16
+            or not all(char.isalnum() or char in ".-" for char in symbol)
+        ):
             self.send_error(HTTPStatus.BAD_REQUEST, "invalid symbol")
             return
 

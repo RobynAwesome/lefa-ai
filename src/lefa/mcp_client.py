@@ -5,6 +5,7 @@ credentials exist and deterministic simulated responses for offline isolation.
 It is **not** MCP protocol evidence and must never be cited as hackathon MCP
 compliance. Real MCP usage lives in :mod:`lefa.mcp_v2`.
 """
+
 import logging
 import os
 from typing import Any
@@ -76,7 +77,12 @@ class AlpacaPaperObserver:
                 except Exception as exc:  # noqa: BLE001 - legacy provider fallback boundary
                     logger.warning("Alpaca get_account API error, falling back: %s", exc)
 
-            return {"status": "ACTIVE", "equity": "100000.00", "currency": "USD", "_simulated": True}
+            return {
+                "status": "ACTIVE",
+                "equity": "100000.00",
+                "currency": "USD",
+                "_simulated": True,
+            }
 
         if tool_name in {"get_quote", "get_stock_bars"}:
             symbol = args.get("symbol", "SPY") if args else "SPY"
@@ -101,7 +107,12 @@ class AlpacaPaperObserver:
                 except Exception as exc:  # noqa: BLE001 - legacy provider fallback boundary
                     logger.warning("Alpaca market quote error, falling back: %s", exc)
 
-            return {"symbol": symbol, "bid_price": "595.10", "ask_price": "595.15", "_simulated": True}
+            return {
+                "symbol": symbol,
+                "bid_price": "595.10",
+                "ask_price": "595.15",
+                "_simulated": True,
+            }
 
         if tool_name == "get_all_positions":
             if client is not None:
@@ -109,7 +120,11 @@ class AlpacaPaperObserver:
                     positions = client.get_all_positions()
                     return {
                         "positions": [
-                            {"symbol": p.symbol, "qty": str(p.qty), "market_value": str(p.market_value)}
+                            {
+                                "symbol": p.symbol,
+                                "qty": str(p.qty),
+                                "market_value": str(p.market_value),
+                            }
                             for p in positions
                         ],
                         "_simulated": False,

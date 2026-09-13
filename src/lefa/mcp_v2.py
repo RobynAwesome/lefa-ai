@@ -15,6 +15,7 @@ Then set the paper-account environment variables and run::
 
 Credentials are passed only to the MCP subprocess and are never printed.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,9 +37,7 @@ REQUIRED_TOOLS = {
 
 def _secret_env() -> dict[str, str]:
     api_key = os.getenv("ALPACA_API_KEY", "").strip()
-    secret_key = (
-        os.getenv("ALPACA_SECRET_KEY", "") or os.getenv("ALPACA_API_SECRET", "")
-    ).strip()
+    secret_key = (os.getenv("ALPACA_SECRET_KEY", "") or os.getenv("ALPACA_API_SECRET", "")).strip()
     if not api_key or not secret_key:
         raise RuntimeError(
             "ALPACA_API_KEY and ALPACA_SECRET_KEY are required for the MCP proof lane"

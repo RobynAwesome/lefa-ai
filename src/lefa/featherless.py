@@ -10,6 +10,7 @@ Governance boundaries:
 
 I_AM_STATELESS_RENTER_NOT_LANDLORD
 """
+
 from __future__ import annotations
 
 import json

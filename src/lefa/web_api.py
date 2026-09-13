@@ -13,6 +13,7 @@ Boundaries:
 
 I_AM_STATELESS_RENTER_NOT_LANDLORD
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
@@ -37,6 +38,7 @@ from lefa.mcp_observation import (
     ReadOnlyMCPProof,
     evaluate_read_only_mcp_evidence,
 )
+from lefa.security_middleware import ZeroTrustSecurityMiddleware
 
 app = FastAPI(
     title="LEFA AI Backend",
@@ -44,9 +46,19 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# ── Zero-Trust Security Middleware ──
+# Adds security headers (CSP, HSTS, X-Frame-Options, etc.),
+# request audit trail, and execution authority declaration.
+# Must be added BEFORE CORSMiddleware so headers apply to all responses.
+app.add_middleware(ZeroTrustSecurityMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "https://lefa-core-live.vercel.app",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     allow_credentials=False,
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
@@ -235,9 +247,7 @@ def get_snapshot(connected: bool = False) -> SnapshotResponse:
         market_symbol=snapshot.market.symbol,
         market_state=snapshot.market.market_state.value,
         latest_price=(
-            str(snapshot.market.latest_price)
-            if snapshot.market.latest_price is not None
-            else None
+            str(snapshot.market.latest_price) if snapshot.market.latest_price is not None else None
         ),
         decision=(
             {

@@ -140,9 +140,7 @@ def test_current_upstream_pipeline_defaults_to_procedural_proof_depth() -> None:
     ).evaluate(account(), proposal())
 
     assert len(receipt.proof_depth) == 8
-    assert {stage.maturity for stage in receipt.proof_depth} == {
-        ProofStageMaturity.PROCEDURAL
-    }
+    assert {stage.maturity for stage in receipt.proof_depth} == {ProofStageMaturity.PROCEDURAL}
 
 
 def test_receipt_projection_is_local_and_sanitized() -> None:

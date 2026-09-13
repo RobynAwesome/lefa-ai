@@ -1,0 +1,80 @@
+name: "Frontend Quality Gate"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── TypeScript Strict Check ────────────────────────────────────────
+  # Issue #14 acceptance: tsc --noEmit passes with strict unused checks
+  # (noUnusedLocals=true, noUnusedParameters=true).
+  # The CI override from PR #13 is removed once debt is reconciled.
+  typecheck:
+    name: "📝 TypeScript Strict Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --no-audit --no-fund
+      - name: Typecheck with strict unused symbol detection
+        run: npx tsc --noEmit
+        # After Issue #14 is resolved, this runs WITHOUT
+        # --noUnusedLocals false --noUnusedParameters false overrides.
+        # Until then, the existing ci.yml continues to use the override.
+
+  # ─── Vite Production Build ──────────────────────────────────────────
+  # Validates the complete production build pipeline.
+  # RECEIPT: the dist/ artifact proves the build succeeded.
+  build:
+    name: "🏗️ Vite Production Build"
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --no-audit --no-fund
+      - name: Build production bundle
+        run: npm run build
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+          retention-days: 7
+
+  # ─── Bundle Size Check ─────────────────────────────────────────────
+  # Tracks bundle size to prevent regressions.
+  # LEFA design law: interface should become simpler as backend becomes stronger.
+  bundle-analysis:
+    name: "📊 Bundle Size Analysis"
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/
+      - name: Report bundle sizes
+        run: |
+          echo "=== LEFA Frontend Bundle Report ==="
+          echo "Heavy architecture. Light interface."
+          echo ""
+          find dist/ -name "*.js" -exec ls -lh {} \; | awk '{print $5, $9}'
+          echo ""
+          find dist/ -name "*.css" -exec ls -lh {} \; | awk '{print $5, $9}'
+          echo ""
+          TOTAL=$(du -sh dist/ | cut -f1)
+          echo "Total dist size: $TOTAL"

@@ -1,0 +1,69 @@
+name: "Security & Lint Gate"
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Layer 1: Secret Scanning ──────────────────────────────────────
+  # Scans the full git history for verified credentials.
+  # RECEIPT OR HOLD — any verified secret blocks the pipeline.
+  secret-scan:
+    name: "🔒 TruffleHog Secret Scan"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Full history for thorough scanning
+      - name: Run TruffleHog
+        uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --only-verified --fail
+
+  # ─── Layer 2: Python Lint — Repository-Wide ────────────────────────
+  # Issue #15 acceptance: `ruff check .` passes globally.
+  # No more scoped-file-list workaround.
+  ruff-global:
+    name: "🧹 Ruff Global Lint"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install "ruff>=0.12"
+      - name: Lint check (all Python)
+        run: ruff check . --output-format=github
+      - name: Format check (all Python)
+        run: ruff format --check .
+
+  # ─── Layer 3: Credential-Loading Verification ──────────────────────
+  # Ensures every credential reference uses os.getenv() with fail-closed.
+  # No hardcoded fallbacks, no synthetic values.
+  credential-hygiene:
+    name: "🔐 Credential Hygiene Check"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan for hardcoded credential patterns
+        run: |
+          echo "=== Scanning for hardcoded credential-like literals ==="
+          # Fail if any Python file contains a suspicious literal assignment
+          # Excludes .env.example (which has placeholder values)
+          FOUND=0
+          for pattern in 'api_key\s*=\s*"[A-Za-z0-9]' 'secret\s*=\s*"[A-Za-z0-9]' 'token\s*=\s*"[A-Za-z0-9]'; do
+            if grep -rn --include="*.py" -E "$pattern" . | grep -v '.env.example' | grep -v 'os.getenv' | grep -v 'test_' | grep -v '#'; then
+              echo "⚠️  Potential hardcoded credential found for pattern: $pattern"
+              FOUND=1
+            fi
+          done
+          if [ "$FOUND" -eq 1 ]; then
+            echo "❌ Hardcoded credential-like literals detected. Use os.getenv() with fail-closed behavior."
+            exit 1
+          fi
+          echo "✅ No hardcoded credential literals found."

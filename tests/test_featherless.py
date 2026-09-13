@@ -68,7 +68,9 @@ def test_web_api_explain_endpoint_reports_unavailable_when_unconfigured():
 
 def test_web_api_explain_endpoint_success_with_server_configuration():
     mock_response = MagicMock()
-    mock_response.read.return_value = b'{"choices": [{"message": {"content": "Live provider explanation."}}]}'
+    mock_response.read.return_value = (
+        b'{"choices": [{"message": {"content": "Live provider explanation."}}]}'
+    )
     mock_response.__enter__.return_value = mock_response
 
     with (

@@ -1,0 +1,96 @@
+name: "Dependency Audit"
+
+on:
+  # Weekly Monday 6am UTC — automated supply chain scan
+  schedule:
+    - cron: "0 6 * * 1"
+  # Also runs when dependency files change
+  push:
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "pyproject.toml"
+      - "requirements.txt"
+  pull_request:
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - "pyproject.toml"
+      - "requirements.txt"
+
+permissions:
+  contents: read
+
+jobs:
+  # ─── Python Supply Chain Audit ──────────────────────────────────────
+  # pip-audit checks all installed packages against the Python
+  # Advisory Database (PyPA) and OSV.
+  # Financial applications MUST NOT ship known-vulnerable dependencies.
+  python-audit:
+    name: "🐍 Python Dependency Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install pip-audit
+      - name: Install project dependencies
+        run: pip install -e '.[dev,mcp]'
+      - name: Audit Python dependencies
+        run: pip-audit --desc on --output json > python-audit.json || true
+      - name: Report findings
+        run: |
+          echo "=== Python Dependency Audit ==="
+          pip-audit --desc on || echo "⚠️  Vulnerabilities found — review python-audit.json"
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-audit-report
+          path: python-audit.json
+
+  # ─── Node.js Supply Chain Audit ─────────────────────────────────────
+  # npm audit checks against the GitHub Advisory Database.
+  npm-audit:
+    name: "📦 Node.js Dependency Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package.json
+      - run: npm install --no-audit --no-fund
+      - name: Audit npm dependencies
+        run: npm audit --audit-level=moderate --json > npm-audit.json || true
+      - name: Report findings
+        run: |
+          echo "=== npm Dependency Audit ==="
+          npm audit --audit-level=moderate || echo "⚠️  Vulnerabilities found — review npm-audit.json"
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit.json
+
+  # ─── License Compliance ────────────────────────────────────────────
+  # Financial applications must verify license compatibility.
+  license-check:
+    name: "📋 License Compliance"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install pip-licenses
+      - run: pip install -e '.[dev,mcp]'
+      - name: Generate license report
+        run: |
+          echo "=== LEFA Dependency License Report ==="
+          pip-licenses --format=markdown --with-urls --order=license

@@ -26,4 +26,3 @@ class Settings(BaseSettings):
         if not self.alpaca_paper:
             raise ValueError("LEFA baseline prohibits live Alpaca connections; paper trading only")
         return self
-

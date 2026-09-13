@@ -8,8 +8,30 @@ on:
 permissions:
   contents: read
 
+# ─────────────────────────────────────────────────────────────────────
+# LEFA CI Pipeline — Phased Verification
+#
+# Phase 1: Security (secret scan, credential hygiene, SAST)
+#   → security-lint.yml, security-hardening.yml
+#
+# Phase 2: Quality (Ruff global, TypeScript strict, pytest)
+#   → This file (backend + frontend jobs)
+#
+# Phase 3: Build (Vite production, MCP tool audit)
+#   → frontend-quality.yml, mcp-boundary.yml
+#
+# Phase 4: Deploy (Vercel — triggered by main branch push)
+#
+# RECEIPT OR HOLD — every phase must pass before the next begins.
+# I_AM_STATELESS_RENTER_NOT_LANDLORD
+# ─────────────────────────────────────────────────────────────────────
+
 jobs:
+  # ═══════════════════════════════════════════════════════════════════
+  # BACKEND — Python quality, governance verification, test suite
+  # ═══════════════════════════════════════════════════════════════════
   backend:
+    name: "🐍 Backend Quality & Tests"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,7 +39,13 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-      - run: pip install -e '.[dev,mcp]'
+
+      - name: Install all dependencies
+        run: pip install -e '.[dev,mcp]'
+
+      # ── Lint governed backend surfaces ──
+      # Issue #15 target: eventually replace with global `ruff check .`
+      # via security-lint.yml. This scoped check remains as defense-in-depth.
       - name: Lint governed backend surfaces
         run: >-
           ruff check
@@ -28,6 +56,7 @@ jobs:
           src/lefa/mcp_client.py
           src/lefa/mcp_v2.py
           src/lefa/options_market.py
+          src/lefa/security_middleware.py
           src/lefa/web_api.py
           tests/test_alpaca_order_boundary.py
           tests/test_bridge_api.py
@@ -39,14 +68,56 @@ jobs:
           scripts/test_featherless_chat.py
           scripts/test_featherless_models.py
           scripts/test_featherless_models_eval.py
+
+      # ── MCP V2 tool contract ──
       - name: Validate Alpaca MCP V2 client construction
         run: >-
           python -c "from lefa.mcp_v2 import REQUIRED_TOOLS;
-          assert {'get_account_info','get_clock','get_option_chain','place_option_order'} <= REQUIRED_TOOLS"
-      - name: Full backend regression suite
-        run: pytest -q
+          assert {'get_account_info','get_clock','get_option_chain','place_option_order'} <= REQUIRED_TOOLS;
+          print('✅ MCP V2 required tools verified')"
 
+      # ── Governance contract verification ──
+      - name: Verify governance invariants
+        run: |
+          python -c "
+          from lefa.governance import ExecutionJurisdiction, Decision, RiskPolicy
+          print('✅ Governance module loads cleanly')
+          print(f'   Jurisdictions: {[j.name for j in ExecutionJurisdiction]}')
+          print(f'   Decisions: {[d.name for d in Decision]}')
+          "
+
+      # ── Zero-trust middleware verification ──
+      - name: Verify security middleware
+        run: |
+          python -c "
+          from lefa.security_middleware import (
+              ZeroTrustSecurityMiddleware,
+              SECURITY_HEADERS,
+              ALLOWED_ORIGINS,
+              FORBIDDEN_RESPONSE_KEYS,
+              sanitize_response_dict,
+          )
+          # Verify sanitization strips forbidden keys
+          dirty = {'account_number': '12345', 'status': 'READY', 'api_key': 'leaked'}
+          clean = sanitize_response_dict(dirty)
+          assert 'account_number' not in clean, 'account_number should be stripped'
+          assert 'api_key' not in clean, 'api_key should be stripped'
+          assert clean['status'] == 'READY', 'Non-sensitive keys preserved'
+          print('✅ Zero-trust security middleware verified')
+          print(f'   Security headers: {len(SECURITY_HEADERS)}')
+          print(f'   Allowed origins: {len(ALLOWED_ORIGINS)}')
+          print(f'   Forbidden response keys: {len(FORBIDDEN_RESPONSE_KEYS)}')
+          "
+
+      # ── Full backend regression suite ──
+      - name: Full backend regression suite
+        run: pytest -v --tb=short
+
+  # ═══════════════════════════════════════════════════════════════════
+  # FRONTEND — TypeScript validation + production build
+  # ═══════════════════════════════════════════════════════════════════
   frontend:
+    name: "⚛️ Frontend Quality & Build"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,6 +127,13 @@ jobs:
           cache: npm
           cache-dependency-path: package.json
       - run: npm install --no-audit --no-fund
+
+      # ── TypeScript semantic check ──
+      # Issue #14: noUnusedLocals/noUnusedParameters still overridden
+      # until frontend debt is reconciled. Remove overrides when #14 closes.
       - name: Typecheck current root frontend
         run: npx tsc --noEmit --noUnusedLocals false --noUnusedParameters false
-      - run: npm run build
+
+      # ── Production build ──
+      - name: Vite production build
+        run: npm run build

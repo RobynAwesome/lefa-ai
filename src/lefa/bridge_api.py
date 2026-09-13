@@ -7,6 +7,7 @@ only a small truthful state.
 REALITY_STATE > INDEX_STATE
 RECEIPT OR HOLD
 """
+
 from __future__ import annotations
 
 import os
@@ -163,7 +164,9 @@ def _runtime_projection(bridge: dict[str, Any]) -> dict[str, Any]:
     elif experience_state == "SETUP_NEEDED":
         state = "SETUP_NEEDED"
         headline = str(experience.get("headline", "Trading connection needs setup"))
-        detail = str(experience.get("detail", "The secure trading service is still being configured."))
+        detail = str(
+            experience.get("detail", "The secure trading service is still being configured.")
+        )
     else:
         state = "UNAVAILABLE"
         headline = "Trading service unavailable"
