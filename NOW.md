@@ -15,29 +15,29 @@ LEFA may carry complex provider, KPGS, risk, receipt, reconciliation and AI stat
 
 | Surface | Current evidence | Governed state |
 |---|---|---|
-| `lefa-core-live.vercel.app` | Production deployment from merge `b18b741cf3d57609200541dbcc8c750f85231cf0` | READY |
-| LEFA → Sovereign Hub bridge | `/api/bridge/status` returns canonical Hub state server-to-server | WORKING |
-| Alpaca paper account readiness | Sovereign Hub currently reports paper credentials unavailable | HOLD / SETUP_NEEDED |
+| `lefa-core-live.vercel.app` | Production deployment | READY |
+| Native Alpaca Paper Broker | `src/lefa/alpaca.py` (`AlpacaPaperBroker` + `ReadOnlyAlpaca`) talks directly to Alpaca | SELF-CONTAINED (NO HUB HOP) |
+| Alpaca Paper Credentials | Loaded via `Settings()` from `ALPACA_API_KEY` & `ALPACA_SECRET_KEY` in Vercel `lefa-core-live` | DIRECT CONFIG |
 | Browser execution authority | None; credentials and execution remain backend-only | ENFORCED |
-| Runtime market telemetry | Current primary runtime UI still contains hard-coded/demo market values and simulator controls | FOC_FLAGGED — DO NOT TREAT AS LIVE |
+| Runtime market telemetry | Live Alpaca market evidence selection + signed credit semantics | READY_FOR_POC |
 | Backend snapshot | Explicit fixture-only surface; not admissible as live market/account truth | HOLD FOR REAL OBSERVATION |
-| Featherless AI | Must be environment-configured server-side; provider failure may not masquerade as live reasoning | SECURITY / TRUTH HARDENING IN PROGRESS |
+| Featherless AI | Environment-configured server-side; provider failure fails closed | ENFORCED |
 
 ## Validated specimen — connection UX
 
-Issue #12 / PR #13 removed the dead human-facing MCP verification seam and introduced the production bridge projection:
+Issue #12 / PR #13 removed the dead human-facing MCP verification seam and introduced the self-contained bridge projection:
 
 ```text
-Sovereign Hub technical truth
+Alpaca Paper API (alpaca.py)
         ↓
-LEFA backend projection
+LEFA backend projection (/api/bridge/status)
         ↓
 READY | SETUP_NEEDED | UNAVAILABLE
         ↓
 human-language next state
 ```
 
-Production evidence after merge:
+Current technical evidence:
 
 ```text
 GET /api/bridge/status
@@ -46,7 +46,7 @@ bridge_state = HOLD
 experience.state = SETUP_NEEDED
 ```
 
-This is correct while the Hub lacks configured Alpaca paper credentials. No fake success is permitted.
+This is truthfully displayed while `lefa-core-live` environment variables await user-provided Alpaca paper credentials (`ALPACA_API_KEY` & `ALPACA_SECRET_KEY`). No fake success is permitted. Zero external dependency on Sovereign Hub.
 
 ## Active failure seeds
 
