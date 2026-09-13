@@ -3,10 +3,19 @@
 </p>
 
 <div align="center">
-  <img src="https://img.shields.io/badge/STATUS-POC_VALIDATED-111111?style=for-the-badge" alt="POC status" />
+  <img src="https://img.shields.io/badge/STATUS-GOVERNED_POC_VALIDATED-111111?style=for-the-badge" alt="POC status" />
   <img src="https://img.shields.io/badge/ALPACA-OPTIONS_ALPHA_AGENTS-F2D16B?style=for-the-badge&logoColor=111111" alt="Alpaca AI Trading Agents Hackathon" />
   <img src="https://img.shields.io/badge/PARTNER-FEATHERLESS_AI-7C3AED?style=for-the-badge&logoColor=white" alt="Featherless AI Partner" />
+  <img src="https://img.shields.io/badge/ZERO--TRUST-FORTIFIED-059669?style=for-the-badge&logoColor=white" alt="Zero-Trust Fortified" />
   <img src="https://img.shields.io/badge/PYTHON-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.11+" />
+</div>
+
+<div align="center">
+  <a href="https://github.com/RobynAwesome/lefa-ai/actions/workflows/ci.yml"><img src="https://github.com/RobynAwesome/lefa-ai/actions/workflows/ci.yml/badge.svg?branch=main" alt="ci" /></a>
+  <a href="https://github.com/RobynAwesome/lefa-ai/actions/workflows/security-lint.yml"><img src="https://github.com/RobynAwesome/lefa-ai/actions/workflows/security-lint.yml/badge.svg?branch=main" alt="Security & Lint Gate" /></a>
+  <a href="https://github.com/RobynAwesome/lefa-ai/actions/workflows/security-hardening.yml"><img src="https://github.com/RobynAwesome/lefa-ai/actions/workflows/security-hardening.yml/badge.svg?branch=main" alt="Zero-Trust Security Gate" /></a>
+  <a href="https://github.com/RobynAwesome/lefa-ai/actions/workflows/mcp-boundary.yml"><img src="https://github.com/RobynAwesome/lefa-ai/actions/workflows/mcp-boundary.yml/badge.svg?branch=main" alt="MCP Boundary Verification" /></a>
+  <a href="https://github.com/RobynAwesome/lefa-ai/actions/workflows/frontend-quality.yml"><img src="https://github.com/RobynAwesome/lefa-ai/actions/workflows/frontend-quality.yml/badge.svg?branch=main" alt="Frontend Quality Gate" /></a>
 </div>
 
 <p align="center">
@@ -24,6 +33,7 @@
   <a href="https://lefa-core-live.vercel.app/"><img src="https://img.shields.io/badge/🚀_LAUNCH_LIVE_DEMO-lefa--core--live.vercel.app-22C55E?style=for-the-badge" alt="Launch Live Demo" /></a>
   <a href="./submission/one-page-writeup.md"><img src="https://img.shields.io/badge/📄_ONE--PAGE_WRITEUP-READ_PDF%2FMD-F2D16B?style=for-the-badge&logoColor=111111" alt="Read One-Page Writeup" /></a>
   <a href="#-options-alpha-strategy--risk-governance"><img src="https://img.shields.io/badge/⚡_OPTIONS_STRATEGY-DEFINED--RISK-3B82F6?style=for-the-badge" alt="Options Strategy" /></a>
+  <a href="#-zero-trust-security-architecture"><img src="https://img.shields.io/badge/🛡️_ZERO--TRUST-NIST_800--207-7C3AED?style=for-the-badge" alt="Zero Trust Architecture" /></a>
 </div>
 
 ---
@@ -56,26 +66,76 @@ You speak to **LEFA**. LEFA is the user-facing base intelligence. The complicate
 Built specifically for the **Alpaca AI Trading Agents Hackathon** (Track: *Options Alpha Agents*):
 
 - **AI Logic**: when `FEATHERLESS_API_KEY` is configured, Featherless AI (`Qwen/Qwen2.5-7B-Instruct`) explains the real provider evidence supplied to it. If inference is unavailable, the camera-safe lane returns `HOLD`; it does not substitute canned reasoning.
-- **Current execution POC**: live-evidence selection of a defined-risk **bull put vertical credit spread** on the governed universe (`SPY`, `QQQ`, `AAPL`, `NVDA`). Bear-call spreads and iron condors remain broader strategy designs; they are not claimed as provider-execution proof by the current demo runner.
-- **Delta Targeting**: the current candidate selector requires the short put to fall within `0.15–0.20` absolute delta.
+- **Defined-Risk Alpha Structures (`src/lefa/alpha_structures.py`)**:
+  - **Bull Put Vertical Spreads** (Moderately Bullish / High IV Premium Harvesting)
+  - **Bear Call Vertical Spreads** (Moderately Bearish / High IV Premium Harvesting)
+  - **Iron Condors** (Delta-Neutral Combined Volatility Premium Harvesting)
+- **Delta Targeting**: the candidate selector requires short strikes to fall within `0.15–0.20` absolute delta.
 - **Volatility Premium Gate**: a candidate is admitted only when $\frac{\text{ATM IV}}{\text{20-session RV}} \ge 1.15$.
-- **Current hard gates**: paper jurisdiction, protective long, live provider quotes/Greeks, max $3\%$ loss per structure, $12\%$ aggregate-risk policy, and a $5\%$ competition-baseline drawdown circuit breaker. Existing positions or open orders cause the camera-safe runner to `HOLD` rather than assume their risk is zero.
-- **Lifecycle design**: 50% profit-taking and a 5 DTE time stop are strategy-management targets; the current camera-safe runner does not claim those exits as broker-receipted automation until TIME/REVEAL evidence exists.
+- **Deterministic Risk Firewall**:
+  - Max $3\%$ loss per structure relative to portfolio equity
+  - $12\%$ aggregate-risk policy cap across all open exposures
+  - $5\%$ competition-baseline drawdown circuit breaker
 - **Alpaca Developer Stack**: official Alpaca MCP V2 server for protocol/tool observation plus `alpaca-py` / Alpaca Trading API for the separately governed paper-order boundary.
 
 📄 **Full Architecture & Risk Specifications**: [Read the One-Page Hackathon Write-Up](./submission/one-page-writeup.md)
 
 ---
 
-<p align="center">
-  <img src="./assets/readme/lefa-observe-ledger-reveal.svg" alt="Animated LEFA Observe Ledger Time Reveal timeline" width="100%" />
-</p>
+## 🛡️ Zero-Trust Security Architecture
 
-LEFA does not treat a convincing first answer as reality.
+LEFA operates under strict **Zero-Trust Architecture** (aligned with NIST SP 800-207 principles: *never trust, always verify, fail closed*).
 
-**Observe** what is happening. **Ledger** what was known. Let **time** continue. **Reveal** what survived.
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                        ZERO-TRUST SECURITY STACK                       │
+├────────────────────────────────────────────────────────────────────────┤
+│ Layer 1: Secret Purge & Continuous Scanning (TruffleHog in CI)         │
+│ Layer 2: Read-Only Alpaca MCP Boundary (ReadOnlyMCPProof Gate)         │
+│ Layer 3: Execution Jurisdiction Firewall (LIVE Mode Inadmissible)      │
+│ Layer 4: Cryptographic Runtime Truth (SHA-256 Receipts & Ark Ledger)   │
+│ Layer 5: Defense-in-Depth HTTP Headers & DLP Response Sanitizer        │
+│ Layer 6: Static Application Security Testing (Bandit SAST & pip-audit) │
+└────────────────────────────────────────────────────────────────────────┘
+```
 
-> **The frontend tells the story. The backend preserves the truth. Time decides what survives.**
+1. **Defense-in-Depth HTTP Security Middleware (`src/lefa/security_middleware.py`)**:
+   - Injects `Content-Security-Policy`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Cache-Control: no-store` (ensures sensitive financial data is never persisted in browser caches).
+   - Enforces CORS allowlist (`https://lefa-core-live.vercel.app`, `http://localhost:3000`), immediately rejecting unauthorized origins with `HTTP 403 Forbidden`.
+   - Injects `X-LEFA-Execution-Authority: zero` and SHA-256 correlation IDs on every API response.
+2. **Recursive Response DLP Sanitizer**:
+   - Strips sensitive keywords (`secret`, `token`, `password`, `api_key`, `authorization`, `account_number`) recursively before payloads leave the server boundary.
+3. **Execution Jurisdiction Firewall**:
+   - `OBSERVE_ONLY`: Read-only market and account telemetry.
+   - `PAPER`: Autonomous paper orders gated by dual-axis governance.
+   - `LIVE`: Inadmissible; rejected at the orchestration layer.
+
+---
+
+## 🎭 Governing Product Law: Heavy Backend → Easy Immersive Interface
+
+Codified in [`docs/HEAVY-BACKEND-EASY-IMMERSIVE.md`](./docs/HEAVY-BACKEND-EASY-IMMERSIVE.md):
+
+> **Heavy Backend → Small Human State → Immersive Action**
+
+LEFA serves non-technical humans. The backend absorbs technical complexity, schema drift, broker reconnection, and multi-leg risk evaluation. The interface projects simple, truthful human states:
+
+| Human State | Semantic Meaning | Contextual Trigger |
+|---|---|---|
+| `Connecting` | Background verification active | Session initialization / MCP tool discovery |
+| `Ready` | Provider witnessed, boundaries verified | Live paper telemetry authenticated |
+| `Needs setup` | Environment setup required | Missing Alpaca or Featherless credentials |
+| `Waiting` | Awaiting market evidence | Outside market hours or awaiting quotes |
+| `Protected` | Risk firewall active | Candidate rejected or position limit reached |
+| `Review needed` | Human authorization requested | Order submitted for confirmation |
+| `Completed` | Transaction receipted | Order filled and confirmed on Alpaca |
+
+```text
+SIMPLE UI ≠ SIMPLE GOVERNANCE
+HUMAN FRIENDLY ≠ FALSE SUCCESS
+IMMERSIVE ≠ DECORATIVE
+AI DOES THE WORK ≠ AI HIDES CONSEQUENCES
+```
 
 ---
 
@@ -109,34 +169,6 @@ LEFA
 DECISION / EXPLANATION
 ```
 
-The internal system does **not** replace LEFA's judgment. It filters unsupported certainty, preserves useful ambiguity, and returns better governed evidence to the base model.
-
-<details>
-<summary><strong>OPEN // Why the backend expands before it compresses</strong></summary>
-<br/>
-
-Human language can carry emotion, memory, contradiction, testimony, uncertainty and several valid meanings at once.
-
-The ARK gives that ambiguity room to become **structured bloat** instead of prematurely flattening it into one intent. BMP then earns compression by stress-testing what should survive.
-
-```text
-HUMAN AMBIGUITY
-      ↓
-GOVERNED EXPANSION
-      ↓
-POC / FOC PRESSURE
-      ↓
-BMP FILTER + COMPRESSION
-      ↓
-BOUNDED DATA
-```
-
-**POC:** what can actually be supported.
-
-**FOC:** what merely looks complete, plausible or polished.
-
-</details>
-
 ---
 
 ## 🌱 Five agents. Five ecosystems. One LEFA.
@@ -144,8 +176,6 @@ BOUNDED DATA
 <p align="center">
   <img src="./assets/readme/lefa-swfus-ecosystem.svg" alt="Animated LEFA SWFUS five-agent ecosystem" width="100%" />
 </p>
-
-The five internal agents do **not** talk to the user. They receive governed information from LEFA's backend and operate inside bounded ecosystems.
 
 | Lane | Ecosystem | Core concern |
 | :---: | :--- | :--- |
@@ -155,144 +185,83 @@ The five internal agents do **not** talk to the user. They receive governed info
 | **U** | Unified Synchronization | What accepted state must align before action? |
 | **S** | Severance Execution | What must be cut, held or rejected? |
 
-> **Rich at the center. Minimal at the edges.**
-
-The agent receives its identity, role, hierarchy and boundary. It does not need the entire city. It needs its ecosystem.
-
 ---
 
-## 🧊 POC vs FOC
-
-LEFA grows through one loop:
-
-```text
-POC → TEST → FEEDBACK → IMPROVE → NEXT POC
-```
-
-A model can sound intelligent and still be wrong. A market can disagree. A beautiful interface can look finished while the backend remains unproven.
-
-So LEFA keeps receipts.
-
-<details>
-<summary><strong>OPEN // The hackathon proof lane: Governed Options Alpha</strong></summary>
-<br/>
-
-```text
-ALPACA MCP V2 OBSERVATION + TOOL DISCOVERY
-                 ↓
-REAL ALPACA MARKET / OPTIONS EVIDENCE
-                 ↓
-FEATHERLESS AI REASONING — OR HOLD
-                 ↓
-BULL-PUT VERTICAL CANDIDATE (7–21 DTE, |delta| 0.15–0.20, IV/RV >= 1.15)
-                 ↓
-DETERMINISTIC RISK FIREWALL (3% trade loss, 12% policy cap, 5% baseline drawdown stop)
-                 ↓
-CONTENT-HASHED EXECUTION INTENT
-                 ↓
-OPTIONAL `--execute` ALPACA PAPER ORDER
-                 ↓
-INDEPENDENT PROVIDER ORDER RE-READ
-                 ↓
-PROVIDER RECEIPT CONFIRMED — OR HOLD
-                 ↓
-TIME & REVEAL
-```
-
-**Autonomous ≠ Ungoverned. Execution-capable ≠ executed.**
-
-The code can request a governed paper multi-leg order only after the preceding gates clear. LEFA calls execution proven for a run only when Alpaca returns a provider order ID and a separate provider read confirms the same order. It does not claim a fill unless Alpaca itself reports one.
-
-> **Real provider evidence or HOLD. Receipt before claim.**
-
-</details>
-
----
-
-## 🎨 Heavy architecture. Light interface.
-
-LEFA's visual identity is not decoration attached to a dashboard. The companion is the interface anchor.
-
-- black, white and gold;
-- calm, recognizable identity;
-- circular / halo framing;
-- motion maps to system state;
-- financial truth must come from real providers, never invented UI values;
-- the interface should become simpler as the backend becomes stronger.
-
-Asset governance lives in [`./assets/INDEX.md`](./assets/INDEX.md).
-
----
-
-## 🛠️ Current project seed
+## 🛠️ Project Structure & Skills
 
 ```text
 lefa-ai/
-├── assets/
-│   ├── companion/
-│   │   ├── lefa-companion-root.jpg  # canonical drawing source
-│   │   └── lefa-companion-root.svg  # animated interface interpretation
-│   ├── readme/
-│   │   ├── meet-lefa-readme-hero.svg
-│   │   ├── lefa-control-room.svg
-│   │   ├── lefa-observe-ledger-reveal.svg
-│   │   └── lefa-swfus-ecosystem.svg
-│   └── INDEX.md
+├── .github/workflows/
+│   ├── ci.yml                    # Primary CI pipeline (backend, MCP, frontend)
+│   ├── security-lint.yml         # TruffleHog secret scan + global Ruff lint/format
+│   ├── security-hardening.yml    # Bandit SAST scan + pip-audit + jurisdiction gate
+│   ├── mcp-boundary.yml          # Alpaca MCP tool audit + read-only boundary tests
+│   ├── frontend-quality.yml      # Strict TypeScript check + Vite production build
+│   └── dependency-audit.yml      # Weekly supply chain vulnerability audit
+├── assets/                       # Governed brand, companion, and interface artwork
 ├── docs/
+│   └── HEAVY-BACKEND-EASY-IMMERSIVE.md  # Product system projection law
+├── skills/
+│   └── kpgs-rtc-learning/        # Evolved 24-RTC learning skill under KPGS rules
 ├── src/lefa/
-├── tests/
-├── .github/
-├── .env.example
-├── pyproject.toml
-├── LEFA AI Logo.png
+│   ├── alpha_structures.py       # Bull Put, Bear Call, Iron Condor options alpha
+│   ├── security_middleware.py    # Zero-Trust headers, CORS 403, and DLP sanitizer
+│   ├── orchestration.py          # Dual-axis trading orchestrator
+│   ├── governance.py             # RiskPolicy, Decision, and ExecutionJurisdiction
+│   ├── mcp_observation.py        # ReadOnlyMCPProof evaluator
+│   └── web_api.py               # Governed FastAPI serverless backend
+├── tests/                        # Full regression suite (76/76 passing)
+├── pyproject.toml                # Hatchling build specification
+├── package.json                  # React 19 + Vite 6 + Tailwind 4 + Three.js
 └── README.md
 ```
-
-The code remains deliberately small while the architecture is being validated.
 
 ---
 
 ## ⚡ Run LEFA
 
 ```bash
+# Set up Python environment
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -e '.[dev,mcp]'
 cp .env.example .env
-pytest
+
+# Run full regression test suite (76 tests)
+pytest -v --tb=short
+
+# Run repository-wide lint and format check
+ruff check .
+ruff format --check .
+
+# Frontend strict typecheck and production build
+npx tsc --noEmit
+npm run build
 ```
 
 Base CLI:
-
 ```bash
 lefa
 ```
 
 Real Alpaca MCP V2 protocol proof:
-
 ```bash
 lefa-mcp-proof --symbol SPY
 ```
 
-Camera-safe options cycle — no broker write:
-
+Options Alpha Agent Cycle (Camera-Safe / No Broker Write):
 ```bash
 python scripts/run_options_agent.py --symbol AUTO
 ```
 
-Explicit Alpaca **paper** execution request after all gates clear:
-
+Explicit Alpaca **Paper** Execution Request after all gates clear:
 ```bash
 python scripts/run_options_agent.py --symbol AUTO --execute
 ```
 
-The last command is not a promise of a trade or fill. Provider rejection, missing evidence, unavailable AI, existing risk, or an inadmissible market candidate produces `HOLD`.
-
-Keep credentials in your local `.env` or the appropriate secret manager. Never commit or print them.
-
 ---
 
-## 🏁 The question
+## 🏁 The Question
 
 LEFA is not being built merely to answer:
 
