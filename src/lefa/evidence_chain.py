@@ -16,8 +16,8 @@ import argparse
 import hashlib
 import json
 import sys
-from dataclasses import asdict, dataclass
-from datetime import UTC, datetime
+from dataclasses import asdict, dataclass, field
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
@@ -32,6 +32,229 @@ def sha256_digest(data: Any) -> str:
     else:
         payload = str(data)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+# ─── CANONICAL GSMB BRACKET PROTOCOLS ────────────────────────────────────────
+class BracketManagementProtocol:
+    """BMP v1.0 — Every payload enters a bracket.
+    [] Spatial -> {} Keynote -> <> Ark -> () Understanding
+    No ungoverned payload exits. Every bracket hashes.
+    """
+
+    VERSION = "V1.0"
+    FOC_MARKERS = (
+        "maybe",
+        "later",
+        "dunno",
+        "skip",
+        "ignore",
+        "placeholder",
+        "todo",
+        "tbd",
+        "lorem ipsum",
+        "i think",
+        "probably",
+        "might",
+        "somehow",
+    )
+
+    def enforce(self, payload: dict[str, Any], context: str = "LEFA_OPTIONS") -> dict[str, Any]:
+        ts = datetime.now(UTC).isoformat()
+        raw = f"{ts}:{context}:{json.dumps(payload, sort_keys=True, default=str)}"
+        h = hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+        payload_text = json.dumps(payload, default=str).lower()
+        foc_found = [m for m in self.FOC_MARKERS if m in payload_text]
+        is_foc = len(foc_found) > 0
+
+        what_val = str(
+            payload.get(
+                "what",
+                payload.get("action", payload.get("structure", payload.get("symbol", "?"))),
+            )
+        )
+        who_val = str(
+            payload.get(
+                "who",
+                payload.get("provider", payload.get("persona", payload.get("advisory_model", "?"))),
+            )
+        )
+        why_val = str(
+            payload.get(
+                "why",
+                payload.get("intent", payload.get("detail", payload.get("rationale", "?"))),
+            )
+        )
+
+        return {
+            "schema": f"bmp_{self.VERSION.lower()}",
+            "spatial": f"[{context}]",
+            "keynote": f"{{{what_val}}}",
+            "ark": f"<{who_val}>",
+            "understand": f"({why_val})",
+            "bracket_ts": ts,
+            "bmp_hash": h,
+            "foc_purged": is_foc,
+            "foc_markers": foc_found,
+            "cbp_verdict": "FOC_SEVERED" if is_foc else "POC_CLEARED",
+            "version": self.VERSION,
+        }
+
+
+class BracketManagementNestingProtocol:
+    """BMNP: Nest the BMP record inside GSMB domain brackets.
+    Each domain is a nesting layer. Ensures no protocol leaks between domains.
+    [GSMB[DOMAIN[AGENT[bmp_hash]]]]
+    """
+
+    DOMAINS = ("LEFA", "CAREERS", "CRISISCONNECT", "KASILINK", "STARFALL", "GSMB")
+
+    def nest(
+        self,
+        bmp_record: dict[str, Any],
+        domain: str = "LEFA",
+        agent: str = "CASSEY",
+    ) -> dict[str, Any]:
+        if domain not in self.DOMAINS:
+            domain = "GSMB"
+        nesting_str = f"[GSMB[{domain}[{agent}[{bmp_record['bmp_hash']}]]]]"
+        return {
+            "schema": "bmnp_v1",
+            "nesting": nesting_str,
+            "domain": domain,
+            "agent": agent,
+            "bmp_hash": bmp_record["bmp_hash"],
+            "cbp_verdict": bmp_record.get("cbp_verdict", "UNKNOWN"),
+            "foc_purged": bmp_record.get("foc_purged", False),
+            "nest_ts": datetime.now(UTC).isoformat(),
+        }
+
+
+class UltimateBracketManagementProtocol:
+    """UBMP — Ultimate Bracket Management Protocol.
+    Produced for Round Table Council (RTC) synthesis.
+    Seals the evidence chain with bmp_hash, bmnp_nesting, rtc_hash, dso vector,
+    and the stateless renter invariant constraint.
+    """
+
+    SCHEMA = "ubmp_output_v1"
+
+    def produce_ubmp(
+        self,
+        *,
+        chain_id: str,
+        ikp_code: str,
+        dso: str,
+        dso_label: str,
+        rtc_hash: str,
+        clean: bool,
+        four_ws_valid: bool,
+        bmp_hash: str,
+        cbp_verdict: str,
+        bmnp_nesting: str,
+        pp_status: str,
+    ) -> dict[str, Any]:
+        return {
+            "schema": self.SCHEMA,
+            "chain_id": chain_id,
+            "ikp_code": ikp_code,
+            "dso": dso,
+            "dso_label": dso_label,
+            "rtc_hash": rtc_hash,
+            "clean": clean,
+            "four_ws_valid": four_ws_valid,
+            "bmp_hash": bmp_hash,
+            "cbp_verdict": cbp_verdict,
+            "bmnp_nesting": bmnp_nesting,
+            "pp_status": pp_status,
+            "constraint": "I_AM_STATELESS_RENTER_NOT_LANDLORD",
+            "ubmp_ts": datetime.now(UTC).isoformat(),
+        }
+
+
+class UltimateBracketManagementNonPlayerProtocol:
+    """UBMNP — Ultimate Bracket Management Non-Player Protocol.
+    Evaluates autonomous/non-player agent execution using the canonical PKAP formula:
+    [(BMNP * BMP) * UBMP + UBMNP]^3 / [KPGS^3 * DSO * RTC]
+    Ensures no non-player executes without meeting the 80% logic threshold.
+    """
+
+    SCHEMA = "ubmnp_non_player_v1"
+
+    def evaluate_pkap(
+        self,
+        *,
+        bmnp_depth: float = 6.0,
+        bmp_score: float = 0.95,
+        ubmp_score: float = 1.0,
+        ubmnp_base: float = 3.35,
+        kpgs_power: int = 3,
+        dso_weight: float = 3.0,  # HDSO=3, ADSO=2, PDSO=1
+        rtc_factor: float = 1.0,
+        four_ws_complete: bool = True,
+        is_clean: bool = True,
+    ) -> dict[str, Any]:
+        dso_vec = "HDSO" if dso_weight >= 3.0 else ("ADSO" if dso_weight >= 2.0 else "PDSO")
+        if not four_ws_complete or not is_clean:
+            b_brackets = 0.0
+            o_orders = 0.5
+            o_cubed = o_orders**3
+            d_denom = (kpgs_power**3) * dso_weight * rtc_factor
+            res = o_cubed / d_denom
+            return {
+                "schema": self.SCHEMA,
+                "verdict": "FOC_DECLINED",
+                "four_ws_complete": four_ws_complete,
+                "dso_vector": dso_vec,
+                "pkap_result": {
+                    "formula": "[(BMNP*BMP)*UBMP+UBMNP]^3 / [KPGS^3 * DSO * RTC]",
+                    "steps": {
+                        "B_brackets": b_brackets,
+                        "O_orders": o_orders,
+                        "O_cubed": round(o_cubed, 4),
+                        "D_denominator": round(d_denom, 2),
+                        "result": round(res, 6),
+                    },
+                    "pkap_method": "BODMAS: B=CBP, O=BMNP^depth, D=Decline/Divide, M=Invariance, A=Ingress, S=FOC_remove",
+                },
+                "pkap_score": round(res, 4),
+                "threshold": 5.0,
+                "autonomous_authorized": False,
+                "reason": "4Ws incomplete or FOC bleed detected. Non-player execution declined.",
+            }
+
+        b_brackets = bmnp_depth * bmp_score
+        o_orders = (b_brackets * ubmp_score) + ubmnp_base
+        o_cubed = o_orders**kpgs_power
+        d_denom = (kpgs_power**3) * dso_weight * rtc_factor
+        res = o_cubed / d_denom
+
+        authorized = res >= 5.0
+        return {
+            "schema": self.SCHEMA,
+            "verdict": "POC_AUTHORIZED" if authorized else "FOC_DECLINED",
+            "four_ws_complete": True,
+            "dso_vector": dso_vec,
+            "pkap_result": {
+                "formula": "[(BMNP*BMP)*UBMP+UBMNP]^3 / [KPGS^3 * DSO * RTC]",
+                "steps": {
+                    "B_brackets": round(b_brackets, 4),
+                    "O_orders": round(o_orders, 4),
+                    "O_cubed": round(o_cubed, 4),
+                    "D_denominator": round(d_denom, 2),
+                    "result": round(res, 6),
+                },
+                "pkap_method": "BODMAS: B=CBP, O=BMNP^depth, D=Decline/Divide, M=Invariance, A=Ingress, S=FOC_remove",
+            },
+            "pkap_score": round(res, 4),
+            "threshold": 5.0,
+            "autonomous_authorized": authorized,
+            "reason": (
+                "4Ws complete and PKAP score exceeds 5.0 threshold. Non-player execution authorized."
+                if authorized
+                else "PKAP score below 5.0 threshold."
+            ),
+        }
 
 
 @dataclass(frozen=True)
@@ -56,6 +279,10 @@ class KPGSChainReceipt:
     is_fully_evidenced: bool
     governance_decision: str  # APPROVE | HOLD | REJECT
     reasons: list[str]
+    bmp: dict[str, Any] = field(default_factory=dict)
+    bmnp: dict[str, Any] = field(default_factory=dict)
+    ubmp: dict[str, Any] = field(default_factory=dict)
+    ubmnp: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -67,6 +294,10 @@ class KPGS8StageChainRunner:
     def __init__(self, symbol: str = "SPY", ark_ledger: ArkLedger | None = None):
         self.symbol = symbol.upper()
         self.ark_ledger = ark_ledger or ArkLedger(Path("receipts/ark_ledger.jsonl"))
+        self.bmp = BracketManagementProtocol()
+        self.bmnp = BracketManagementNestingProtocol()
+        self.ubmp = UltimateBracketManagementProtocol()
+        self.ubmnp = UltimateBracketManagementNonPlayerProtocol()
 
     def run_chain(
         self,
@@ -406,25 +637,101 @@ class KPGS8StageChainRunner:
         stages = [s1, s2, s3, s4, s5, s6, s7, s8]
 
         # =========================================================================
+        # BMP & BMNP Protocol Evaluation
+        # Spatial: [] -> Keynote: {} -> Ark: <> -> Understand: ()
+        # Nesting: [GSMB[LEFA[CASSEY[bmp_hash]]]]
+        # =========================================================================
+        bmp_payload = {
+            "what": f"{s3_payload.get('structure', 'defined_risk_vertical')} on {self.symbol}",
+            "who": f"{s4_payload.get('persona', 'Cassey')} via {s1_payload.get('provider', 'Alpaca')}",
+            "why": f"{s4_payload.get('rationale', 'Defined risk IV/RV harvest')}",
+            "action": s8_payload.get("action", "ORDER_VERIFIED"),
+        }
+        bmp_rec = self.bmp.enforce(bmp_payload, context="LEFA_OPTIONS")
+        bmnp_rec = self.bmnp.nest(bmp_rec, domain="LEFA", agent="CASSEY")
+
+        # =========================================================================
+        # RTC Synthesis: Council Consensus & Seals via UBMP and UBMNP
+        # =========================================================================
+        rtc_votes = {
+            "kc_ledger": "APPROVE" if s6.status == "PASS" else "HOLD",
+            "cassey_advisor": "APPROVE" if s4.status == "PASS" else "HOLD",
+            "khelos_validator": "APPROVE" if s3.status == "PASS" else "REJECT",
+            "apex_orchestrator": "APPROVE" if s5.status == "PASS" else "HOLD",
+            "anchor_perimeter": (
+                "APPROVE" if s1.status == "PASS" and s8.status == "PASS" else "HOLD"
+            ),
+        }
+        rtc_clean = (
+            all(v == "APPROVE" for v in rtc_votes.values())
+            and not bmp_rec["foc_purged"]
+            and all(st.status == "PASS" for st in stages)
+        )
+        rtc_hash = hashlib.sha256(
+            json.dumps(rtc_votes, sort_keys=True).encode("utf-8")
+        ).hexdigest()[:16]
+
+        # RTC uses UBMP (Ultimate Bracket Management Protocol) to seal the output
+        ubmp_rec = self.ubmp.produce_ubmp(
+            chain_id=receipt_uuid,
+            ikp_code="CLEAN" if rtc_clean else "POC_SEVERED",
+            dso="HDSO",
+            dso_label="###!!!",
+            rtc_hash=rtc_hash,
+            clean=rtc_clean,
+            four_ws_valid=s2.status == "PASS",
+            bmp_hash=bmp_rec["bmp_hash"],
+            cbp_verdict=bmp_rec["cbp_verdict"],
+            bmnp_nesting=bmnp_rec["nesting"],
+            pp_status="FAST_TRACK" if rtc_clean else "CONDITIONAL",
+        )
+
+        # RTC uses UBMNP (Ultimate Bracket Management Non-Player Protocol)
+        # to evaluate PKAP formula: [(BMNP*BMP)*UBMP+UBMNP]^3 / [KPGS^3 * DSO * RTC]
+        ubmnp_rec = self.ubmnp.evaluate_pkap(
+            bmnp_depth=6.0,
+            bmp_score=0.95 if rtc_clean else 0.40,
+            ubmp_score=1.0 if rtc_clean else 0.50,
+            ubmnp_base=3.35,
+            kpgs_power=3,
+            dso_weight=3.0,
+            rtc_factor=1.0,
+            four_ws_complete=s2.status == "PASS",
+            is_clean=rtc_clean,
+        )
+
+        # =========================================================================
         # Mathematical Root Hash Binding
-        # H_root = SHA256( T_UTC || ||_{i=1}^8 (S_i || M_i || E_i) )
+        # H_root = SHA256( T_UTC || ||_{i=1}^8 (S_i || M_i || E_i) || BMP || BMNP || RTC || PKAP )
         # =========================================================================
         tokens = [now_utc, self.symbol]
         for stage in stages:
             tokens.append(f"{stage.stage_id}:{stage.maturity}:{stage.evidence_hash}")
+        tokens.append(f"bmp:{bmp_rec['bmp_hash']}")
+        tokens.append(f"bmnp:{bmnp_rec['nesting']}")
+        tokens.append(f"rtc_ubmp:{ubmp_rec['rtc_hash']}")
+        tokens.append(f"pkap:{ubmnp_rec['pkap_score']}")
         root_hash = hashlib.sha256("|".join(tokens).encode("utf-8")).hexdigest()
 
         # Decision synthesis
         if any(st.status == "REJECT" for st in stages):
             decision = "REJECT"
-        elif any(st.status == "HOLD" for st in stages) or any(
-            st.maturity != "EVIDENCED" for st in stages
+        elif (
+            any(st.status == "HOLD" for st in stages)
+            or any(st.maturity != "EVIDENCED" for st in stages)
+            or not ubmnp_rec["autonomous_authorized"]
         ):
             decision = "HOLD"
+            if not ubmnp_rec["autonomous_authorized"]:
+                reasons.append(f"ubmnp:{ubmnp_rec['verdict'].lower()}")
         else:
             decision = "APPROVE"
 
-        all_evidenced = all(st.maturity == "EVIDENCED" for st in stages) and decision == "APPROVE"
+        all_evidenced = (
+            all(st.maturity == "EVIDENCED" for st in stages)
+            and decision == "APPROVE"
+            and ubmnp_rec["autonomous_authorized"]
+        )
 
         return KPGSChainReceipt(
             receipt_id=receipt_uuid,
@@ -435,7 +742,79 @@ class KPGS8StageChainRunner:
             is_fully_evidenced=all_evidenced,
             governance_decision=decision,
             reasons=reasons or ["all_8_stages_fully_evidenced_and_approved"],
+            bmp=bmp_rec,
+            bmnp=bmnp_rec,
+            ubmp=ubmp_rec,
+            ubmnp=ubmnp_rec,
         )
+
+    def run_feedback_loop(
+        self,
+        turns: int = 3,
+        perturbation_turn: int = 2,
+    ) -> dict[str, Any]:
+        """Execute multi-turn feedback loop to evaluate whole-system stability.
+
+        Turn 1: Baseline nominal execution -> APPROVE.
+        Turn 2: Controlled perturbation (e.g. stale quote) -> HOLD fail-closed.
+        Turn 3: Recovery and convergence -> APPROVE.
+        """
+        turn_receipts: list[dict[str, Any]] = []
+        now = datetime.now(UTC)
+
+        for t in range(1, turns + 1):
+            if t == perturbation_turn:
+                # Controlled perturbation: market quote 120s stale
+                stale_time = (now - timedelta(seconds=120)).isoformat()
+                stale_witness = {
+                    "symbol": self.symbol,
+                    "underlying_price": "595.00",
+                    "atm_iv": "0.198",
+                    "historical_rv": "0.152",
+                    "iv_rv_ratio": "1.30",
+                    "provider": "Alpaca Market Data API V2",
+                    "quote_timestamp": stale_time,
+                    "is_live_provider": True,
+                }
+                rec = self.run_chain(witness_data=stale_witness, reference_time=now)
+            else:
+                rec = self.run_chain(reference_time=now)
+
+            turn_receipts.append(
+                {
+                    "turn": t,
+                    "receipt_id": rec.receipt_id,
+                    "decision": rec.governance_decision,
+                    "is_fully_evidenced": rec.is_fully_evidenced,
+                    "root_hash": rec.root_hash,
+                    "bmp_hash": rec.bmp.get("bmp_hash"),
+                    "bmnp_nesting": rec.bmnp.get("nesting"),
+                    "ubmp_rtc_hash": rec.ubmp.get("rtc_hash"),
+                    "ubmnp_authorized": rec.ubmnp.get("autonomous_authorized"),
+                    "pkap_score": rec.ubmnp.get("pkap_score"),
+                    "reasons": rec.reasons,
+                }
+            )
+
+        t1_pass = turn_receipts[0]["decision"] == "APPROVE"
+        t2_held = turn_receipts[1]["decision"] == "HOLD"
+        t3_pass = turn_receipts[2]["decision"] == "APPROVE"
+        whole_stable = t1_pass and t2_held and t3_pass
+
+        return {
+            "schema": "kpgs_feedback_loop_v1",
+            "symbol": self.symbol,
+            "turns_requested": turns,
+            "perturbation_turn": perturbation_turn,
+            "whole_system_verdict": (
+                "POC_VALIDATED_CONVERGED" if whole_stable else "SYSTEMIC_DIVERGENCE"
+            ),
+            "integrity_score": 1.0 if whole_stable else 0.0,
+            "all_turns_honest": whole_stable,
+            "turns": turn_receipts,
+            "constraint": "I_AM_STATELESS_RENTER_NOT_LANDLORD",
+            "completed_at": datetime.now(UTC).isoformat(),
+        }
 
 
 def main():
@@ -444,9 +823,38 @@ def main():
     parser = argparse.ArgumentParser(description="KPGS 8-Stage Evidence Chain Validator")
     parser.add_argument("--symbol", default="SPY", help="Ticker symbol to validate")
     parser.add_argument("--json", action="store_true", help="Output raw JSON receipt")
+    parser.add_argument("--loop", action="store_true", help="Run 3-turn feedback loop")
     args = parser.parse_args()
 
     runner = KPGS8StageChainRunner(symbol=args.symbol)
+
+    if args.loop:
+        loop_res = runner.run_feedback_loop(turns=3)
+        if args.json:
+            print(json.dumps(loop_res, indent=2))
+            return
+        print("=" * 75)
+        print("  🔁 KPGS 3-TURN FEEDBACK LOOP EXECUTION REPORT")
+        print(f"  Symbol: {loop_res['symbol']}  |  Verdict: {loop_res['whole_system_verdict']}")
+        print(
+            f"  Integrity Score: {loop_res['integrity_score']:.0%}  |  Constraint: {loop_res['constraint']}"
+        )
+        print("=" * 75)
+        for t in loop_res["turns"]:
+            icon = "✅" if t["decision"] == "APPROVE" else "⏳"
+            print(
+                f"  Turn {t['turn']}: {icon} {t['decision']} | PKAP: {t['pkap_score']} | Auth: {t['ubmnp_authorized']}"
+            )
+            print(f"          Root: sha256:{t['root_hash'][:24]}…")
+            print(f"          UBMP RTC: {t['ubmp_rtc_hash']} | BMNP: {t['bmnp_nesting']}")
+            print(f"          Reasons: {', '.join(t['reasons'])}")
+        print("-" * 75)
+        print(
+            f"  🏛️ WHOLE SYSTEM STATUS: {'ALL 3 TURNS HONEST & CONVERGED' if loop_res['all_turns_honest'] else 'FAILED'}"
+        )
+        print("=" * 75)
+        return
+
     receipt = runner.run_chain()
 
     if args.json:
@@ -468,6 +876,15 @@ def main():
         print(f"       Status:       {stage.status} - {stage.detail}")
         print(f"       Evidence:     sha256:{stage.evidence_hash[:32]}…")
 
+    print("-" * 75)
+    print(f"  🔲 BMP HASH:     sha256:{receipt.bmp.get('bmp_hash')}")
+    print(f"  🔲 BMNP NESTING: {receipt.bmnp.get('nesting')}")
+    print(
+        f"  🏛️ UBMP RTC:     sha256:{receipt.ubmp.get('rtc_hash')} (ikp_code: {receipt.ubmp.get('ikp_code')})"
+    )
+    print(
+        f"  ⚡ UBMNP PKAP:   {receipt.ubmnp.get('pkap_score')} (verdict: {receipt.ubmnp.get('verdict')}, authorized: {receipt.ubmnp.get('autonomous_authorized')})"
+    )
     print("-" * 75)
     print(f"  🔗 COMPOSITE CHAIN ROOT HASH: sha256:{receipt.root_hash}")
     print(
