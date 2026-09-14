@@ -15,9 +15,11 @@ from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from lefa.alpaca import AlpacaPaperBroker
 from lefa.config import Settings
+from lefa.evidence_chain import KPGS8StageChainRunner
 
 router = APIRouter()
 
@@ -213,3 +215,40 @@ def get_runtime_status() -> dict[str, Any]:
     """Return the small human-facing runtime state used by the primary UI."""
 
     return _runtime_projection(_current_bridge_status())
+
+
+class ChainVerifyRequest(BaseModel):
+    symbol: str = "SPY"
+    witness_data: dict[str, Any] | None = None
+    observation_data: dict[str, Any] | None = None
+    validation_data: dict[str, Any] | None = None
+    attestation_data: dict[str, Any] | None = None
+    canonical_data: dict[str, Any] | None = None
+    ledger_data: dict[str, Any] | None = None
+    time_data: dict[str, Any] | None = None
+    reveal_data: dict[str, Any] | None = None
+
+
+@router.get("/api/bridge/chain/verify")
+def verify_evidence_chain_get(symbol: str = "SPY") -> dict[str, Any]:
+    """Execute and inspect the KPGS 8-Stage Evidence-Backed Chain."""
+    runner = KPGS8StageChainRunner(symbol=symbol)
+    receipt = runner.run_chain()
+    return receipt.to_dict()
+
+
+@router.post("/api/bridge/chain/verify")
+def verify_evidence_chain_post(request: ChainVerifyRequest) -> dict[str, Any]:
+    """Verify arbitrary or simulated inputs against the 8-Stage Evidence-Backed Chain."""
+    runner = KPGS8StageChainRunner(symbol=request.symbol)
+    receipt = runner.run_chain(
+        witness_data=request.witness_data,
+        observation_data=request.observation_data,
+        validation_data=request.validation_data,
+        attestation_data=request.attestation_data,
+        canonical_data=request.canonical_data,
+        ledger_data=request.ledger_data,
+        time_data=request.time_data,
+        reveal_data=request.reveal_data,
+    )
+    return receipt.to_dict()
